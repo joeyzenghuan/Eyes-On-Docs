@@ -27,24 +27,29 @@ class Spyder:
         self.personal_token = "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"
         self.headers = {"Authorization": "token " + self.personal_token}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
-        self.url2 = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"
+        self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/" #爬虫起始网页，从openai的commits中开始爬取操作
 
         self.starttime = datetime.datetime.strptime(
-            "2023-10-29T18:24:08Z", "%Y-%m-%dT%H:%M:%SZ"
+            "2023-10-29T18:24:08Z", "%Y-%m-%dT%H:%M:%SZ" #测试使用的时间，非测试时间请注释掉
         )
         logger.info(f"Only get changes after the time point: {self.starttime}")
 
         self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
+        
+        # *****从当前时间开始执行爬虫，只爬取比当前时间新的commit操作*****
+        
         # local_time = datetime.datetime.now()
         # time_struct = time.mktime(local_time.timetuple())
         # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
         # self.starttime = utc_st
+        
+        # *****正式使用请取消注释*****
 
-    def get_commit_page(self):
-        logger.info(f"Getting commit page:  {self.url2} ")
+    def get_commit_page(self): #获取所有根路径（openai）下的所有commmits操作，以及他们的时间
+        logger.info(f"Getting commit page:  {self.main_url} ")
 
-        response = requests.get(self.url2, headers=self.headers).text
+        response = requests.get(self.main_url, headers=self.headers).text
         # logger.debug(f"Commit Page Raw Text: {response}")
 
         soup = BeautifulSoup(response, "html.parser")
