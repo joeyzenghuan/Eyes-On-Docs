@@ -30,7 +30,7 @@ class Spyder:
         self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/" #爬虫起始网页，从openai的commits中开始爬取操作
 
         self.starttime = datetime.datetime.strptime(
-            "2023-10-29T18:24:08Z", "%Y-%m-%dT%H:%M:%SZ" #测试使用的时间，非测试时间请注释掉
+            "2023-10-29T18:24:08Z", "%Y-%m-%dT%H:%M:%SZ"                               #测试使用的时间，非测试时间请注释掉
         )
         logger.info(f"Only get changes after the time point: {self.starttime}")
 
@@ -46,7 +46,7 @@ class Spyder:
         
         # *****正式使用请取消注释*****
 
-    def get_commit_page(self): #获取所有根路径（openai）下的所有commmits操作，以及他们的时间
+    def get_commit_page(self):                                                        #获取所有根路径（openai）下的所有commmits操作，以及他们的时间
         logger.info(f"Getting commit page:  {self.main_url} ")
 
         response = requests.get(self.main_url, headers=self.headers).text
@@ -61,21 +61,21 @@ class Spyder:
             time_ = item.find_all("relative-time")
             for i in time_:
                 a = i["datetime"]
-                precise_time_list.append(
+                precise_time_list.append(                                                #获取当前页面的所有时间
                     datetime.datetime.strptime(str(a), "%Y-%m-%dT%H:%M:%SZ")
                 )
 
-        action_u = soup.find_all(
+        action_u = soup.find_all(                                                             #获取当前页面所有commit的url
             "a", {"class": "Link--primary text-bold js-navigation-open markdown-title"}
         )
         for item in action_u:
             if "https://github.com" + item["href"] not in action_url:
-                action_url.append("https://github.com" + item["href"])
+                action_url.append("https://github.com" + item["href"])                   #保持顺序不变的情况下去除重复项
 
-        page_dic = dict(zip(precise_time_list, action_url))
+        page_dic = dict(zip(precise_time_list, action_url))                            #将时间和url打包成字典，字典的键是时间，字典的值是url
         return page_dic
 
-    def select_latest(self):
+    def select_latest_commits(self):               #将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时跟新最新时间。
         page_dic = self.get_commit_page()
         selected = {}
         for key in page_dic.keys():
@@ -83,10 +83,10 @@ class Spyder:
                 selected[key] = page_dic[key]
         self.starttime = max(page_dic.keys())
 
-        return selected
+        return selected                                            #返回筛选完的时间以及对应url
 
-    def get_change(self, time, url):
-        response = requests.get(url, headers=self.headers).text
+    def get_change_from_each_url(self, time, url):                          #输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回       
+        response = requests.get(url, headers=self.headers).text                    
         soup = BeautifulSoup(response, "html.parser")
         time_ = time
         if soup.find("div", {"class": "commit-desc"}):
@@ -149,10 +149,10 @@ class Spyder:
         return result_dic, time_, summary, commit_url
 
     def each_commit(self):
-        selected = self.select_latest()
+        selected = self.select_latest_commits()
         for key in selected:
             time_, url = key, selected[key]
-            input_dic, time_, summary, commit_url = self.get_change(time_, url)
+            input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url)
             reply = self.gpt_summary(input_dic)
             self.postTeamsMessage(summary, time_, reply, commit_url)
 
