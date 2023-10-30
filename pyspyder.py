@@ -89,23 +89,23 @@ class Spyder:
         response = requests.get(url, headers=self.headers).text                    
         soup = BeautifulSoup(response, "html.parser")
         time_ = time
-        if soup.find("div", {"class": "commit-desc"}):
+        if soup.find("div", {"class": "commit-desc"}):                      #summary有两个地方，位置不固定，提前判断做出选择，防止报错
             summary = soup.find("div", {"class": "commit-desc"}).pre.text
         else:
-            summary = soup.find("div", class_="commit-title markdown-title").text
+            summary = soup.find("div", class_="commit-title markdown-title").text 
 
         commit_url = url
         url_list = []
         final_urls = []
         deleted_list = []
-        added_list = []
-        deleted = soup.find_all(
+        added_list = []                                                   #通过爬取 - 号 来判定这是删除操作
+        deleted = soup.find_all(                                          #通过爬取 + 号 来判定只是增加操作
             "span",
             class_="blob-code-inner blob-code-marker js-code-nav-pass js-skip-tagsearch",
         )
         added = soup.find_all("span", {"data-code-marker": "+"})
 
-        with sync_playwright() as p:
+        with sync_playwright() as p:                                     #playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(
                 extra_http_headers=self.headers,
@@ -114,20 +114,20 @@ class Spyder:
 
             page = context.new_page()
 
-            page.goto(url)
-            # page.wait_for_load_state("networkidle")
+            page.goto(url)                
+            page.wait_for_load_state()                                              #等待网页加载完成
 
             for i in page.locator(
-                "//span[@class='Truncate']//a[@class='Link--primary Truncate-text']"
+                "//span[@class='Truncate']//a[@class='Link--primary Truncate-text']"   #使用x-path 获取被修改文件的路径
             ).all():
                 url_list.append(i.inner_text())
 
             page.close()
             context.close()
             browser.close()
-        for item in url_list:
+        for item in url_list:                                                  #将获取的url和前缀进行拼接，带有includes的路径只能跳转到对应的github页面，无法跳转到microsoft.learn的页面
             if "includes" in item:
-                final_urls.append(self.gitprefix + item)
+                final_urls.append(self.gitprefix + item)                                        #筛选不同的url按照不同规则进行拼接
             else:
                 item = item.replace("articles/", "").replace(".md", "")
                 final_urls.append(self.mslearnprefix + item)
@@ -144,11 +144,11 @@ class Spyder:
         for i, key in enumerate(keys):
             result_dic[key] = values[i]
         
-        logger.debug(f"Get Change result_dic: {result_dic}")
+        logger.debug(f"Get Change result_dic: {result_dic}")          #时间，commit的url，总结 都按照结构化返回，增加和删除的操作内容以及包含的所有被修改文件的url 都打包成字典后续传给gpt4处理。
 
         return result_dic, time_, summary, commit_url
 
-    def each_commit(self):
+    def process_each_commit(self):                          #循环，对每一个筛选完的，确认更新的链接点击进去并执行上面的函数对内容进行爬取
         selected = self.select_latest_commits()
         for key in selected:
             time_, url = key, selected[key]
@@ -156,7 +156,7 @@ class Spyder:
             reply = self.gpt_summary(input_dic)
             self.postTeamsMessage(summary, time_, reply, commit_url)
 
-    def postTeamsMessage(self, summary, time, text, commit_url):
+    def postTeamsMessage(self, summary, time, text, commit_url):    # 向teams发送信息的函数
         # WEBHOOK_URL = "https://uniofnottm.webhook.office.com/webhookb2/577208ca-2378-4222-a0d6-a5297dfec8a5@67bda7ee-fd80-41ef-ac91-358418290a1e/IncomingWebhook/49e2d97a9bfa452f82fcbf04bdc835b6/6701c303-f6a1-4998-bae1-b64f726f699e"
         WEBHOOK_URL = "https://microsoft.webhook.office.com/webhookb2/47e32e29-2419-41ba-bd3e-9a9e1c8c91eb@72f988bf-86f1-41af-91ab-2d7cd011db47/IncomingWebhook/c3279cbec95042eea542d56d98fab2eb/0e8f7dd6-18ac-459d-8def-328da20ecf7d"
 
@@ -232,7 +232,7 @@ class MainDialog(QDialog):
         while True:
             if self.flag == 1:
                 git_spyder = Spyder()
-                git_spyder.each_commit()
+                git_spyder.process_each_commit()
                 self.ui.label_4.setText(str(git_spyder.starttime))
                 time.sleep(self.schedule)
             else:
