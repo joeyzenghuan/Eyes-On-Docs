@@ -218,26 +218,47 @@ class Spyder:
         requests.post(WEBHOOK_URL, json=jsonData)
 
     def gpt_summary(self, input_dict):  # 调用GPT4 总结删除和增加的内容
+        commit_patch_data = input_dict.get("commits")
+
+#         system_message = """
+# Analyze the contents of from a git commit patch data,and summarize the contents of the commit.
+# The patch contents of this commit is user's input['commits']`+'put the users'input['urls'] at the end of your reply.
+# Display URLs by row.
+# Reply in Chinese.
+#                 """
+        system_message = """
+Analyze the contents from a git commit patch data,and summarize the contents of the commit.
+If the commit involves more than 1 file, please summarize the contents of each file separately.
+Output format:
+<path of 1st file>
+<summary of 1st file> 
+<path of 2nd file>
+<summary of 2nd file>
+Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
+If the path is end with ".md", remove ".md" from the path.
+For example:
+For original path "articles/abc/def/ghi.md", the output should be:
+https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
+
+Reply in Chinese.
+                """
         messages = [
             {
                 "role": "system",
-                "content": 
-                """ 
-                    Reply in Chinese 
-                    `Analyze the contents of a git commit,and summarize the contents of the commit.` +
-                    `The patch contents of this commit is user's input['commits']`+'put the users'input['urls'] at the end of your reply.
-                    Display URLs by row'
-                """,
+                "content": system_message,
             },
-            {"role": "user", "content": str(input_dict)},
+            # {"role": "user", "content": str(input_dict)},
+            {"role": "user", "content": f"Here are the commit patch data. ###{commit_patch_data} ###"},
         ]
+
+        logger.info(f"GPT_Summary Request body: {messages}")
         response = openai.ChatCompletion.create(
             engine=deployment_name,  # engine = "deployment_name".
             messages=messages,
         )
         gpt_summary_response_ = response["choices"][0]["message"]["content"]
 
-        logger.info(f"GPT_Summary Request body: {messages}")
+        
         logger.info(f"GPT_Summary Response:  {gpt_summary_response_}")
 
         return gpt_summary_response_
