@@ -18,19 +18,22 @@ from logs import logger
 from dotenv import load_dotenv
 
 load_dotenv()
-AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
+openai.api_key = os.getenv("AZURE_OPENAI_KEY")
+openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 # logger.debug(f"AZURE_OPENAI_KEY: {AZURE_OPENAI_KEY}")
-
+openai.api_type = "azure"
+openai.api_version = "2023-07-01-preview"    
+deployment_name = "gpt432k"
 
 class Spyder:
     def __init__(self):
-        self.personal_token = "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"
+        self.personal_token = os.getenv("PERSONAL_TOKEN")
         self.headers = {"Authorization": "token " + self.personal_token}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/" #爬虫起始网页，从openai的commits中开始爬取操作
 
         self.starttime = datetime.datetime.strptime(
-            "2023-10-29T18:24:08Z", "%Y-%m-%dT%H:%M:%SZ"                               #测试使用的时间，非测试时间请注释掉
+            "2023-10-30T16:32:50Z", "%Y-%m-%dT%H:%M:%SZ"                               #测试使用的时间，非测试时间请注释掉
         )
         logger.info(f"Only get changes after the time point: {self.starttime}")
 
@@ -55,9 +58,9 @@ class Spyder:
         soup = BeautifulSoup(response, "html.parser")
 
         precise_time_list = []
-        action_url = []
-        action = soup.find_all("div", {"class": "TimelineItem-body"})
-        for item in action:
+        commits_url = []
+        comiits_filed = soup.find_all("div", {"class": "TimelineItem-body"})
+        for item in comiits_filed:
             time_ = item.find_all("relative-time")
             for i in time_:
                 a = i["datetime"]
@@ -65,25 +68,25 @@ class Spyder:
                     datetime.datetime.strptime(str(a), "%Y-%m-%dT%H:%M:%SZ")
                 )
 
-        action_u = soup.find_all(                                                             #获取当前页面所有commit的url
+        comiits_url_html = soup.find_all(                                                             #获取当前页面所有commit的url
             "a", {"class": "Link--primary text-bold js-navigation-open markdown-title"}
         )
-        for item in action_u:
-            if "https://github.com" + item["href"] not in action_url:
-                action_url.append("https://github.com" + item["href"])                   #保持顺序不变的情况下去除重复项
+        for item in comiits_url_html:
+            if "https://github.com" + item["href"] not in commits_url:
+                commits_url.append("https://github.com" + item["href"])                   #保持顺序不变的情况下去除重复项
 
-        page_dic = dict(zip(precise_time_list, action_url))                            #将时间和url打包成字典，字典的键是时间，字典的值是url
+        page_dic = dict(zip(precise_time_list, commits_url))                            #将时间和url打包成字典，字典的键是时间，字典的值是url
         return page_dic
 
     def select_latest_commits(self):               #将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时跟新最新时间。
         page_dic = self.get_commit_page()
-        selected = {}
+        selected_commits = {}
         for key in page_dic.keys():
             if key > self.starttime:
-                selected[key] = page_dic[key]
+                selected_commits[key] = page_dic[key]
         self.starttime = max(page_dic.keys())
 
-        return selected                                            #返回筛选完的时间以及对应url
+        return selected_commits                                            #返回筛选完的时间以及对应url
 
     def get_change_from_each_url(self, time, url):                          #输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回       
         response = requests.get(url, headers=self.headers).text                    
@@ -93,17 +96,17 @@ class Spyder:
             summary = soup.find("div", {"class": "commit-desc"}).pre.text
         else:
             summary = soup.find("div", class_="commit-title markdown-title").text 
-
+        
         commit_url = url
         url_list = []
         final_urls = []
-        deleted_list = []
-        added_list = []                                                   #通过爬取 - 号 来判定这是删除操作
-        deleted = soup.find_all(                                          #通过爬取 + 号 来判定只是增加操作
-            "span",
-            class_="blob-code-inner blob-code-marker js-code-nav-pass js-skip-tagsearch",
-        )
-        added = soup.find_all("span", {"data-code-marker": "+"})
+        patch_url = url+'.patch'
+        response_patch =requests.get(patch_url, stream=True,headers=self.headers).text
+        temp_data = response_patch
+        if len(temp_data)>=30000:
+            patch_data = temp_data[:30000]
+        else:
+            patch_data = temp_data
 
         with sync_playwright() as p:                                     #playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全
             browser = p.chromium.launch(headless=True)
@@ -129,17 +132,13 @@ class Spyder:
             if "includes" in item:
                 final_urls.append(self.gitprefix + item)                                        #筛选不同的url按照不同规则进行拼接
             else:
-                item = item.replace("articles/", "").replace(".md", "")
-                final_urls.append(self.mslearnprefix + item)
+                temp_item = item.replace("articles/", "").replace(".md", "")
+                final_urls.append(self.mslearnprefix + temp_item)
 
-        for item in deleted:
-            for i in item:
-                deleted_list.append(i.text)
-        for item in added:
-            added_list.append(item.text)
+    
 
-        keys = ["added_list", "deleted_list", "urls"]
-        values = [added_list, deleted_list, final_urls]
+        keys = ['commits','urls']
+        values = [patch_data,final_urls]
         result_dic = {}
         for i, key in enumerate(keys):
             result_dic[key] = values[i]
@@ -149,21 +148,22 @@ class Spyder:
         return result_dic, time_, summary, commit_url
 
     def process_each_commit(self):                          #循环，对每一个筛选完的，确认更新的链接点击进去并执行上面的函数对内容进行爬取
-        selected = self.select_latest_commits()
-        for key in selected:
-            time_, url = key, selected[key]
+        selected_commits = self.select_latest_commits()
+        for key in selected_commits:
+            time_, url = key, selected_commits[key]
             input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url)
             reply = self.gpt_summary(input_dic)
-            self.postTeamsMessage(summary, time_, reply, commit_url)
+            title = self.gpt_title(reply)
+            self.postTeamsMessage(title, time_, reply, commit_url)
 
-    def postTeamsMessage(self, summary, time, text, commit_url):    # 向teams发送信息的函数
-        # WEBHOOK_URL = "https://uniofnottm.webhook.office.com/webhookb2/577208ca-2378-4222-a0d6-a5297dfec8a5@67bda7ee-fd80-41ef-ac91-358418290a1e/IncomingWebhook/49e2d97a9bfa452f82fcbf04bdc835b6/6701c303-f6a1-4998-bae1-b64f726f699e"
-        WEBHOOK_URL = "https://microsoft.webhook.office.com/webhookb2/47e32e29-2419-41ba-bd3e-9a9e1c8c91eb@72f988bf-86f1-41af-91ab-2d7cd011db47/IncomingWebhook/c3279cbec95042eea542d56d98fab2eb/0e8f7dd6-18ac-459d-8def-328da20ecf7d"
+    def postTeamsMessage(self, title, time, text, commit_url):    # 向teams发送信息的函数
+        WEBHOOK_URL = os.getenv('WEBHOOK_URL')
+     
 
-        jsonData = {
+        jsonData = {                                                #向teams 发送的message必须是json格式
             "@type": "MessageCard",
             "themeColor": "0076D7",
-            "title": "[NEW ACTION]:" + "  " + str(summary) + " " + str(time),
+            "title": str(title)+ str(time),
             "text": text,
             "potentialAction": [
                 {
@@ -176,33 +176,17 @@ class Spyder:
         logger.debug(f"Teams Message jsonData: {jsonData}")
         requests.post(WEBHOOK_URL, json=jsonData)
 
-    def gpt_summary(self, input_dict):
-        openai.api_type = "azure"
-        openai.api_base = "https://ryanopenaicandaeast.openai.azure.com/"
-        openai.api_version = "2023-07-01-preview"
-        # openai.api_key = "b0df4f028e7c4ae49473a01a80aad1ef"
-        openai.api_key = AZURE_OPENAI_KEY
+    def gpt_summary(self, input_dict):                              #调用GPT4 总结删除和增加的内容
 
-        messages = [
-            {
-                "role": "system",
-                "content": """you will get a dict style input ,*You need to make a summary of the deleted operations and the added operations*
-                The dictionary has a total of 2 keys  added_list, deleted_list,
-                added_list corresponding value is the content added by the user,Deletions and additions occur in added_list and 
-                deleted_list corresponding positions, 
-                and you should reflect the corresponding relationship when answering, deleted_
-                The value corresponding to the list is the content deleted by the user,urls includes the links to each changed file.
-                Dont't include meaningless punctuation in your reply.
-                for example'[]''-','+' ,**Use bullets to make the answer clear and unambiguous** 
-                [Deleted Action]:{use bullets to explain} , 
-                [Added Action]:{use bullets to explain},
-                URLS:{Each line displays a URL}
-                """,
-            },
+        messages=[
+            {"role": "system", "content": """ Reply in Chinese `Analyze the contents of a git commit,and summarize the contents of the commit.` +
+        `The patch contents of this commit is user's input['commits']`+'put the users'input['urls'] at the end of your reply.Display URLs by row'
+            """},
             {"role": "user", "content": str(input_dict)},
+
         ]
         response = openai.ChatCompletion.create(
-            engine="gpt432k",  # engine = "deployment_name".
+            engine=deployment_name,  # engine = "deployment_name".
             messages=messages,
         )
         gpt_response = response["choices"][0]["message"]["content"]
@@ -211,7 +195,19 @@ class Spyder:
         logger.info(f"GPT Response:  {gpt_response}")
 
         return gpt_response
+    def gpt_title(self, input_):                                         #调用GPT生成标题
+        response = openai.ChatCompletion.create(
+            engine="gpt432k",  # engine = "deployment_name".
+            messages=[
+                {"role": "system", "content": """ give me a Chinese title to summarize the input. Don't mention user's name in the title.
+                """},
+                {"role": "user", "content": str(input_)},
 
+            ]
+        )
+        gpt_title =  response['choices'][0]['message']['content']
+
+        return gpt_title
 
 class MainDialog(QDialog):
     def __init__(self, parent=None):
@@ -223,7 +219,7 @@ class MainDialog(QDialog):
         self.ui.pushButton_2.clicked.connect(self.stop)
 
     def run(self):
-        t = threading.Thread(target=self.on, name="t")
+        t = threading.Thread(target=self.on, name="t") #多线程，停止运行程序的时候，UI窗口不会消失。
         t.start()
 
     def on(self):
