@@ -22,8 +22,8 @@ openai.api_key = os.getenv("AZURE_OPENAI_KEY")
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 # logger.debug(f"AZURE_OPENAI_KEY: {AZURE_OPENAI_KEY}")
 openai.api_type = "azure"
-openai.api_version = "2023-07-01-preview"
-deployment_name = "gpt432k"
+openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
 
 class Spyder:
