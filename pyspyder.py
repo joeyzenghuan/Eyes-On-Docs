@@ -29,13 +29,14 @@ deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 class Spyder:
     def __init__(self):
         self.personal_token = os.getenv("PERSONAL_TOKEN")
+        print(self.personal_token)
         self.headers = {"Authorization": "token " + self.personal_token}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  # 爬虫起始网页，从openai的commits中开始爬取操作
+        self.schedule = 3600
 
-        self.starttime = datetime.datetime.strptime(
-            "2023-11-01T3:30:50Z", "%Y-%m-%dT%H:%M:%SZ"  # 测试使用的时间，非测试时间请注释掉
-        )
+        self.starttime = self.read_time()
+
 
         self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
@@ -50,7 +51,16 @@ class Spyder:
         # *****正式使用请取消注释*****
 
         logger.info(f"Only get changes after the time point: {self.starttime}")
-
+    def write_time(self,update_time):
+        with open('last_crawl_time.txt','w') as f:
+            f.write(str(update_time))
+        f.close()
+    def read_time(self):
+        with open('last_crawl_time.txt') as f:
+            time_in_file = datetime.datetime.strptime(
+           f.readline(), "%Y-%m-%d %H:%M:%S"  # 测试使用的时间，非测试时间请注释掉
+        )
+        return time_in_file
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
     def get_all_commits(self):  
         logger.info(f"Getting commit page:  {self.main_url} ")
@@ -89,15 +99,15 @@ class Spyder:
         )  # 将时间和url打包成字典，字典的键是时间，字典的值是url
         return commits_dic_time_url
 
-    def select_latest_commits(self):  # 将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时跟新最新时间。
-        commits_dic_time_url = self.get_all_commits()
+    def select_latest_commits(self,commits_dic_time_url):  # 将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时跟新最新时间。
+        # commits_dic_time_url = self.get_all_commits()
 
         selected_commits = {}
 
         for key in commits_dic_time_url.keys():
             if key > self.starttime:
                 selected_commits[key] = commits_dic_time_url[key]
-        self.starttime = max(commits_dic_time_url.keys())
+        self.write_time(str(max(commits_dic_time_url.keys())))
 
         selected_commits_length = len(selected_commits)
         logger.info(f"{selected_commits_length} selected commits: {selected_commits}")
@@ -106,11 +116,11 @@ class Spyder:
 
      # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
     def get_change_from_each_url(
-        self, time, url
+        self, time, commit_url
     ): 
-        logger.info(f"Getting changes from url: {url}")
+        logger.info(f"Getting changes from url: {commit_url}")
 
-        response = requests.get(url, headers=self.headers).text
+        response = requests.get(commit_url, headers=self.headers).text
         soup = BeautifulSoup(response, "html.parser")
         time_ = time
 
@@ -129,10 +139,10 @@ class Spyder:
         )
         logger.info(f"commit_title_and_desc: {commit_title_and_desc}")
 
-        commit_url = url
+      
         url_list = []
         final_urls = []
-        patch_url = url + ".patch"
+        patch_url = commit_url + ".patch"
 
         logger.info(f"Getting patch data from url: {patch_url}")
         response_patch = requests.get(patch_url, stream=True, headers=self.headers).text
@@ -152,7 +162,7 @@ class Spyder:
 
             page = context.new_page()
 
-            page.goto(url)
+            page.goto(commit_url)
             page.wait_for_load_state()  # 等待网页加载完成
 
             for i in page.locator(
@@ -186,8 +196,8 @@ class Spyder:
 
         return result_dic, time_, commit_title_and_desc, commit_url
 
-    def process_each_commit(self):  # 循环，对每一个筛选完的，确认更新的链接点击进去并执行上面的函数对内容进行爬取
-        selected_commits = self.select_latest_commits()
+    def process_each_commit(self,selected_commits):  # 循环，对每一个筛选完的，确认更新的链接点击进去并执行上面的函数对内容进行爬取
+        # selected_commits = self.select_latest_commits()
 
         for key in selected_commits:
             time_, url = key, selected_commits[key]
@@ -196,6 +206,7 @@ class Spyder:
             )
             gpt_summary_response = self.gpt_summary(input_dic)
             gpt_title_response = self.gpt_title(gpt_summary_response)
+
             self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
     def post_teams_message(self, gpt_title_response, time, gpt_summary_response, commit_url):  # 向teams发送信息的函数
@@ -265,7 +276,7 @@ Reply in Chinese.
 
     def gpt_title(self, input_):  # 调用GPT生成标题
 
-        system_prompt =""" give me a Chinese title to summarize the input. Don't mention user's name in the title.""",
+        system_prompt ="give me a Chinese title to summarize the input. Don't mention user's name in the title.",
 
 #         system_prompt = """
 # User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.
@@ -276,7 +287,7 @@ Reply in Chinese.
         messages = [
             {
                 "role": "system",
-                "content": system_prompt,
+                "content": str(system_prompt),
             },
             {"role": "user", "content": str(input_)},
         ]
@@ -291,39 +302,11 @@ Reply in Chinese.
 
         return gpt_title_response
 
-
-class MainDialog(QDialog):
-    def __init__(self, parent=None):
-        super(QDialog, self).__init__(parent)
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
-        self.schedule = 3600
-        self.ui.pushButton.clicked.connect(self.run)
-        self.ui.pushButton_2.clicked.connect(self.stop)
-
-    def run(self):
-        t = threading.Thread(target=self.on, name="t")  # 多线程，停止运行程序的时候，UI窗口不会消失。
-        t.start()
-
-    def on(self):
-        self.flag = 1
-        self.ui.label_2.setText("Running...")
-        while True:
-            if self.flag == 1:
-                git_spyder = Spyder()
-                git_spyder.process_each_commit()
-                self.ui.label_4.setText(str(git_spyder.starttime))
-                time.sleep(self.schedule)
-            else:
-                break
-
-    def stop(self):
-        self.flag = 0
-        self.ui.label_2.setText("Stop...")
-
-
-if __name__ == "__main__":
-    myapp = QApplication(sys.argv)
-    myDlg = MainDialog()
-    myDlg.show()
-    sys.exit(myapp.exec_())
+        
+if __name__ == "__main__": 
+    while True:
+        git_spyder = Spyder()
+        all_commits_from_main_url = git_spyder.get_all_commits()
+        selected_commits = git_spyder.select_latest_commits(all_commits_from_main_url)
+        git_spyder.process_each_commit(selected_commits)
+        time.sleep(git_spyder.schedule)
