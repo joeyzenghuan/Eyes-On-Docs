@@ -4,13 +4,13 @@ import datetime
 import openai
 import os
 import json
-from playwright.sync_api import Playwright, sync_playwright, expect
+# from playwright.sync_api import Playwright, sync_playwright, expect
 from bs4 import BeautifulSoup
-import pymsteams
-from PyQt5.QtWidgets import QApplication, QDialog
-from spyder import Ui_Dialog
-import sys
-import threading
+# import pymsteams
+# from PyQt5.QtWidgets import QApplication, QDialog
+# from spyder import Ui_Dialog
+# import sys
+# import threading
 import time
 from logs import logger
 
@@ -32,31 +32,29 @@ class Spyder:
         print(self.personal_token)
         self.headers = {"Authorization": "token " + self.personal_token}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
-        self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  # 爬虫起始网页，从openai的commits中开始爬取操作
         self.schedule = 3600
 
         self.starttime = self.read_time()
         logger.info(f"Only get changes after the time point: {self.starttime}")
 
+        # 爬虫起始网页，从openai的commits中开始爬取操作
+        self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
         self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
 
         # *****从当前时间开始执行爬虫，只爬取比当前时间新的commit操作*****
-
         # local_time = datetime.datetime.now()
         # time_struct = time.mktime(local_time.timetuple())
         # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
         # self.starttime = utc_st
-
         # *****正式使用请取消注释*****
 
-        
 
     def write_time(self,update_time):
         with open('last_crawl_time.txt','w') as f:
             f.write(str(update_time))
         f.close()
-        logger.info(f"Update time config file: {update_time}")
+        logger.warning(f"Update time config file: {update_time}")
 
     def read_time(self):
         with open('last_crawl_time.txt') as f:
@@ -64,9 +62,10 @@ class Spyder:
            f.readline(), "%Y-%m-%d %H:%M:%S"  # 测试使用的时间，非测试时间请注释掉
         )
         return time_in_file
+    
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
     def get_all_commits(self):  
-        logger.info(f"Getting commit page:  {self.main_url} ")
+        logger.info(f"Commit Root page:  {self.main_url} ")
 
         response = requests.get(self.main_url, headers=self.headers).text
         # logger.debug(f"Commit Page Raw Text: {response}")
@@ -76,27 +75,25 @@ class Spyder:
         precise_time_list = []
         commits_url_list = []
 
-        # 某一天的所有commits集合 <div class="TimelineItem-body">
+        # 每天的所有commits集合 <div class="TimelineItem-body">
         commits_per_day = soup.find_all("div", {"class": "TimelineItem-body"})
 
         for item in commits_per_day:
+
             # <relative-time datetime="2023-10-31T17:37:03Z" class="no-wrap" title="Nov 1, 2023, 1:37 AM GMT+8">Nov 1, 2023</relative-time>
             time_ = item.find_all("relative-time")
             for i in time_:
                 a = i["datetime"]
-                precise_time_list.append(  # 获取当前页面的所有时间
+                precise_time_list.append(  # 获取这一天commits的所有时间
                     datetime.datetime.strptime(str(a), "%Y-%m-%dT%H:%M:%SZ")
                 )
-
-        commits_url_html = soup.find_all(  # 获取当前页面所有commit的url
-            "a", {"class": "Link--primary text-bold js-navigation-open markdown-title"}
-        )
-        for item in commits_url_html:
-            if "https://github.com" + item["href"] not in commits_url_list:
-                commits_url_list.append(
-                    "https://github.com" + item["href"]
-                )  # 保持顺序不变的情况下去除重复项
-
+            
+            commits_url = item.find_all(  # 获取这一天commits的url
+            "a", {"class": "Link--primary text-bold js-navigation-open markdown-title"})
+            for item in commits_url:
+                if "https://github.com" + item["href"] not in commits_url_list:
+                    commits_url_list.append("https://github.com" + item["href"])  # 保持顺序不变的情况下去除重复项
+        
         commits_dic_time_url = dict(
             zip(precise_time_list, commits_url_list)
         )  # 将时间和url打包成字典，字典的键是时间，字典的值是url
@@ -112,10 +109,16 @@ class Spyder:
                 selected_commits[key] = commits_dic_time_url[key]
 
         # self.write_time(str(max(commits_dic_time_url.keys())))
-        latest_crawl_time = str(max(selected_commits.keys()))
 
         selected_commits_length = len(selected_commits)
         logger.info(f"{selected_commits_length} selected commits: {selected_commits}")
+
+        if selected_commits_length > 0:
+            latest_crawl_time = str(max(selected_commits.keys()))
+            logger.warning(f"Max new commits time: {latest_crawl_time}")
+        else:
+            latest_crawl_time = self.starttime
+            logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
 
         return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
 
@@ -128,13 +131,6 @@ class Spyder:
         response = requests.get(commit_url, headers=self.headers).text
         soup = BeautifulSoup(response, "html.parser")
         time_ = time
-
-        # if soup.find(
-        #     "div", {"class": "commit-desc"}
-        # ):  # summary有两个地方，位置不固定，提前判断做出选择，防止报错
-        #     summary = soup.find("div", {"class": "commit-desc"}).pre.text
-        # else:
-        #     summary = soup.find("div", class_="commit-title markdown-title").text
 
         commit_title = soup.find("div", class_="commit-title markdown-title").text if soup.find("div", class_="commit-title markdown-title") else ""
         commit_desc = soup.find("div", {"class": "commit-desc"}).pre.text if soup.find("div", {"class": "commit-desc"}) else ""
@@ -152,42 +148,43 @@ class Spyder:
         logger.info(f"Getting patch data from url: {patch_url}")
         response_patch = requests.get(patch_url, stream=True, headers=self.headers).text
         temp_data = response_patch
+        logger.warning(f"Patch data length: {len(temp_data)}")
         if len(temp_data) >= 30000:
             logger.warning(f"Patch data is too long, only get the first 30000 characters")
             patch_data = temp_data[:30000]
         else:
             patch_data = temp_data
 
-        with sync_playwright() as p:  # playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                extra_http_headers=self.headers,
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.76",
-            )
+        # with sync_playwright() as p:  # playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全
+        #     browser = p.chromium.launch(headless=True)
+        #     context = browser.new_context(
+        #         extra_http_headers=self.headers,
+        #         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.76",
+        #     )
 
-            page = context.new_page()
+        #     page = context.new_page()
 
-            page.goto(commit_url)
-            page.wait_for_load_state()  # 等待网页加载完成
+        #     page.goto(commit_url)
+        #     page.wait_for_load_state()  # 等待网页加载完成
 
-            for i in page.locator(
-                "//span[@class='Truncate']//a[@class='Link--primary Truncate-text']"  # 使用x-path 获取被修改文件的路径
-            ).all():
-                logger.info(f"Getting changed file url: {i.inner_text()}")
-                url_list.append(i.inner_text())
+        #     for i in page.locator(
+        #         "//span[@class='Truncate']//a[@class='Link--primary Truncate-text']"  # 使用x-path 获取被修改文件的路径
+        #     ).all():
+        #         logger.info(f"Getting changed file url: {i.inner_text()}")
+        #         url_list.append(i.inner_text())
 
-            page.close()
-            context.close()
-            browser.close()
+        #     page.close()
+        #     context.close()
+        #     browser.close()
 
-        for  item in url_list:  # 将获取的url和前缀进行拼接，带有includes的路径只能跳转到对应的github页面，无法跳转到microsoft.learn的页面
-            if "includes" in item:
-                final_urls.append(self.gitprefix + item)  # 筛选不同的url按照不同规则进行拼接
-                logger.info(f"Final url(includes detected): {self.gitprefix + item}")
-            else:
-                temp_item = item.replace("articles/", "").replace(".md", "")
-                final_urls.append(self.mslearnprefix + temp_item)
-                logger.info(f"Final url: {self.mslearnprefix + temp_item}")
+        # for  item in url_list:  # 将获取的url和前缀进行拼接，带有includes的路径只能跳转到对应的github页面，无法跳转到microsoft.learn的页面
+        #     if "includes" in item:
+        #         final_urls.append(self.gitprefix + item)  # 筛选不同的url按照不同规则进行拼接
+        #         logger.info(f"Final url(includes detected): {self.gitprefix + item}")
+        #     else:
+        #         temp_item = item.replace("articles/", "").replace(".md", "")
+        #         final_urls.append(self.mslearnprefix + temp_item)
+        #         logger.info(f"Final url: {self.mslearnprefix + temp_item}")
 
         keys = ["commits", "urls"]
         values = [patch_data, final_urls]
@@ -273,15 +270,20 @@ Reply in Chinese.
             messages=messages,
         )
         gpt_summary_response_ = response["choices"][0]["message"]["content"]
-
+        prompt_tokens = response["usage"]["prompt_tokens"]
+        completion_tokens = response["usage"]["completion_tokens"]
+        total_tokens = response["usage"]["total_tokens"]
         
         logger.info(f"GPT_Summary Response:  {gpt_summary_response_}")
+        logger.warning(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
+        logger.warning(f"GPT_Summary Completion tokens:  {completion_tokens}")
+        logger.warning(f"GPT_Summary Total tokens:  {total_tokens}")
 
         return gpt_summary_response_
 
     def gpt_title(self, input_):  # 调用GPT生成标题
 
-        system_prompt ="give me a Chinese title to summarize the input. Don't mention user's name in the title.",
+        system_prompt ="Give me a Chinese title to summarize the input. Don't mention user's name in the title.",
 
 #         system_prompt = """
 # User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.
@@ -296,13 +298,22 @@ Reply in Chinese.
             },
             {"role": "user", "content": str(input_)},
         ]
+
+        logger.info(f"GPT_Title Request body: {messages}")
+
         response = openai.ChatCompletion.create(
             engine=deployment_name,  # engine = "deployment_name".
             messages=messages,
         )
         gpt_title_response = response["choices"][0]["message"]["content"]
+        prompt_tokens = response["usage"]["prompt_tokens"]
+        completion_tokens = response["usage"]["completion_tokens"]
+        total_tokens = response["usage"]["total_tokens"]
 
-        logger.info(f"GPT_Title Request body: {messages}")
+        logger.warning(f"GPT_Title Prompt tokens:  {prompt_tokens}")
+        logger.warning(f"GPT_Title Completion tokens:  {completion_tokens}")
+        logger.warning(f"GPT_Title Total tokens:  {total_tokens}")
+
         logger.info(f"GPT_Title Response:  {gpt_title_response}")
 
         return gpt_title_response
@@ -315,7 +326,10 @@ if __name__ == "__main__":
         selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_main_url)
         git_spyder.process_each_commit(selected_commits)
 
-        git_spyder.write_time(latest_crawl_time)
+        if latest_crawl_time != git_spyder.starttime:
+            git_spyder.write_time(latest_crawl_time)
+        
+        # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
         logger.warning(f"Waiting for {git_spyder.schedule} seconds")
         time.sleep(git_spyder.schedule)
