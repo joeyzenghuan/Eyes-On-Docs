@@ -34,7 +34,7 @@ class Spyder:
         self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  # 爬虫起始网页，从openai的commits中开始爬取操作
 
         self.starttime = datetime.datetime.strptime(
-            "2023-10-31T16:00:50Z", "%Y-%m-%dT%H:%M:%SZ"  # 测试使用的时间，非测试时间请注释掉
+            "2023-11-01T3:30:50Z", "%Y-%m-%dT%H:%M:%SZ"  # 测试使用的时间，非测试时间请注释掉
         )
 
         self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
@@ -264,11 +264,19 @@ Reply in Chinese.
         return gpt_summary_response_
 
     def gpt_title(self, input_):  # 调用GPT生成标题
+
+        system_prompt =""" give me a Chinese title to summarize the input. Don't mention user's name in the title.""",
+
+#         system_prompt = """
+# User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.
+# If the content is about GPT model update, please add [!!Model Update!!] at the beginning of the title.
+# If the content is about code change, please add [!!Code Change!!] at the beginning of the title.
+# Don't mention user's name in the title.
+# Reply in Chinese."""
         messages = [
             {
                 "role": "system",
-                "content": """ give me a Chinese title to summarize the input. Don't mention user's name in the title.
-                """,
+                "content": system_prompt,
             },
             {"role": "user", "content": str(input_)},
         ]
