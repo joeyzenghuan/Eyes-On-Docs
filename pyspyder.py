@@ -36,7 +36,7 @@ class Spyder:
         self.schedule = 3600
 
         self.starttime = self.read_time()
-
+        logger.info(f"Only get changes after the time point: {self.starttime}")
 
         self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
@@ -50,11 +50,14 @@ class Spyder:
 
         # *****正式使用请取消注释*****
 
-        logger.info(f"Only get changes after the time point: {self.starttime}")
+        
+
     def write_time(self,update_time):
         with open('last_crawl_time.txt','w') as f:
             f.write(str(update_time))
         f.close()
+        logger.info(f"Update time config file: {update_time}")
+
     def read_time(self):
         with open('last_crawl_time.txt') as f:
             time_in_file = datetime.datetime.strptime(
@@ -107,12 +110,14 @@ class Spyder:
         for key in commits_dic_time_url.keys():
             if key > self.starttime:
                 selected_commits[key] = commits_dic_time_url[key]
-        self.write_time(str(max(commits_dic_time_url.keys())))
+
+        # self.write_time(str(max(commits_dic_time_url.keys())))
+        latest_crawl_time = str(max(selected_commits.keys()))
 
         selected_commits_length = len(selected_commits)
         logger.info(f"{selected_commits_length} selected commits: {selected_commits}")
 
-        return selected_commits  # 返回筛选完的时间以及对应url
+        return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
 
      # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
     def get_change_from_each_url(
@@ -307,6 +312,10 @@ if __name__ == "__main__":
     while True:
         git_spyder = Spyder()
         all_commits_from_main_url = git_spyder.get_all_commits()
-        selected_commits = git_spyder.select_latest_commits(all_commits_from_main_url)
+        selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_main_url)
         git_spyder.process_each_commit(selected_commits)
+
+        git_spyder.write_time(latest_crawl_time)
+
+        logger.warning(f"Waiting for {git_spyder.schedule} seconds")
         time.sleep(git_spyder.schedule)
