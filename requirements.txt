@@ -1,9 +1,9 @@
 beautifulsoup4==4.12.2
 loguru==0.7.2
 openai==0.28.1
-playwright==1.39.0
-pymsteams==0.2.2
-PyQt5==5.15.10
-PyQt5_sip==12.13.0
+# playwright==1.39.0
+# pymsteams==0.2.2
+# PyQt5==5.15.10
+# PyQt5_sip==12.13.0
 python-dotenv==1.0.0
 Requests==2.31.0
