@@ -74,7 +74,7 @@ class Spyder:
 
         precise_time_list = []
         commits_url_list = []
-
+        commits_url_html = []
         # 每天的所有commits集合 <div class="TimelineItem-body">
         commits_per_day = soup.find_all("div", {"class": "TimelineItem-body"})
 
@@ -88,12 +88,13 @@ class Spyder:
                     datetime.datetime.strptime(str(a), "%Y-%m-%dT%H:%M:%SZ")
                 )
             
-            commits_url = item.find_all(  # 获取这一天commits的url
-            "a", {"class": "Link--primary text-bold js-navigation-open markdown-title"})
-            for item in commits_url:
-                if "https://github.com" + item["href"] not in commits_url_list:
-                    commits_url_list.append("https://github.com" + item["href"])  # 保持顺序不变的情况下去除重复项
-        
+            for i in item.find_all(  # 获取当前div中的第一条url
+                "div", {"class": "flex-auto min-width-0 js-details-container Details"}):
+                    commits_url_html.append(i.find('a','Link--primary text-bold js-navigation-open markdown-title').get('href'))
+
+        for item in commits_url_html:
+            commits_url_list.append("https://github.com" + item)
+
         commits_dic_time_url = dict(
             zip(precise_time_list, commits_url_list)
         )  # 将时间和url打包成字典，字典的键是时间，字典的值是url
