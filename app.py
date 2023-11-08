@@ -39,8 +39,9 @@ class Spyder:
 
         # 爬虫起始网页，从openai的commits中开始爬取操作
         self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
-        self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
-        self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
+        
+        # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
+        # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
 
         # *****从当前时间开始执行爬虫，只爬取比当前时间新的commit操作*****
         # local_time = datetime.datetime.now()
