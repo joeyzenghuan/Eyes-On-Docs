@@ -35,8 +35,41 @@ with open('prompts.toml', 'r') as f:
 gpt_summary_prompt = data['gpt_summary_prompt_v1']['prompt']
 gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
 
-print(f"gpt_summary_prompt: {gpt_summary_prompt}")
-print(f"gpt_title_prompt: {gpt_title_prompt}")
+# print(f"gpt_summary_prompt: {gpt_summary_prompt}")
+# print(f"gpt_title_prompt: {gpt_title_prompt}")
+
+
+
+from azure.identity import DefaultAzureCredential  
+from cosmosdbservice import CosmosConversationClient
+
+# CosmosDB Integration Settings
+AZURE_COSMOSDB_DATABASE = "docupdateDB"
+AZURE_COSMOSDB_ACCOUNT = "jz-cosmosdb"
+AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = "docupdateContainer"
+AZURE_COSMOSDB_ACCOUNT_KEY = "vS2v63TT8EpBnF5NtSwtDZA2vyyUSfwcohhlqcGLgFhhAM0zocggezw3vQP7OO9HdzxwpPgJESqRfoLZLxscnw=="
+
+# Initialize a CosmosDB client with AAD auth and containers
+cosmos_conversation_client = None
+if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
+    try :
+        cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
+
+        if not AZURE_COSMOSDB_ACCOUNT_KEY:
+            credential = DefaultAzureCredential()
+        else:
+            credential = AZURE_COSMOSDB_ACCOUNT_KEY
+
+        cosmos_conversation_client = CosmosConversationClient(
+            cosmosdb_endpoint=cosmos_endpoint, 
+            credential=credential, 
+            database_name=AZURE_COSMOSDB_DATABASE,
+            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+        )
+    except Exception as e:
+        # logging.exception("Exception in CosmosDB initialization", e)
+        cosmos_conversation_client = None
+
 
 class Spyder:
     def __init__(self):
@@ -62,6 +95,8 @@ class Spyder:
         # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
         # self.starttime = utc_st
         # *****正式使用请取消注释*****
+
+        self.commit_history = {}
 
 
     def write_time(self,update_time):
@@ -244,6 +279,21 @@ class Spyder:
 
             self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
+            self.commit_history['time_'] = str(time_)
+            self.commit_history['commit_url'] = str(commit_url)
+            self.commit_history['gpt_title_response'] = str(gpt_title_response)
+            self.commit_history['gpt_summary_response'] = str(gpt_summary_response)
+
+            self.commit_history['root_commits_url'] = root_commits_url
+            self.commit_history['language'] = language
+
+            if cosmos_conversation_client.create_commit_history(self.commit_history):
+                logger.warning(f"Create commit history in CosmosDB successfully!")
+            else:
+                logger.error(f"Create commit history in CosmosDB failed!")
+
+            self.commit_history.clear()
+
     def post_teams_message(self, gpt_title_response, time, gpt_summary_response, commit_url):  # 向teams发送信息的函数
         WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
@@ -262,6 +312,9 @@ class Spyder:
         }
         logger.debug(f"Teams Message jsonData: {jsonData}")
         requests.post(WEBHOOK_URL, json=jsonData)
+        logger.info(f"Post message to Teams successfully!")
+
+        self.commit_history["teams_message"] = jsonData
 
     # 调用GPT4 总结删除和增加的内容
     def gpt_summary(self, input_dict):  
@@ -293,6 +346,11 @@ class Spyder:
         logger.warning(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
         logger.warning(f"GPT_Summary Completion tokens:  {completion_tokens}")
         logger.warning(f"GPT_Summary Total tokens:  {total_tokens}")
+
+        self.commit_history["gpt_summary_response"] = gpt_summary_response_
+        self.commit_history["gpt_summary_prompt_tokens"] = prompt_tokens
+        self.commit_history["gpt_summary_completion_tokens"] = completion_tokens
+        self.commit_history["gpt_summary_total_tokens"] = total_tokens
 
         return gpt_summary_response_
 
@@ -332,6 +390,11 @@ class Spyder:
         logger.warning(f"GPT_Title Total tokens:  {total_tokens}")
 
         logger.info(f"GPT_Title Response:  {gpt_title_response}")
+
+        self.commit_history["gpt_title_response"] = gpt_title_response
+        self.commit_history["gpt_title_prompt_tokens"] = prompt_tokens
+        self.commit_history["gpt_title_completion_tokens"] = completion_tokens
+        self.commit_history["gpt_title_total_tokens"] = total_tokens
 
         return gpt_title_response
 
