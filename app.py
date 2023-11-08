@@ -133,6 +133,8 @@ class Spyder:
             if key > self.starttime:
                 selected_commits[key] = commits_dic_time_url[key]
 
+        # 按时间排序
+        selected_commits = dict(sorted(selected_commits.items(), key=lambda x: x[0]))
         # self.write_time(str(max(commits_dic_time_url.keys())))
 
         selected_commits_length = len(selected_commits)
@@ -246,8 +248,8 @@ class Spyder:
         jsonData = {  # 向teams 发送的message必须是json格式
             "@type": "MessageCard",
             "themeColor": "0076D7",
-            "title": str(gpt_title_response) + str(time),
-            "text": gpt_summary_response,
+            "title": str(gpt_title_response),
+            "text": str(time) + "\n\n" + gpt_summary_response,
             "potentialAction": [
                 {
                     "@type": "OpenUri",
