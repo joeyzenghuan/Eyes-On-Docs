@@ -1,4 +1,4 @@
-azure_storage==0.37.0
+# azure_storage==0.37.0
 beautifulsoup4==4.12.2
 loguru==0.7.2
 openai==0.28.1
