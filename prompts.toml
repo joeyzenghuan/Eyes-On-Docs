@@ -1,0 +1,20 @@
+[gpt_summary_prompt_v1]
+prompt = """
+Analyze the contents from a git commit patch data,and summarize the contents of the commit.
+If the commit involves more than 1 file, please summarize the contents of each file separately.
+Output format:
+<path of 1st file>\n
+<summary of 1st file> 
+<path of 2nd file>\n
+<summary of 2nd file>
+Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
+If the path is end with ".md", remove ".md" from the path.
+For example:
+For original path "articles/abc/def/ghi.md", the output should be:
+https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
+"""
+
+[gpt_title_prompt_v1]
+prompt = """
+Give me a title to summarize the input. Don't mention user's name in the title.
+"""

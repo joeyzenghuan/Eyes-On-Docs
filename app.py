@@ -25,6 +25,18 @@ openai.api_type = "azure"
 openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
+root_commits_url = os.getenv("ROOT_COMMITS_URL")
+language = os.getenv("LANGUAGE")
+
+import toml
+with open('prompts.toml', 'r') as f:
+    data = toml.load(f)
+
+gpt_summary_prompt = data['gpt_summary_prompt_v1']['prompt']
+gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
+
+print(f"gpt_summary_prompt: {gpt_summary_prompt}")
+print(f"gpt_title_prompt: {gpt_title_prompt}")
 
 class Spyder:
     def __init__(self):
@@ -38,7 +50,8 @@ class Spyder:
         logger.info(f"Only get changes after the time point: {self.starttime}")
 
         # 爬虫起始网页，从openai的commits中开始爬取操作
-        self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
+        # self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
+        self.main_url = root_commits_url
         
         # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
@@ -58,10 +71,19 @@ class Spyder:
         logger.warning(f"Update time config file: {update_time}")
 
     def read_time(self):
-        with open('last_crawl_time.txt') as f:
-            time_in_file = datetime.datetime.strptime(
-           f.readline(), "%Y-%m-%d %H:%M:%S"  # 测试使用的时间，非测试时间请注释掉
-        )
+        try:
+            with open('last_crawl_time.txt') as f:
+                time_in_file = datetime.datetime.strptime(
+                    f.readline(), "%Y-%m-%d %H:%M:%S"
+                )
+        except Exception as e:
+            logger.error(f"Error reading time from file: {e}")
+            # time_in_file = datetime.datetime.now()
+
+            local_time = datetime.datetime.now()
+            time_struct = time.mktime(local_time.timetuple())
+            utc_st = datetime.datetime.utcfromtimestamp(time_struct)
+            time_in_file = utc_st
         return time_in_file
     
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
@@ -101,7 +123,8 @@ class Spyder:
         )  # 将时间和url打包成字典，字典的键是时间，字典的值是url
         return commits_dic_time_url
 
-    def select_latest_commits(self,commits_dic_time_url):  # 将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时跟新最新时间。
+    # 将每个时间与当前记录的最新时间对比，选出比当前最新时间还要大的时间，同时更新最新时间。
+    def select_latest_commits(self,commits_dic_time_url):  
         # commits_dic_time_url = self.get_all_commits()
 
         selected_commits = {}
@@ -124,7 +147,7 @@ class Spyder:
 
         return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
 
-     # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
+    # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
     def get_change_from_each_url(
         self, time, commit_url
     ): 
@@ -157,7 +180,11 @@ class Spyder:
         else:
             patch_data = temp_data
 
-        # with sync_playwright() as p:  # playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全
+
+        #（暂不启用）
+        # playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全的情况
+
+        # with sync_playwright() as p:  
         #     browser = p.chromium.launch(headless=True)
         #     context = browser.new_context(
         #         extra_http_headers=self.headers,
@@ -232,7 +259,8 @@ class Spyder:
         logger.debug(f"Teams Message jsonData: {jsonData}")
         requests.post(WEBHOOK_URL, json=jsonData)
 
-    def gpt_summary(self, input_dict):  # 调用GPT4 总结删除和增加的内容
+    # 调用GPT4 总结删除和增加的内容
+    def gpt_summary(self, input_dict):  
         commit_patch_data = input_dict.get("commits")
 
 #         system_message = """
@@ -241,22 +269,24 @@ class Spyder:
 # Display URLs by row.
 # Reply in Chinese.
 #                 """
-        system_message = """
-Analyze the contents from a git commit patch data,and summarize the contents of the commit.
-If the commit involves more than 1 file, please summarize the contents of each file separately.
-Output format:
-<path of 1st file>
-<summary of 1st file> 
-<path of 2nd file>
-<summary of 2nd file>
-Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
-If the path is end with ".md", remove ".md" from the path.
-For example:
-For original path "articles/abc/def/ghi.md", the output should be:
-https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
+#         system_message = """
+# Analyze the contents from a git commit patch data,and summarize the contents of the commit.
+# If the commit involves more than 1 file, please summarize the contents of each file separately.
+# Output format:
+# <path of 1st file>
+# <summary of 1st file> 
+# <path of 2nd file>
+# <summary of 2nd file>
+# Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
+# If the path is end with ".md", remove ".md" from the path.
+# For example:
+# For original path "articles/abc/def/ghi.md", the output should be:
+# https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
 
-Reply in Chinese.
-                """
+# Reply in Chinese.
+#                 """
+        system_message = f"{gpt_summary_prompt} Reply in {language}."
+
         messages = [
             {
                 "role": "system",
@@ -270,6 +300,7 @@ Reply in Chinese.
         response = openai.ChatCompletion.create(
             engine=deployment_name,  # engine = "deployment_name".
             messages=messages,
+            temperature=0,
         )
         gpt_summary_response_ = response["choices"][0]["message"]["content"]
         prompt_tokens = response["usage"]["prompt_tokens"]
@@ -285,7 +316,8 @@ Reply in Chinese.
 
     def gpt_title(self, input_):  # 调用GPT生成标题
 
-        system_prompt ="Give me a Chinese title to summarize the input. Don't mention user's name in the title.",
+        # system_prompt ="Give me a Chinese title to summarize the input. Don't mention user's name in the title.",
+        system_prompt = f"{gpt_title_prompt} Reply in {language}."
 
 #         system_prompt = """
 # User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.
@@ -306,6 +338,7 @@ Reply in Chinese.
         response = openai.ChatCompletion.create(
             engine=deployment_name,  # engine = "deployment_name".
             messages=messages,
+            temperature=0,
         )
         gpt_title_response = response["choices"][0]["message"]["content"]
         prompt_tokens = response["usage"]["prompt_tokens"]
