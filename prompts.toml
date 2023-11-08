@@ -16,5 +16,5 @@ https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This 
 
 [gpt_title_prompt_v1]
 prompt = """
-Give me a title to summarize the input. Don't mention user's name in the title.
+Give me a title to summarize the input.
 """

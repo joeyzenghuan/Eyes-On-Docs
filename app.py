@@ -265,28 +265,6 @@ class Spyder:
     def gpt_summary(self, input_dict):  
         commit_patch_data = input_dict.get("commits")
 
-#         system_message = """
-# Analyze the contents of from a git commit patch data,and summarize the contents of the commit.
-# The patch contents of this commit is user's input['commits']`+'put the users'input['urls'] at the end of your reply.
-# Display URLs by row.
-# Reply in Chinese.
-#                 """
-#         system_message = """
-# Analyze the contents from a git commit patch data,and summarize the contents of the commit.
-# If the commit involves more than 1 file, please summarize the contents of each file separately.
-# Output format:
-# <path of 1st file>
-# <summary of 1st file> 
-# <path of 2nd file>
-# <summary of 2nd file>
-# Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
-# If the path is end with ".md", remove ".md" from the path.
-# For example:
-# For original path "articles/abc/def/ghi.md", the output should be:
-# https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
-
-# Reply in Chinese.
-#                 """
         system_message = f"{gpt_summary_prompt} Reply in {language}."
 
         messages = [
