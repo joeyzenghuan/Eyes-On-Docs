@@ -84,6 +84,8 @@ class Spyder:
             time_struct = time.mktime(local_time.timetuple())
             utc_st = datetime.datetime.utcfromtimestamp(time_struct)
             time_in_file = utc_st
+            self.write_time(time_in_file)
+            logger.warning(f"Use current time as start time, and update last_crawl_time: {time_in_file}")
         return time_in_file
     
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
