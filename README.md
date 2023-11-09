@@ -1,16 +1,8 @@
-
-
-# 中文
-
-##原理：
-- 以Azure OpenAI为例，文档的每次更新记录都会记录在 https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai 这个页面。
-- 爬取每一个commit的更新内容
-- 提交给GPT4进行总结，生成标题
-- 通过Teams Channel Webhook将GPT4的总结推送到Teams Channel
-
 ##用户界面
 用户可以在Teams Channel中看到以下推送。
 ![Message UI](/images/message_ui.jpg)
+<img src="/images/message_ui.jpg" alt="Example Image" width="50%" height="50%">
+<img src="/images/commit_page.jpg" alt="image" width="300" height="auto">
 - 最上方是GPT4给出的标题
 - 第二行是更新的UTC时间
 - 主体内容是GPT4对这次更新涉及到的不同文档的总结。比如例子中涉及了三个文档的更新。
@@ -27,6 +19,13 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
 ![preview_button](/images/preview_button.jpg)
 ![preview_ui](/images/preview_ui.jpg)
+
+##原理：
+- 以Azure OpenAI为例，文档的每次更新记录都会记录在 https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai 这个页面。
+- 爬取每一个commit的更新内容
+- 提交给GPT4进行总结，生成标题
+- 通过Teams Channel Webhook将GPT4的总结推送到Teams Channel
+
 
 
 准备**
