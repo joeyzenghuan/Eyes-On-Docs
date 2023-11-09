@@ -7,7 +7,7 @@ Users can see the following notifications in Teams Channel.
 - Clicking on the link takes you to the official documentation.
 - The "Go to commit page" button at the bottom takes you to the commit page on GitHub.
 
-<img src="/GCR-AI-IoT-Team-Operation/images/message_ui.jpg" width="150" ></img>
+<img src="/GCR-AI-IoT-Team-Operation/_git/DocUpdateNotificationBot?path=/images/message_ui.jpg&version=GBmaster" width="150" ></img>
 
 
 # Commit Page
