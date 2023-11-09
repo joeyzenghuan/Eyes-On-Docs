@@ -14,13 +14,13 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 You can see that this update involves modifications to three files, which is consistent with the summary provided by GPT4.
 The left side shows the version before the update, and the right side shows the version after the update.
-![Commit Page](/images/commit_page.jpg =700x)
+![Commit Page](/images/commit_page.jpg =800x)
 
 By clicking on the Preview button in the upper right corner, you can see the updated content more intuitively.
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
 
-![preview_button](/images/preview_button.jpg =700x)
-![preview_ui](/images/preview_ui.jpg=700x)
+![preview_button](/images/preview_button.jpg =800x)
+![preview_ui](/images/preview_ui.jpg =800x)
 
 # Implementation :
 - Taking Azure OpenAI Documents as an example, each update to the documentation is recorded on this page: https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai.
@@ -39,7 +39,7 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 # 用户界面
 用户可以在Teams Channel中看到以下推送。
-![Message UI](/images/message_ui_Chinese.jpg)
+![Message UI](/images/message_ui_Chinese.jpg =800x)
 - 最上方是GPT4给出的标题
 - 第二行是更新的UTC时间
 - 主体内容是GPT4对这次更新涉及到的不同文档的总结。比如例子中涉及了三个文档的更新。
@@ -51,13 +51,13 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 可以看到这次更新涉及了三个文件的修改，和GPT4给出的总结一致。
 左边是更新前的版本，右边是更新后的版本。
-![Commit Page](/images/commit_page.jpg)
+![Commit Page](/images/commit_page.jpg =800x)
 
 通过点击右上角的Preview按钮，可以更直观地看到更新的内容。
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
 
-![preview_button](/images/preview_button.jpg)
-![preview_ui](/images/preview_ui.jpg)
+![preview_button](/images/preview_button.jpg =800x)
+![preview_ui](/images/preview_ui.jpg =800x)
 
 # 原理：
 - 以Azure OpenAI为例，文档的每次更新记录都会记录在 https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai 这个页面。
