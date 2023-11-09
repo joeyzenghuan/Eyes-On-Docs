@@ -1,6 +1,6 @@
 ##用户界面
 用户可以在Teams Channel中看到以下推送。
-![Message UI](/images/message_ui.jpg)
+![Message UI](/images/message_ui_Chinese.jpg)
 - 最上方是GPT4给出的标题
 - 第二行是更新的UTC时间
 - 主体内容是GPT4对这次更新涉及到的不同文档的总结。比如例子中涉及了三个文档的更新。
