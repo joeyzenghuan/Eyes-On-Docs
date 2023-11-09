@@ -7,6 +7,9 @@ Users can see the following notifications in Teams Channel.
 - Clicking on the link takes you to the official documentation.
 - The "Go to commit page" button at the bottom takes you to the commit page on GitHub.
 
+<img src="https://img-blog.csdnimg.cn/20200430213015405.jpg#pic_center" width="150" ></img>
+
+
 # Commit Page
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2 
 
