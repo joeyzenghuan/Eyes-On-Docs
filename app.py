@@ -25,8 +25,8 @@ openai.api_type = "azure"
 openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
-root_commits_url = os.getenv("ROOT_COMMITS_URL")
-language = os.getenv("LANGUAGE")
+ROOT_COMMITS_URL = os.getenv("ROOT_COMMITS_URL")
+LANGUAGE = os.getenv("LANGUAGE")
 
 import toml
 with open('prompts.toml', 'r') as f:
@@ -39,19 +39,20 @@ gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
 # print(f"gpt_title_prompt: {gpt_title_prompt}")
 
 
-
 from azure.identity import DefaultAzureCredential  
 from cosmosdbservice import CosmosConversationClient
 
 # CosmosDB Integration Settings
-AZURE_COSMOSDB_DATABASE = "docupdateDB"
-AZURE_COSMOSDB_ACCOUNT = "jz-cosmosdb"
-AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = "docupdateContainer"
-AZURE_COSMOSDB_ACCOUNT_KEY = "vS2v63TT8EpBnF5NtSwtDZA2vyyUSfwcohhlqcGLgFhhAM0zocggezw3vQP7OO9HdzxwpPgJESqRfoLZLxscnw=="
+AZURE_COSMOSDB_DATABASE = os.getenv("AZURE_COSMOSDB_DATABASE")
+AZURE_COSMOSDB_ACCOUNT = os.getenv("AZURE_COSMOSDB_ACCOUNT")
+AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.getenv("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
+AZURE_COSMOSDB_ACCOUNT_KEY = os.getenv("AZURE_COSMOSDB_ACCOUNT_KEY")
+save_commit_history_to_cosmosdb = False
 
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
+    save_commit_history_to_cosmosdb = True
     try :
         cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
@@ -67,7 +68,8 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
             container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
         )
     except Exception as e:
-        # logging.exception("Exception in CosmosDB initialization", e)
+        logger.exception("Exception in CosmosDB initialization", e)
+        save_commit_history_to_cosmosdb = False
         cosmos_conversation_client = None
 
 
@@ -84,7 +86,7 @@ class Spyder:
 
         # 爬虫起始网页，从openai的commits中开始爬取操作
         # self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
-        self.main_url = root_commits_url
+        self.main_url = ROOT_COMMITS_URL
         
         # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
@@ -96,6 +98,7 @@ class Spyder:
         # self.starttime = utc_st
         # *****正式使用请取消注释*****
 
+        #记录每次爬取的commit的时间，url，gpt生成的标题和总结等信息
         self.commit_history = {}
 
 
@@ -279,18 +282,19 @@ class Spyder:
 
             self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
-            self.commit_history['time_'] = str(time_)
+            self.commit_history['commit_time'] = str(time_)
             self.commit_history['commit_url'] = str(commit_url)
             self.commit_history['gpt_title_response'] = str(gpt_title_response)
             self.commit_history['gpt_summary_response'] = str(gpt_summary_response)
 
-            self.commit_history['root_commits_url'] = root_commits_url
-            self.commit_history['language'] = language
+            self.commit_history['ROOT_COMMITS_URL'] = ROOT_COMMITS_URL
+            self.commit_history['LANGUAGE'] = LANGUAGE
 
-            if cosmos_conversation_client.create_commit_history(self.commit_history):
-                logger.warning(f"Create commit history in CosmosDB successfully!")
-            else:
-                logger.error(f"Create commit history in CosmosDB failed!")
+            if save_commit_history_to_cosmosdb:
+                if cosmos_conversation_client.create_commit_history(self.commit_history):
+                    logger.warning(f"Create commit history in CosmosDB successfully!")
+                else:
+                    logger.error(f"Create commit history in CosmosDB failed!")
 
             self.commit_history.clear()
 
@@ -314,13 +318,14 @@ class Spyder:
         requests.post(WEBHOOK_URL, json=jsonData)
         logger.info(f"Post message to Teams successfully!")
 
-        self.commit_history["teams_message"] = jsonData
+        self.commit_history["teams_message_jsondata"] = jsonData
+        self.commit_history["teams_message_webhook_url"] = WEBHOOK_URL
 
     # 调用GPT4 总结删除和增加的内容
     def gpt_summary(self, input_dict):  
         commit_patch_data = input_dict.get("commits")
 
-        system_message = f"{gpt_summary_prompt} Reply in {language}."
+        system_message = f"{gpt_summary_prompt} Reply in {LANGUAGE}."
 
         messages = [
             {
@@ -357,7 +362,7 @@ class Spyder:
     def gpt_title(self, input_):  # 调用GPT生成标题
 
         # system_prompt ="Give me a Chinese title to summarize the input. Don't mention user's name in the title.",
-        system_prompt = f"{gpt_title_prompt} Reply in {language}."
+        system_prompt = f"{gpt_title_prompt} Reply in {LANGUAGE}."
 
 #         system_prompt = """
 # User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.

@@ -84,6 +84,7 @@ class CosmosConversationClient():
     def create_commit_history(self, history_dict: dict):
         
         history_dict['id'] = str(uuid.uuid4())
+        history_dict['log_time'] = datetime.utcnow().isoformat()
         resp = self.container_client.upsert_item(history_dict)  
         if resp:
             # ## update the parent conversations's updatedAt field with the current message's createdAt datetime value
