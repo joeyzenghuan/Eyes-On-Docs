@@ -9,12 +9,14 @@
 
 ##Commit Page
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2 
+
 可以看到这次更新涉及了三个文件的修改，和GPT4给出的总结一致。
 左边是更新前的版本，右边是更新后的版本。
 ![Commit Page](/images/commit_page.jpg)
 
 通过点击右上角的Preview按钮，可以更直观地看到更新的内容。
 https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
+
 ![preview_button](/images/preview_button.jpg)
 ![preview_ui](/images/preview_ui.jpg)
 
