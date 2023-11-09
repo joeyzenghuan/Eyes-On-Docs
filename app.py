@@ -96,7 +96,6 @@ class Spyder:
         # time_struct = time.mktime(local_time.timetuple())
         # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
         # self.starttime = utc_st
-        # *****正式使用请取消注释*****
 
         #记录每次爬取的commit的时间，url，gpt生成的标题和总结等信息
         self.commit_history = {}
@@ -222,40 +221,6 @@ class Spyder:
         else:
             patch_data = temp_data
 
-
-        #（暂不启用）
-        # playwright 框架等待网页加载并爬取，这样可以避免爬取内容不全的情况
-
-        # with sync_playwright() as p:  
-        #     browser = p.chromium.launch(headless=True)
-        #     context = browser.new_context(
-        #         extra_http_headers=self.headers,
-        #         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.76",
-        #     )
-
-        #     page = context.new_page()
-
-        #     page.goto(commit_url)
-        #     page.wait_for_load_state()  # 等待网页加载完成
-
-        #     for i in page.locator(
-        #         "//span[@class='Truncate']//a[@class='Link--primary Truncate-text']"  # 使用x-path 获取被修改文件的路径
-        #     ).all():
-        #         logger.info(f"Getting changed file url: {i.inner_text()}")
-        #         url_list.append(i.inner_text())
-
-        #     page.close()
-        #     context.close()
-        #     browser.close()
-
-        # for  item in url_list:  # 将获取的url和前缀进行拼接，带有includes的路径只能跳转到对应的github页面，无法跳转到microsoft.learn的页面
-        #     if "includes" in item:
-        #         final_urls.append(self.gitprefix + item)  # 筛选不同的url按照不同规则进行拼接
-        #         logger.info(f"Final url(includes detected): {self.gitprefix + item}")
-        #     else:
-        #         temp_item = item.replace("articles/", "").replace(".md", "")
-        #         final_urls.append(self.mslearnprefix + temp_item)
-        #         logger.info(f"Final url: {self.mslearnprefix + temp_item}")
 
         keys = ["commits", "urls"]
         values = [patch_data, final_urls]
