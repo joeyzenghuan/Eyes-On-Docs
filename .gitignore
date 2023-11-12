@@ -3,6 +3,7 @@
 .env
 logs
 test.json
+last_crawl_time.txt
 # static
 # .azure/
 # __pycache__/
