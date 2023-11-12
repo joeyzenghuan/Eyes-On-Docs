@@ -4,6 +4,7 @@
 logs
 test.json
 last_crawl_time.txt
+test*
 # static
 # .azure/
 # __pycache__/

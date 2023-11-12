@@ -25,8 +25,8 @@ openai.api_type = "azure"
 openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
-ROOT_COMMITS_URL = os.getenv("ROOT_COMMITS_URL")
-LANGUAGE = os.getenv("LANGUAGE")
+# ROOT_COMMITS_URL = os.getenv("ROOT_COMMITS_URL")
+# LANGUAGE = os.getenv("LANGUAGE")
 
 import toml
 with open('prompts.toml', 'r') as f:
@@ -74,22 +74,19 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
 
 
 class Spyder:
-    def __init__(self):
+    def __init__(self, topic, root_commits_url, language, teams_webhook_url):
         self.personal_token = os.getenv("PERSONAL_TOKEN")
-        print(self.personal_token)
+        # print(self.personal_token)
         self.headers = {"Authorization": "token " + self.personal_token}
+
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.schedule = 3600
 
         self.starttime = self.read_time()
-        logger.info(f"Only get changes after the time point: {self.starttime}")
 
-        # 爬虫起始网页，从openai的commits中开始爬取操作
-        # self.main_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
-        self.main_url = ROOT_COMMITS_URL
-        
-        # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
-        # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
+        time_now = datetime.datetime.now()
+        time_now_struct = time.mktime(time_now.timetuple())
+        self.last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
 
         # *****从当前时间开始执行爬虫，只爬取比当前时间新的commit操作*****
         # local_time = datetime.datetime.now()
@@ -97,15 +94,30 @@ class Spyder:
         # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
         # self.starttime = utc_st
 
+        logger.info(f"Only get changes after the time point: {self.starttime}")
+
+        # 爬虫起始网页，从openai的commits中开始爬取操作
+        # self.root_commits_url = "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/"  
+        self.root_commits_url = root_commits_url
+        self.topic = topic
+        self.language = language
+        self.teams_webhook_url = teams_webhook_url
+        
+        # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
+        # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
+
         #记录每次爬取的commit的时间，url，gpt生成的标题和总结等信息
         self.commit_history = {}
 
 
-    def write_time(self,update_time):
-        with open('last_crawl_time.txt','w') as f:
-            f.write(str(update_time))
-        f.close()
-        logger.warning(f"Update time config file: {update_time}")
+    def write_time(self, update_time):
+        try:
+            with open('last_crawl_time.txt', 'w') as f:
+                f.write(str(update_time))
+            f.close()
+            logger.warning(f"Update time config file: {update_time}")
+        except Exception as e:
+            logger.error(f"Error writing time: {e}")
 
     def read_time(self):
         try:
@@ -127,9 +139,9 @@ class Spyder:
     
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
     def get_all_commits(self):  
-        logger.info(f"Commit Root page:  {self.main_url} ")
+        logger.info(f"Commit Root page:  {self.root_commits_url} ")
 
-        response = requests.get(self.main_url, headers=self.headers).text
+        response = requests.get(self.root_commits_url, headers=self.headers).text
         # logger.debug(f"Commit Page Raw Text: {response}")
 
         soup = BeautifulSoup(response, "html.parser")
@@ -177,16 +189,17 @@ class Spyder:
         # self.write_time(str(max(commits_dic_time_url.keys())))
 
         selected_commits_length = len(selected_commits)
-        logger.info(f"{selected_commits_length} selected commits: {selected_commits}")
+        logger.warning(f"{selected_commits_length} selected commits: {selected_commits}")
 
-        if selected_commits_length > 0:
-            latest_crawl_time = str(max(selected_commits.keys()))
-            logger.warning(f"Max new commits time: {latest_crawl_time}")
-        else:
-            latest_crawl_time = self.starttime
-            logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
+        # if selected_commits_length > 0:
+        #     latest_crawl_time = str(max(selected_commits.keys()))
+        #     logger.warning(f"Max new commits time: {latest_crawl_time}")
+        # else:
+        #     latest_crawl_time = self.starttime
+        #     logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
 
-        return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
+        # return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
+        return selected_commits  # 返回筛选完的时间以及对应url
 
     # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
     def get_change_from_each_url(
@@ -252,8 +265,9 @@ class Spyder:
             self.commit_history['gpt_title_response'] = str(gpt_title_response)
             self.commit_history['gpt_summary_response'] = str(gpt_summary_response)
 
-            self.commit_history['ROOT_COMMITS_URL'] = ROOT_COMMITS_URL
-            self.commit_history['LANGUAGE'] = LANGUAGE
+            self.commit_history['topic'] = self.topic
+            self.commit_history['root_commits_url'] = self.root_commits_url
+            self.commit_history['language'] = self.language
 
             if save_commit_history_to_cosmosdb:
                 if cosmos_conversation_client.create_commit_history(self.commit_history):
@@ -264,7 +278,7 @@ class Spyder:
             self.commit_history.clear()
 
     def post_teams_message(self, gpt_title_response, time, gpt_summary_response, commit_url):  # 向teams发送信息的函数
-        WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+        # WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
         jsonData = {  # 向teams 发送的message必须是json格式
             "@type": "MessageCard",
@@ -280,17 +294,17 @@ class Spyder:
             ],
         }
         logger.debug(f"Teams Message jsonData: {jsonData}")
-        requests.post(WEBHOOK_URL, json=jsonData)
+        requests.post(self.teams_webhook_url, json=jsonData)
         logger.info(f"Post message to Teams successfully!")
 
         self.commit_history["teams_message_jsondata"] = jsonData
-        self.commit_history["teams_message_webhook_url"] = WEBHOOK_URL
+        self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
 
     # 调用GPT4 总结删除和增加的内容
     def gpt_summary(self, input_dict):  
         commit_patch_data = input_dict.get("commits")
 
-        system_message = f"{gpt_summary_prompt} Reply in {LANGUAGE}."
+        system_message = f"{gpt_summary_prompt} Reply in {self.language}."
 
         messages = [
             {
@@ -327,7 +341,7 @@ class Spyder:
     def gpt_title(self, input_):  # 调用GPT生成标题
 
         # system_prompt ="Give me a Chinese title to summarize the input. Don't mention user's name in the title.",
-        system_prompt = f"{gpt_title_prompt} Reply in {LANGUAGE}."
+        system_prompt = f"{gpt_title_prompt} Reply in {self.language}."
 
 #         system_prompt = """
 # User will provide a summary of the Microsoft Document update change history. Please generate a short title based on user input.
@@ -371,15 +385,40 @@ class Spyder:
         
 if __name__ == "__main__": 
     while True:
-        git_spyder = Spyder()
-        all_commits_from_main_url = git_spyder.get_all_commits()
-        selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_main_url)
-        git_spyder.process_each_commit(selected_commits)
+        time_now = datetime.datetime.now()
+        time_now_struct = time.mktime(time_now.timetuple())
+        last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
 
-        if latest_crawl_time != git_spyder.starttime:
-            git_spyder.write_time(latest_crawl_time)
-        
-        # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
+        with open('target_config.json', 'r') as f:
+            targets = json.load(f)
+            for d in targets:
+                topic = d['topic_name']
+                root_commits_url = d['root_commits_url']
+                language = d['language']
+                teams_webhook_url = d['teams_webhook_url']
+
+                logger.warning(f"Start to process topic: {topic}")
+                logger.info(f"Root commits url: {root_commits_url}")
+                logger.info(f"Language: {language}")
+                logger.info(f"Teams webhook url: {teams_webhook_url}")
+
+                git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url)
+                all_commits_from_root_commits_url = git_spyder.get_all_commits()
+                # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
+                selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
+
+                git_spyder.process_each_commit(selected_commits)
+                logger.warning(f"Finish processing topic: {topic}")
+
+
+                # git_spyder.write_time(latest_crawl_time)
+
+                # if latest_crawl_time != git_spyder.starttime:
+                #     git_spyder.write_time(latest_crawl_time)
+                
+                # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
+
+        git_spyder.write_time(last_crawl_time)
 
         logger.warning(f"Waiting for {git_spyder.schedule} seconds")
         time.sleep(git_spyder.schedule)
