@@ -12,18 +12,20 @@ from bs4 import BeautifulSoup
 # import sys
 # import threading
 import time
-from logs import logger
 
+from logs import logger
+from gpt_reply import *
 
 from dotenv import load_dotenv
 
 load_dotenv()
-openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
-# logger.debug(f"AZURE_OPENAI_KEY: {AZURE_OPENAI_KEY}")
-openai.api_type = "azure"
-openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
-deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+
+# openai.api_key = os.getenv("AZURE_OPENAI_KEY")
+# openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
+# # logger.debug(f"AZURE_OPENAI_KEY: {AZURE_OPENAI_KEY}")
+# openai.api_type = "azure"
+# openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+# deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
 # ROOT_COMMITS_URL = os.getenv("ROOT_COMMITS_URL")
 # LANGUAGE = os.getenv("LANGUAGE")
@@ -316,11 +318,14 @@ class Spyder:
         ]
 
         logger.info(f"GPT_Summary Request body: {messages}")
-        response = openai.ChatCompletion.create(
-            engine=deployment_name,  # engine = "deployment_name".
-            messages=messages,
-            temperature=0,
-        )
+        # response = openai.ChatCompletion.create(
+        #     engine=deployment_name,  # engine = "deployment_name".
+        #     messages=messages,
+        #     temperature=0,
+        # )
+
+        response = get_gpt_response(messages)
+
         gpt_summary_response_ = response["choices"][0]["message"]["content"]
         prompt_tokens = response["usage"]["prompt_tokens"]
         completion_tokens = response["usage"]["completion_tokens"]
@@ -359,11 +364,14 @@ class Spyder:
 
         logger.info(f"GPT_Title Request body: {messages}")
 
-        response = openai.ChatCompletion.create(
-            engine=deployment_name,  # engine = "deployment_name".
-            messages=messages,
-            temperature=0,
-        )
+        # response = openai.ChatCompletion.create(
+        #     engine=deployment_name,  # engine = "deployment_name".
+        #     messages=messages,
+        #     temperature=0,
+        # )
+
+        response = get_gpt_response(messages)
+
         gpt_title_response = response["choices"][0]["message"]["content"]
         prompt_tokens = response["usage"]["prompt_tokens"]
         completion_tokens = response["usage"]["completion_tokens"]
