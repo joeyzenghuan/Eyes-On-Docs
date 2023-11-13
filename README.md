@@ -35,8 +35,9 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 # Running Configuration
 1. pip install -r requirements
-2. Create a .env file according to the example in .env.example.
-3. Modify last_crawl_time.txt.
+2. Create a .env file based on .env.example.
+3. Create last_crawl_time.txt based on last_crawl_time.txt.example.
+4. Create target_config.json based on target_config.json.example.
 
 
 # 中文介绍
@@ -76,6 +77,6 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 # 运行配置
 1. pip install -r requirements
-2. 接着创建.env文件 按照.env.example的示例
-3. 修改last_crawl_time.txt
-
+2. 按照.env.example的示例创建.env文件
+3. 按照last_crawl_time.txt.example的示例创建last_crawl_time.txt
+4. 按照target_config.json.example的示例创建target_config.json文件
