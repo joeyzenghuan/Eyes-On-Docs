@@ -207,7 +207,7 @@ class Spyder:
     def get_change_from_each_url(
         self, time, commit_url
     ): 
-        logger.info(f"Getting changes from url: {commit_url}")
+        logger.warning(f"Getting changes from url: {commit_url}")
 
         response = requests.get(commit_url, headers=self.headers).text
         soup = BeautifulSoup(response, "html.parser")
@@ -331,10 +331,10 @@ class Spyder:
         completion_tokens = response["usage"]["completion_tokens"]
         total_tokens = response["usage"]["total_tokens"]
         
-        logger.info(f"GPT_Summary Response:  {gpt_summary_response_}")
-        logger.warning(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
-        logger.warning(f"GPT_Summary Completion tokens:  {completion_tokens}")
-        logger.warning(f"GPT_Summary Total tokens:  {total_tokens}")
+        logger.warning(f"GPT_Summary Response:\n  {gpt_summary_response_}")
+        logger.info(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
+        logger.info(f"GPT_Summary Completion tokens:  {completion_tokens}")
+        logger.info(f"GPT_Summary Total tokens:  {total_tokens}")
 
         self.commit_history["gpt_summary_response"] = gpt_summary_response_
         self.commit_history["gpt_summary_prompt_tokens"] = prompt_tokens
@@ -377,11 +377,11 @@ class Spyder:
         completion_tokens = response["usage"]["completion_tokens"]
         total_tokens = response["usage"]["total_tokens"]
 
-        logger.warning(f"GPT_Title Prompt tokens:  {prompt_tokens}")
-        logger.warning(f"GPT_Title Completion tokens:  {completion_tokens}")
-        logger.warning(f"GPT_Title Total tokens:  {total_tokens}")
+        logger.info(f"GPT_Title Prompt tokens:  {prompt_tokens}")
+        logger.info(f"GPT_Title Completion tokens:  {completion_tokens}")
+        logger.info(f"GPT_Title Total tokens:  {total_tokens}")
 
-        logger.info(f"GPT_Title Response:  {gpt_title_response}")
+        logger.warning(f"GPT_Title Response:\n {gpt_title_response}")
 
         self.commit_history["gpt_title_response"] = gpt_title_response
         self.commit_history["gpt_title_prompt_tokens"] = prompt_tokens
