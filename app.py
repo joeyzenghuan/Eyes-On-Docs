@@ -124,8 +124,9 @@ class Spyder:
     def read_time(self):
         try:
             with open('last_crawl_time.txt') as f:
+                time_in_file_readline = f.readline().strip()
                 time_in_file = datetime.datetime.strptime(
-                    f.readline(), "%Y-%m-%d %H:%M:%S"
+                    time_in_file_readline, "%Y-%m-%d %H:%M:%S"
                 )
         except Exception as e:
             logger.error(f"Error reading time from file: {e}")
