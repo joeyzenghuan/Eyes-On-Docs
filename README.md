@@ -39,6 +39,9 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 3. Create last_crawl_time.txt based on last_crawl_time.txt.example.
 4. Create target_config.json based on target_config.json.example.
 
+# How to create Teams Channel Webhook
+https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
+
 
 # 中文介绍
 
@@ -80,4 +83,7 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 2. 按照.env.example的示例创建.env文件
 3. 按照last_crawl_time.txt.example的示例创建last_crawl_time.txt
 4. 按照target_config.json.example的示例创建target_config.json文件
+
+# How to create Teams Channel Webhook
+https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
  
