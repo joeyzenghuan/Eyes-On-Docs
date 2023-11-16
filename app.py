@@ -54,7 +54,7 @@ save_commit_history_to_cosmosdb = False
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
-    save_commit_history_to_cosmosdb = True
+    
     try :
         cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
@@ -69,6 +69,10 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
             database_name=AZURE_COSMOSDB_DATABASE,
             container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
         )
+
+        save_commit_history_to_cosmosdb = True
+        logger.info(f"Initialize CosmosDB client successfully!")
+
     except Exception as e:
         logger.exception("Exception in CosmosDB initialization", e)
         save_commit_history_to_cosmosdb = False
@@ -84,12 +88,50 @@ class Spyder:
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.schedule = 7200
 
-        self.starttime = self.read_time()
+        lastest_commit_time_in_cosmosdb = None
+        try:
+            lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(topic, language, root_commits_url, sort_order = 'DESC')
+            # print(lastest_commit_in_cosmosdb)
+
+            if lastest_commit_in_cosmosdb:
+                lastest_commit_time_in_cosmosdb = lastest_commit_in_cosmosdb['commit_time']
+
+                lastest_commit_time_in_cosmosdb = lastest_commit_time_in_cosmosdb.strip()
+                lastest_commit_time_in_cosmosdb = datetime.datetime.strptime(
+                    lastest_commit_time_in_cosmosdb, "%Y-%m-%d %H:%M:%S"
+                )
+        except Exception as e:
+            logger.error(f"Error getting lastest_commit_time_in_cosmosdb: {e}")
+
+
+        time_in_last_crawl_time_txt = self.read_time()
 
         time_now = datetime.datetime.now()
         time_now_struct = time.mktime(time_now.timetuple())
-        self.last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
+        time_now_utc = datetime.datetime.utcfromtimestamp(time_now_struct)
 
+        if lastest_commit_time_in_cosmosdb == None and time_in_last_crawl_time_txt == None:
+            self.write_time(time_now_utc)
+            logger.warning(f"No Commit in cosmosdb! Use current time as start time, and create last_crawl_time.txt: {time_now_utc}")
+            self.starttime = time_now_utc
+        elif lastest_commit_time_in_cosmosdb == None and time_in_last_crawl_time_txt != None:
+            self.starttime = time_in_last_crawl_time_txt
+            logger.warning(f"No Commit in cosmosdb! Use last_crawl_time.txt as start time: {self.starttime}")
+        elif lastest_commit_time_in_cosmosdb != None and time_in_last_crawl_time_txt == None:
+            self.starttime = lastest_commit_time_in_cosmosdb
+            logger.warning(f"Found Commits in cosmosdb! Use lastest_commit_time_in_cosmosdb as start time: {self.starttime}")
+            # self.write_time(lastest_commit_time_in_cosmosdb)
+            # logger.warning(f"Create last_crawl_time.txt: {lastest_commit_time_in_cosmosdb}")
+        elif lastest_commit_time_in_cosmosdb != None and time_in_last_crawl_time_txt != None:
+            if lastest_commit_time_in_cosmosdb > time_in_last_crawl_time_txt:
+                self.starttime = lastest_commit_time_in_cosmosdb
+                logger.warning(f"lastest_commit_time_in_cosmosdb > time_in_last_crawl_time_txt! Use lastest_commit_time_in_cosmosdb as start time: {self.starttime}")
+            else:
+                self.starttime = time_in_last_crawl_time_txt
+                logger.warning(f"lastest_commit_time_in_cosmosdb <= time_in_last_crawl_time_txt! Use time_in_last_crawl_time_txt as start time: {self.starttime}. ")
+                logger.warning("It may skip some commits.")
+
+        
         # *****从当前时间开始执行爬虫，只爬取比当前时间新的commit操作*****
         # local_time = datetime.datetime.now()
         # time_struct = time.mktime(local_time.timetuple())
@@ -117,7 +159,7 @@ class Spyder:
             with open('last_crawl_time.txt', 'w') as f:
                 f.write(str(update_time))
             f.close()
-            logger.warning(f"Update time config file: {update_time}")
+            logger.warning(f"Update last_crawl_time.txt: {update_time}")
         except Exception as e:
             logger.error(f"Error writing time: {e}")
 
@@ -130,14 +172,16 @@ class Spyder:
                 )
         except Exception as e:
             logger.error(f"Error reading time from file: {e}")
-            # time_in_file = datetime.datetime.now()
+            time_in_file = None
 
-            local_time = datetime.datetime.now()
-            time_struct = time.mktime(local_time.timetuple())
-            utc_st = datetime.datetime.utcfromtimestamp(time_struct)
-            time_in_file = utc_st
-            self.write_time(time_in_file)
-            logger.warning(f"Use current time as start time, and update last_crawl_time: {time_in_file}")
+            # # if file doesn't exist, create a file, and use current time as start time
+            # local_time = datetime.datetime.now()
+            # time_struct = time.mktime(local_time.timetuple())
+            # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
+            # time_in_file = utc_st
+            # self.write_time(time_in_file)
+            # logger.warning(f"Use current time as start time, and update last_crawl_time: {time_in_file}")
+
         return time_in_file
     
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
@@ -199,7 +243,8 @@ class Spyder:
             logger.warning(f"Max new commits time: {latest_crawl_time}")
         else:
             latest_crawl_time = self.starttime
-            logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
+            # logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
+            logger.warning(f"No new commits")
 
         return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
         # return selected_commits  # 返回筛选完的时间以及对应url
@@ -287,8 +332,8 @@ class Spyder:
 
             if commit_patch_data == "Error":
                 logger.error(f"Error getting patch data from url: {commit_url}")
-                gpt_summary_response = "[!]Too many changes in one commit. Please check the update via commit page button."
-                gpt_title_response = "Need to check the update in commit page manually."
+                gpt_summary_response = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
+                gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
             else:
                 gpt_summary_response = self.gpt_summary(input_dic)
                 gpt_title_response = self.gpt_title(gpt_summary_response)
@@ -427,9 +472,9 @@ class Spyder:
         
 if __name__ == "__main__": 
     while True:
-        time_now = datetime.datetime.now()
-        time_now_struct = time.mktime(time_now.timetuple())
-        last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
+        # time_now = datetime.datetime.now()
+        # time_now_struct = time.mktime(time_now.timetuple())
+        # last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
 
         with open('target_config.json', 'r') as f:
             targets = json.load(f)
@@ -438,6 +483,8 @@ if __name__ == "__main__":
                 root_commits_url = d['root_commits_url']
                 language = d['language']
                 teams_webhook_url = d['teams_webhook_url']
+
+                
 
                 logger.warning(f"Start to process topic: {topic}")
                 logger.info(f"Root commits url: {root_commits_url}")
@@ -455,8 +502,8 @@ if __name__ == "__main__":
 
                 # git_spyder.write_time(latest_crawl_time)
 
-                if latest_crawl_time != git_spyder.starttime:
-                    git_spyder.write_time(latest_crawl_time)
+                # if latest_crawl_time != git_spyder.starttime:
+                #     git_spyder.write_time(latest_crawl_time)
                 
                 # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
