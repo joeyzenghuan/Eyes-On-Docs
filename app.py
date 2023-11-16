@@ -82,7 +82,7 @@ class Spyder:
         self.headers = {"Authorization": "token " + self.personal_token}
 
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
-        self.schedule = 3600
+        self.schedule = 7200
 
         self.starttime = self.read_time()
 
@@ -194,15 +194,15 @@ class Spyder:
         selected_commits_length = len(selected_commits)
         logger.warning(f"{selected_commits_length} selected commits: {selected_commits}")
 
-        # if selected_commits_length > 0:
-        #     latest_crawl_time = str(max(selected_commits.keys()))
-        #     logger.warning(f"Max new commits time: {latest_crawl_time}")
-        # else:
-        #     latest_crawl_time = self.starttime
-        #     logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
+        if selected_commits_length > 0:
+            latest_crawl_time = str(max(selected_commits.keys()))
+            logger.warning(f"Max new commits time: {latest_crawl_time}")
+        else:
+            latest_crawl_time = self.starttime
+            logger.warning(f"No new commits, keep the latest crawl time: {latest_crawl_time}")
 
-        # return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
-        return selected_commits  # 返回筛选完的时间以及对应url
+        return selected_commits, latest_crawl_time  # 返回筛选完的时间以及对应url
+        # return selected_commits  # 返回筛选完的时间以及对应url
 
     # 输入事件时间和url 并获取这个url中包含的所有文件url，时间，总结，删除和增加的操作并返回
     def get_change_from_each_url(
@@ -230,6 +230,7 @@ class Spyder:
         logger.info(f"Getting patch data from url: {patch_url}")
         response_patch = requests.get(patch_url, stream=True, headers=self.headers).text
         temp_data = response_patch
+        
         logger.warning(f"Patch data length: {len(temp_data)}")
         if len(temp_data) >= 30000:
             logger.warning(f"Patch data is too long, only get the first 30000 characters")
@@ -413,8 +414,8 @@ if __name__ == "__main__":
 
                 git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url)
                 all_commits_from_root_commits_url = git_spyder.get_all_commits()
-                # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
-                selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
+                selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
+                # selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
 
                 git_spyder.process_each_commit(selected_commits)
                 logger.warning(f"Finish processing topic: {topic}")
@@ -422,12 +423,12 @@ if __name__ == "__main__":
 
                 # git_spyder.write_time(latest_crawl_time)
 
-                # if latest_crawl_time != git_spyder.starttime:
-                #     git_spyder.write_time(latest_crawl_time)
+                if latest_crawl_time != git_spyder.starttime:
+                    git_spyder.write_time(latest_crawl_time)
                 
                 # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
-        git_spyder.write_time(last_crawl_time)
+        # git_spyder.write_time(last_crawl_time)
 
         logger.warning(f"Waiting for {git_spyder.schedule} seconds")
         time.sleep(git_spyder.schedule)
