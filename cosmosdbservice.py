@@ -94,7 +94,31 @@ class CosmosConversationClient():
             return resp
         else:
             return False
-    
+
+    def get_lastest_commit(self, topic, language, root_commits_url, sort_order = 'DESC'):
+        parameters = [
+            {
+                'name': '@topic',
+                'value': topic
+            },
+            {
+                'name': '@language',
+                'value': language
+            },
+            {
+                'name': '@root_commits_url',
+                'value': root_commits_url
+            }
+        ]
+        query = f"SELECT TOP 1 * FROM c where c.topic = @topic and c.root_commits_url = @root_commits_url and c.language = @language order by c.commit_time {sort_order}"
+        lastest_commit = list(self.container_client.query_items(query=query, parameters=parameters,
+                                                                               enable_cross_partition_query =True))
+        ## if no conversations are found, return None
+        if len(lastest_commit) == 0:
+            return None
+        else:
+            return lastest_commit[0]
+
 
     # def get_commit_history(self, user_id, conversation_id):
     def get_commit_history(self):
