@@ -236,7 +236,7 @@ class Spyder:
         # self.write_time(str(max(commits_dic_time_url.keys())))
 
         selected_commits_length = len(selected_commits)
-        logger.warning(f"{selected_commits_length} selected commits: {selected_commits}")
+        logger.warning(f"++++++++++++++++++++++++ {selected_commits_length} selected commits: {selected_commits}")
 
         if selected_commits_length > 0:
             latest_crawl_time = str(max(selected_commits.keys()))
@@ -403,12 +403,12 @@ class Spyder:
         #     temperature=0,
         # )
 
-        response = get_gpt_response(messages)
+        gpt_summary_response_, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
 
-        gpt_summary_response_ = response["choices"][0]["message"]["content"]
-        prompt_tokens = response["usage"]["prompt_tokens"]
-        completion_tokens = response["usage"]["completion_tokens"]
-        total_tokens = response["usage"]["total_tokens"]
+        # gpt_summary_response_ = response["choices"][0]["message"]["content"]
+        # prompt_tokens = response["usage"]["prompt_tokens"]
+        # completion_tokens = response["usage"]["completion_tokens"]
+        # total_tokens = response["usage"]["total_tokens"]
         
         logger.warning(f"GPT_Summary Response:\n  {gpt_summary_response_}")
         logger.info(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
@@ -449,12 +449,14 @@ class Spyder:
         #     temperature=0,
         # )
 
-        response = get_gpt_response(messages)
+        # response = get_gpt_response(messages)
 
-        gpt_title_response = response["choices"][0]["message"]["content"]
-        prompt_tokens = response["usage"]["prompt_tokens"]
-        completion_tokens = response["usage"]["completion_tokens"]
-        total_tokens = response["usage"]["total_tokens"]
+        gpt_title_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
+
+        # gpt_title_response = response["choices"][0]["message"]["content"]
+        # prompt_tokens = response["usage"]["prompt_tokens"]
+        # completion_tokens = response["usage"]["completion_tokens"]
+        # total_tokens = response["usage"]["total_tokens"]
 
         logger.info(f"GPT_Title Prompt tokens:  {prompt_tokens}")
         logger.info(f"GPT_Title Completion tokens:  {completion_tokens}")
@@ -486,7 +488,7 @@ if __name__ == "__main__":
 
                 
 
-                logger.warning(f"Start to process topic: {topic}")
+                logger.warning(f"========================= Start to process topic: {topic} =========================")
                 logger.info(f"Root commits url: {root_commits_url}")
                 logger.info(f"Language: {language}")
                 logger.info(f"Teams webhook url: {teams_webhook_url}")

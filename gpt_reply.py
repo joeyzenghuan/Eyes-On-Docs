@@ -12,11 +12,22 @@ openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
 def get_gpt_response(messages):
-        response = openai.ChatCompletion.create(
-            engine=deployment_name,  # engine = "deployment_name".
-            messages=messages,
-            temperature=0,
-        )
-        return response
+        try:
+            response = openai.ChatCompletion.create(
+                engine=deployment_name,  # engine = "deployment_name".
+                messages=messages,
+                temperature=0,
+            )
+
+            gpt_response = response["choices"][0]["message"]["content"]
+            prompt_tokens = response["usage"]["prompt_tokens"]
+            completion_tokens = response["usage"]["completion_tokens"]
+            total_tokens = response["usage"]["total_tokens"]
+            return gpt_response, prompt_tokens, completion_tokens, total_tokens
+        
+        except Exception as e:
+            print("get_gpt_response Exception:", e)
+            return None, None, None, None
+
 
     
