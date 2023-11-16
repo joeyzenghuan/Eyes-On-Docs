@@ -228,15 +228,38 @@ class Spyder:
         patch_url = commit_url + ".patch"
 
         logger.info(f"Getting patch data from url: {patch_url}")
-        response_patch = requests.get(patch_url, stream=True, headers=self.headers).text
-        temp_data = response_patch
-        
-        logger.warning(f"Patch data length: {len(temp_data)}")
-        if len(temp_data) >= 30000:
+        # response_patch = requests.get(patch_url, stream=True, headers=self.headers).text
+        # response_raw_text = response_patch
+
+        try:
+            response = requests.get(patch_url, stream=True, headers=self.headers)
+            response.raise_for_status()
+            response_raw_text = response.text
+            # print(response_raw_text)
+        except requests.exceptions.HTTPError as errh:
+            logger.error("HTTP Error:", errh)
+            response_raw_text = "Error"
+        except requests.exceptions.ConnectionError as errc:
+            logger.error("Error Connecting:", errc)
+            response_raw_text = "Error"
+        except requests.exceptions.Timeout as errt:
+            logger.error("Timeout Error:", errt)
+            response_raw_text = "Error"
+        except requests.exceptions.RequestException as err:
+            logger.error("Something went wrong:", err)
+            response_raw_text = "Error"
+        except Exception as e:
+            logger.error("Unknown Exception:", e)
+            response_raw_text = "Error"
+
+
+
+        logger.warning(f"Patch data length: {len(response_raw_text)}")
+        if len(response_raw_text) >= 30000:
             logger.warning(f"Patch data is too long, only get the first 30000 characters")
-            patch_data = temp_data[:30000]
+            patch_data = response_raw_text[:30000]
         else:
-            patch_data = temp_data
+            patch_data = response_raw_text
 
 
         keys = ["commits", "urls"]
@@ -259,8 +282,17 @@ class Spyder:
             input_dic, time_, summary, commit_url = self.get_change_from_each_url(
                 time_, url
             )
-            gpt_summary_response = self.gpt_summary(input_dic)
-            gpt_title_response = self.gpt_title(gpt_summary_response)
+
+            commit_patch_data = input_dic.get("commits")
+
+            if commit_patch_data == "Error":
+                logger.error(f"Error getting patch data from url: {commit_url}")
+                gpt_summary_response = "[!]Too many changes in one commit. Please check the update via commit page button."
+                gpt_title_response = "Need to check the update in commit page manually."
+            else:
+                gpt_summary_response = self.gpt_summary(input_dic)
+                gpt_title_response = self.gpt_title(gpt_summary_response)
+
 
             self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
