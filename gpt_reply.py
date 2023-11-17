@@ -1,6 +1,8 @@
 import openai
 import os
 from dotenv import load_dotenv
+from logs import logger
+
 
 load_dotenv()
 
@@ -26,7 +28,7 @@ def get_gpt_response(messages):
             return gpt_response, prompt_tokens, completion_tokens, total_tokens
         
         except Exception as e:
-            print("get_gpt_response Exception:", e)
+            logger.error("get_gpt_response Exception:", e)
             return None, None, None, None
 
 
