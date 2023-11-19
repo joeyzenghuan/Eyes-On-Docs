@@ -186,6 +186,7 @@ class Spyder:
     
     # 获取所有根路径（openai）下的所有commmits操作，以及他们的时间
     def get_all_commits(self):  
+        
         logger.info(f"Commit Root page:  {self.root_commits_url} ")
 
         response = requests.get(self.root_commits_url, headers=self.headers).text
@@ -255,8 +256,16 @@ class Spyder:
     ): 
         logger.warning(f"Getting changes from url: {commit_url}")
 
-        response = requests.get(commit_url, headers=self.headers).text
-        soup = BeautifulSoup(response, "html.parser")
+        # response = requests.get(commit_url, headers=self.headers).text
+
+        try:
+            response = response = requests.get(commit_url, headers=self.headers)
+            response.raise_for_status()
+            response_raw_text = response.text
+        except Exception as e:
+            logger.error("Exception in get_change_from_each_url:", e)
+
+        soup = BeautifulSoup(response_raw_text, "html.parser")
         time_ = time
 
         commit_title = soup.find("div", class_="commit-title markdown-title").text if soup.find("div", class_="commit-title markdown-title") else ""
@@ -324,9 +333,11 @@ class Spyder:
 
         for key in selected_commits:
             time_, url = key, selected_commits[key]
-            input_dic, time_, summary, commit_url = self.get_change_from_each_url(
-                time_, url
-            )
+            try:
+                input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url)
+            except Exception as e:
+                logger.error(f"Error getting change from url: {url}, Exception: {e}")
+                
 
             commit_patch_data = input_dic.get("commits")
 
@@ -336,8 +347,14 @@ class Spyder:
                 gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
             else:
                 gpt_summary_response = self.gpt_summary(input_dic)
-                gpt_title_response = self.gpt_title(gpt_summary_response)
-
+                if gpt_summary_response == None:
+                    gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                    gpt_title_response = "Something went wrong"
+                else:
+                    gpt_title_response = self.gpt_title(gpt_summary_response)
+                    if gpt_title_response == None:
+                        gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                
 
             self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
@@ -359,27 +376,33 @@ class Spyder:
             self.commit_history.clear()
 
     def post_teams_message(self, gpt_title_response, time, gpt_summary_response, commit_url):  # 向teams发送信息的函数
-        # WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+        try:
+            jsonData = {  # 向teams 发送的message必须是json格式
+                "@type": "MessageCard",
+                "themeColor": "0076D7",
+                "title": str(gpt_title_response),
+                "text": str(time) + "\n\n" + str(gpt_summary_response),
+                "potentialAction": [
+                    {
+                        "@type": "OpenUri",
+                        "name": "Go to commit page",
+                        "targets": [{"os": "default", "uri": commit_url}],
+                    },
+                ],
+            }
+            logger.debug(f"Teams Message jsonData: {jsonData}")
 
-        jsonData = {  # 向teams 发送的message必须是json格式
-            "@type": "MessageCard",
-            "themeColor": "0076D7",
-            "title": str(gpt_title_response),
-            "text": str(time) + "\n\n" + gpt_summary_response,
-            "potentialAction": [
-                {
-                    "@type": "OpenUri",
-                    "name": "Go to commit page",
-                    "targets": [{"os": "default", "uri": commit_url}],
-                },
-            ],
-        }
-        logger.debug(f"Teams Message jsonData: {jsonData}")
-        requests.post(self.teams_webhook_url, json=jsonData)
-        logger.info(f"Post message to Teams successfully!")
+            response = requests.post(self.teams_webhook_url, json=jsonData)
+            response.raise_for_status()
+            logger.info(f"Post message to Teams successfully!")
 
-        self.commit_history["teams_message_jsondata"] = jsonData
-        self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
+            self.commit_history["teams_message_jsondata"] = jsonData
+            self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
+        except requests.exceptions.HTTPError as err:
+            logger.error(f"Error occured while sending message to Teams: {err}")
+        except Exception as err:
+            logger.error(f"An error occured in post_teams_message: {err}")
+
 
     # 调用GPT4 总结删除和增加的内容
     def gpt_summary(self, input_dict):  
@@ -403,24 +426,24 @@ class Spyder:
         #     temperature=0,
         # )
 
-        gpt_summary_response_, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
+        gpt_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
 
-        # gpt_summary_response_ = response["choices"][0]["message"]["content"]
+        # gpt_summary_response = response["choices"][0]["message"]["content"]
         # prompt_tokens = response["usage"]["prompt_tokens"]
         # completion_tokens = response["usage"]["completion_tokens"]
         # total_tokens = response["usage"]["total_tokens"]
         
-        logger.warning(f"GPT_Summary Response:\n  {gpt_summary_response_}")
+        logger.warning(f"GPT_Summary Response:\n  {gpt_summary_response}")
         logger.info(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
         logger.info(f"GPT_Summary Completion tokens:  {completion_tokens}")
         logger.info(f"GPT_Summary Total tokens:  {total_tokens}")
 
-        self.commit_history["gpt_summary_response"] = gpt_summary_response_
+        self.commit_history["gpt_summary_response"] = gpt_summary_response
         self.commit_history["gpt_summary_prompt_tokens"] = prompt_tokens
         self.commit_history["gpt_summary_completion_tokens"] = completion_tokens
         self.commit_history["gpt_summary_total_tokens"] = total_tokens
 
-        return gpt_summary_response_
+        return gpt_summary_response
 
     def gpt_title(self, input_):  # 调用GPT生成标题
 
@@ -474,42 +497,43 @@ class Spyder:
         
 if __name__ == "__main__": 
     while True:
-        # time_now = datetime.datetime.now()
-        # time_now_struct = time.mktime(time_now.timetuple())
-        # last_crawl_time = datetime.datetime.utcfromtimestamp(time_now_struct)
+        try:
+            with open('target_config.json', 'r') as f:
+                targets = json.load(f)
+                for d in targets:
+                    topic = d['topic_name']
+                    root_commits_url = d['root_commits_url']
+                    language = d['language']
+                    teams_webhook_url = d['teams_webhook_url']
 
-        with open('target_config.json', 'r') as f:
-            targets = json.load(f)
-            for d in targets:
-                topic = d['topic_name']
-                root_commits_url = d['root_commits_url']
-                language = d['language']
-                teams_webhook_url = d['teams_webhook_url']
+                    logger.warning(f"========================= Start to process topic: {topic} =========================")
+                    logger.info(f"Root commits url: {root_commits_url}")
+                    logger.info(f"Language: {language}")
+                    logger.info(f"Teams webhook url: {teams_webhook_url}")
 
-                
+                    git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url)
+                    all_commits_from_root_commits_url = git_spyder.get_all_commits()
+                    selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
+                    # selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
 
-                logger.warning(f"========================= Start to process topic: {topic} =========================")
-                logger.info(f"Root commits url: {root_commits_url}")
-                logger.info(f"Language: {language}")
-                logger.info(f"Teams webhook url: {teams_webhook_url}")
-
-                git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url)
-                all_commits_from_root_commits_url = git_spyder.get_all_commits()
-                selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
-                # selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
-
-                git_spyder.process_each_commit(selected_commits)
-                logger.warning(f"Finish processing topic: {topic}")
+                    git_spyder.process_each_commit(selected_commits)
+                    logger.warning(f"Finish processing topic: {topic}")
 
 
-                # git_spyder.write_time(latest_crawl_time)
+                    # git_spyder.write_time(latest_crawl_time)
 
-                # if latest_crawl_time != git_spyder.starttime:
-                #     git_spyder.write_time(latest_crawl_time)
-                
-                # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
+                    # if latest_crawl_time != git_spyder.starttime:
+                    #     git_spyder.write_time(latest_crawl_time)
+                    
+                    # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
-        # git_spyder.write_time(last_crawl_time)
+            # git_spyder.write_time(last_crawl_time)
 
-        logger.warning(f"Waiting for {git_spyder.schedule} seconds")
-        time.sleep(git_spyder.schedule)
+            logger.warning(f"Waiting for {git_spyder.schedule} seconds")
+            time.sleep(git_spyder.schedule)
+           
+        except Exception as e:
+            logger.error("Unexpected expection:", e)
+
+            
+
