@@ -3,6 +3,11 @@ import os
 from dotenv import load_dotenv
 from logs import logger
 
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+)  # for exponential backoff
 
 load_dotenv()
 
@@ -13,12 +18,23 @@ openai.api_type = "azure"
 openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+def chat_completion_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
+
 def get_gpt_response(messages):
         try:
-            response = openai.ChatCompletion.create(
+            # response = openai.ChatCompletion.create(
+            #     engine=deployment_name,  # engine = "deployment_name".
+            #     messages=messages,
+            #     temperature=0,
+            #     request_timeout = 300,
+            # )
+            response = chat_completion_with_backoff(
                 engine=deployment_name,  # engine = "deployment_name".
                 messages=messages,
                 temperature=0,
+                request_timeout = 300,
             )
 
             gpt_response = response["choices"][0]["message"]["content"]
@@ -30,6 +46,7 @@ def get_gpt_response(messages):
         except Exception as e:
             logger.error("get_gpt_response Exception:", e)
             return None, None, None, None
+
 
 
     
