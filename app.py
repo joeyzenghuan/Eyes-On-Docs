@@ -344,19 +344,24 @@ class Spyder:
             if commit_patch_data == "Error":
                 logger.error(f"Error getting patch data from url: {commit_url}")
                 gpt_summary_response = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
-                gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
+                # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
+                gpt_title_response = "Error in Getting Patch Data"
             else:
                 gpt_summary_response = self.gpt_summary(input_dic)
                 if gpt_summary_response == None:
                     gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                    gpt_title_response = "Something went wrong"
+                    # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
+                    gpt_title_response = "Error in getting Summary"
                 else:
                     gpt_title_response = self.gpt_title(gpt_summary_response)
                     if gpt_title_response == None:
-                        gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        gpt_title_response = "Error in getting Title"
+                    else:
+                        self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
                 
 
-            self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
+            # self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
             self.commit_history['commit_time'] = str(time_)
             self.commit_history['commit_url'] = str(commit_url)
