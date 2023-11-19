@@ -35,7 +35,7 @@ def get_gpt_response(messages):
                 engine=deployment_name,  # engine = "deployment_name".
                 messages=messages,
                 temperature=0,
-                request_timeout = 300,
+                request_timeout = 600,
             )
 
             gpt_response = response["choices"][0]["message"]["content"]

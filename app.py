@@ -349,7 +349,7 @@ class Spyder:
                 gpt_summary_response = self.gpt_summary(input_dic)
                 if gpt_summary_response == None:
                     gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                    gpt_title_response = "Something went wrong"
+                    gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
                 else:
                     gpt_title_response = self.gpt_title(gpt_summary_response)
                     if gpt_title_response == None:
