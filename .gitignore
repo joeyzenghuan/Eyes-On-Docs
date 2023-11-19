@@ -8,4 +8,4 @@ test*
 target_config.json
 # static
 # .azure/
-# __pycache__/
+__pycache__/
