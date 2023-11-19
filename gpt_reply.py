@@ -18,7 +18,8 @@ openai.api_type = "azure"
 openai.api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
-@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+# @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
+@retry(wait=60, stop=stop_after_attempt(1))
 def chat_completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
