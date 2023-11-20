@@ -1,3 +1,17 @@
+[gpt_summary_prompt_v2]
+prompt = """
+Analyze the contents from a git commit patch data and summarize the contents of the commit.
+If the commit involves more than 1 file, please summarize the contents of each file separately.
+Output format:
+<path of 1st file>\n
+<summary of 1st file> 
+<path of 2nd file>\n
+<summary of 2nd file>
+For example:
+For original path "articles/abc/def/ghi.md", the output should be:
+articles/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
+"""
+
 [gpt_summary_prompt_v1.05]
 prompt = """
 Analyze the contents from a git commit patch data,and summarize the contents of the commit.
@@ -7,18 +21,13 @@ Output format:
 <summary of 1st file> 
 <path of 2nd file>\n
 <summary of 2nd file>
-if has artilcse link, please use the link.
+if has article link, please use the link.
 else if the path is contain with "windows-driver", remove ".md" from the path Replace "windows-driver-docs-pr" with "https://learn.microsoft.com/en-us/windows-hardware/drivers/" in the path of the file.
 else If the path is end with ".md", remove ".md" from the path Replace "article" with "https://learn.microsoft.com/en-us/azure/" in the path of the file.
 
 For example:
 For original path "articles/abc/def/ghi.md", the output should be:
 https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
-"""
-
-[gpt_title_prompt_v1.05]
-prompt = """
-Provide a title that succinctly summarizes the input and give a tag. the mormat will like "[tag] title"
 """
 
 [gpt_summary_prompt_v1]
@@ -36,6 +45,17 @@ For example:
 For original path "articles/abc/def/ghi.md", the output should be:
 https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
 """
+
+
+[gpt_title_prompt_v2]
+prompt = """
+Provide a title that succinctly summarizes the input and generate a tag in the beginning. 
+Output format: "[tag1] Title1 \n\n(newline twice) [tag2] Title2"
+The tag should be the object type of the input.
+Here are some examples of tags: Model, Quota, Renaming, Image, Time, Region, New Feature, Text.
+You need to translate the tag into specified language if the input is not in English.
+"""
+
 
 [gpt_title_prompt_v1]
 prompt = """
