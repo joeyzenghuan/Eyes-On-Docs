@@ -34,11 +34,11 @@ import toml
 with open('prompts.toml', 'r') as f:
     data = toml.load(f)
 
-gpt_summary_prompt = data['gpt_summary_prompt_v1']['prompt']
-gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
+# gpt_summary_prompt = data['gpt_summary_prompt_v1']['prompt']
+# gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
 
-# print(f"gpt_summary_prompt: {gpt_summary_prompt}")
-# print(f"gpt_title_prompt: {gpt_title_prompt}")
+gpt_summary_prompt = data['gpt_summary_prompt_v2']['prompt']
+gpt_title_prompt = data['gpt_title_prompt_v2']['prompt']
 
 
 from azure.identity import DefaultAzureCredential  
@@ -101,7 +101,8 @@ class Spyder:
                     lastest_commit_time_in_cosmosdb, "%Y-%m-%d %H:%M:%S"
                 )
         except Exception as e:
-            logger.error(f"Error getting lastest_commit_time_in_cosmosdb: {e}")
+            logger.exception("Exception in getting lastest_commit_time_in_cosmosdb", e)
+
 
 
         time_in_last_crawl_time_txt = self.read_time()
@@ -161,7 +162,8 @@ class Spyder:
             f.close()
             logger.warning(f"Update last_crawl_time.txt: {update_time}")
         except Exception as e:
-            logger.error(f"Error writing time: {e}")
+            # logger.error(f"Error writing time: {e}")
+            logger.exception("Exception in write_time", e)
 
     def read_time(self):
         try:
@@ -171,7 +173,8 @@ class Spyder:
                     time_in_file_readline, "%Y-%m-%d %H:%M:%S"
                 )
         except Exception as e:
-            logger.error(f"Error reading time from file: {e}")
+            # logger.error(f"Error reading time from file: {e}")
+            logger.exception("Exception in read_time", e)
             time_in_file = None
 
             # # if file doesn't exist, create a file, and use current time as start time
@@ -264,6 +267,7 @@ class Spyder:
             response_raw_text = response.text
         except Exception as e:
             logger.error("Exception in get_change_from_each_url:", e)
+            logger.exception("Exception in get_change_from_each_url:", e)
 
         soup = BeautifulSoup(response_raw_text, "html.parser")
         time_ = time
@@ -291,19 +295,19 @@ class Spyder:
             response_raw_text = response.text
             # print(response_raw_text)
         except requests.exceptions.HTTPError as errh:
-            logger.error("HTTP Error:", errh)
+            logger.exception("HTTP Error:", errh)
             response_raw_text = "Error"
         except requests.exceptions.ConnectionError as errc:
-            logger.error("Error Connecting:", errc)
+            logger.exception("Error Connecting:", errc)
             response_raw_text = "Error"
         except requests.exceptions.Timeout as errt:
-            logger.error("Timeout Error:", errt)
+            logger.exception("Timeout Error:", errt)
             response_raw_text = "Error"
         except requests.exceptions.RequestException as err:
-            logger.error("Something went wrong:", err)
+            logger.exception("Something went wrong:", err)
             response_raw_text = "Error"
         except Exception as e:
-            logger.error("Unknown Exception:", e)
+            logger.exception("Unknown Exception:", e)
             response_raw_text = "Error"
 
 
@@ -337,6 +341,7 @@ class Spyder:
                 input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url)
             except Exception as e:
                 logger.error(f"Error getting change from url: {url}, Exception: {e}")
+                logger.exception("Exception in process_each_commit:", e)
                 
 
             commit_patch_data = input_dic.get("commits")
@@ -405,8 +410,10 @@ class Spyder:
             self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
         except requests.exceptions.HTTPError as err:
             logger.error(f"Error occured while sending message to Teams: {err}")
+            logger.exception("HTTPError in post_teams_message:", err)
         except Exception as err:
             logger.error(f"An error occured in post_teams_message: {err}")
+            logger.exception("Unknown Exception in post_teams_message:", err)
 
 
     # 调用GPT4 总结删除和增加的内容
@@ -421,27 +428,28 @@ class Spyder:
                 "content": system_message,
             },
             # {"role": "user", "content": str(input_dict)},
-            {"role": "user", "content": f"Here are the commit patch data. ###{commit_patch_data} ###"},
+            {"role": "user", "content": f"Here are the commit patch data. ###{commit_patch_data} ### Reply in {self.language}"},
         ]
 
         logger.info(f"GPT_Summary Request body: {messages}")
-        # response = openai.ChatCompletion.create(
-        #     engine=deployment_name,  # engine = "deployment_name".
-        #     messages=messages,
-        #     temperature=0,
-        # )
 
         gpt_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
-
-        # gpt_summary_response = response["choices"][0]["message"]["content"]
-        # prompt_tokens = response["usage"]["prompt_tokens"]
-        # completion_tokens = response["usage"]["completion_tokens"]
-        # total_tokens = response["usage"]["total_tokens"]
         
         logger.warning(f"GPT_Summary Response:\n  {gpt_summary_response}")
         logger.info(f"GPT_Summary Prompt tokens:  {prompt_tokens}")
         logger.info(f"GPT_Summary Completion tokens:  {completion_tokens}")
         logger.info(f"GPT_Summary Total tokens:  {total_tokens}")
+
+        gpt_summary_response = gpt_summary_response\
+        .replace("/articles/", "https://learn.microsoft.com/en-us/azure/") \
+        .replace("articles/", "https://learn.microsoft.com/en-us/azure/") \
+        .replace(".md", "") \
+        .replace("/windows-driver-docs-pr/", "https://learn.microsoft.com/en-us/windows-hardware/drivers/") \
+        .replace("windows-driver-docs-pr/", "https://learn.microsoft.com/en-us/windows-hardware/drivers/") \
+        .replace("/docs/", "https://learn.microsoft.com/en-us/fabric/") \
+        .replace("docs/", "https://learn.microsoft.com/en-us/fabric/")
+        
+        logger.warning(f"Correct Links in GPT_Summary Response:\n  {gpt_summary_response}")
 
         self.commit_history["gpt_summary_response"] = gpt_summary_response
         self.commit_history["gpt_summary_prompt_tokens"] = prompt_tokens
@@ -538,7 +546,7 @@ if __name__ == "__main__":
             time.sleep(git_spyder.schedule)
            
         except Exception as e:
-            logger.error("Unexpected expection:", e)
+            logger.exception("Unexpected expection:", e)
 
             
 

@@ -2,6 +2,8 @@ import openai
 import os
 from dotenv import load_dotenv
 from logs import logger
+# import traceback
+
 
 from tenacity import (
     retry,
@@ -36,6 +38,7 @@ def get_gpt_response(messages):
                 messages=messages,
                 temperature=0,
                 request_timeout = 300,
+                max_tokens = 1000,
             )
 
             gpt_response = response["choices"][0]["message"]["content"]
@@ -45,7 +48,9 @@ def get_gpt_response(messages):
             return gpt_response, prompt_tokens, completion_tokens, total_tokens
         
         except Exception as e:
-            logger.error("get_gpt_response Exception:", e)
+            # logger.error("get_gpt_response Exception: {}".format(e))
+            # logger.error("get_gpt_response Exception: {}".format(traceback.format_exc()))  
+            logger.exception("get_gpt_response Exception:", e)          
             return None, None, None, None
 
 
