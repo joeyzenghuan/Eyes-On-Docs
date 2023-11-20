@@ -89,19 +89,20 @@ class Spyder:
         self.schedule = 7200
 
         lastest_commit_time_in_cosmosdb = None
-        try:
-            lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(topic, language, root_commits_url, sort_order = 'DESC')
-            # print(lastest_commit_in_cosmosdb)
+        if save_commit_history_to_cosmosdb:
+            try:
+                lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(topic, language, root_commits_url, sort_order = 'DESC')
+                # print(lastest_commit_in_cosmosdb)
 
-            if lastest_commit_in_cosmosdb:
-                lastest_commit_time_in_cosmosdb = lastest_commit_in_cosmosdb['commit_time']
+                if lastest_commit_in_cosmosdb:
+                    lastest_commit_time_in_cosmosdb = lastest_commit_in_cosmosdb['commit_time']
 
-                lastest_commit_time_in_cosmosdb = lastest_commit_time_in_cosmosdb.strip()
-                lastest_commit_time_in_cosmosdb = datetime.datetime.strptime(
-                    lastest_commit_time_in_cosmosdb, "%Y-%m-%d %H:%M:%S"
-                )
-        except Exception as e:
-            logger.exception("Exception in getting lastest_commit_time_in_cosmosdb", e)
+                    lastest_commit_time_in_cosmosdb = lastest_commit_time_in_cosmosdb.strip()
+                    lastest_commit_time_in_cosmosdb = datetime.datetime.strptime(
+                        lastest_commit_time_in_cosmosdb, "%Y-%m-%d %H:%M:%S"
+                    )
+            except Exception as e:
+                logger.exception("Exception in getting lastest_commit_time_in_cosmosdb", e)
 
 
 
@@ -448,7 +449,7 @@ class Spyder:
         .replace("windows-driver-docs-pr/", "https://learn.microsoft.com/en-us/windows-hardware/drivers/") \
         .replace("/docs/", "https://learn.microsoft.com/en-us/fabric/") \
         .replace("docs/", "https://learn.microsoft.com/en-us/fabric/")
-        
+
         logger.warning(f"Correct Links in GPT_Summary Response:\n  {gpt_summary_response}")
 
         self.commit_history["gpt_summary_response"] = gpt_summary_response
