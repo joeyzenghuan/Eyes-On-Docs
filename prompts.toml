@@ -50,7 +50,8 @@ https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This 
 [gpt_title_prompt_v2]
 prompt = """
 Provide a title that succinctly summarizes the input and generate a tag in the beginning. 
-Output format: "[tag1] Title1 \n\n(newline twice) [tag2] Title2"
+Output format: "[tag] Title"
+Only generate 1 tag and 1 title. If there are multiple topics in the input, please choose the most important one.
 The tag should be the object type of the input.
 Here are some examples of tags: Model, Quota, Renaming, Image, Time, Region, New Feature, Text.
 You need to translate the tag into specified language if the input is not in English.
