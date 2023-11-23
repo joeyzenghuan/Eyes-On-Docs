@@ -38,7 +38,8 @@ with open('prompts.toml', 'r') as f:
 # gpt_title_prompt = data['gpt_title_prompt_v1']['prompt']
 
 gpt_summary_prompt = data['gpt_summary_prompt_v2']['prompt']
-gpt_title_prompt = data['gpt_title_prompt_v2']['prompt']
+# gpt_title_prompt = data['gpt_title_prompt_v2']['prompt']
+gpt_title_prompt = data['gpt_title_prompt_v3']['prompt']
 
 
 from azure.identity import DefaultAzureCredential  
@@ -347,25 +348,39 @@ class Spyder:
 
             commit_patch_data = input_dic.get("commits")
 
+            status = None
             if commit_patch_data == "Error":
                 logger.error(f"Error getting patch data from url: {commit_url}")
                 gpt_summary_response = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
                 # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
                 gpt_title_response = "Error in Getting Patch Data"
+                status = "Error in Getting Patch Data"
             else:
                 gpt_summary_response = self.gpt_summary(input_dic)
                 if gpt_summary_response == None:
                     gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
                     # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
                     gpt_title_response = "Error in getting Summary"
+                    status = "Error in getting Summary"
                 else:
                     gpt_title_response = self.gpt_title(gpt_summary_response)
                     if gpt_title_response == None:
                         # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
                         gpt_title_response = "Error in getting Title"
+                        status = "Error in getting Title"
                     else:
-                        self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
-                
+
+                        # check the first two characters of gpt_title_response, if it is '0 ', skip this commit
+                        first_two_chars = gpt_title_response[:2]
+                        if first_two_chars in ['0 ','"0']:
+                            status = '0 skip'
+                            logger.error(f"Skip this commit: {gpt_title_response}")
+                        else:
+                            status = '1 post'
+                            logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
+                            self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
+
+            self.commit_history['status'] = status
 
             # self.post_teams_message(gpt_title_response, time_, gpt_summary_response, commit_url)
 
