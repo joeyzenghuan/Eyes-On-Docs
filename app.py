@@ -460,6 +460,7 @@ class Spyder:
         .replace("/articles/", "https://learn.microsoft.com/en-us/azure/") \
         .replace("articles/", "https://learn.microsoft.com/en-us/azure/") \
         .replace(".md", "") \
+        .replace(".yml", "") \
         .replace("/windows-driver-docs-pr/", "https://learn.microsoft.com/en-us/windows-hardware/drivers/") \
         .replace("windows-driver-docs-pr/", "https://learn.microsoft.com/en-us/windows-hardware/drivers/") \
         .replace("/docs/", "https://learn.microsoft.com/en-us/fabric/") \
