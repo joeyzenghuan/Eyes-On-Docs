@@ -10,3 +10,4 @@ tenacity==8.2.3
 toml==0.10.2
 azure-cosmos==4.5.1
 azure.identity==1.15.0
+pandas

@@ -1,4 +1,5 @@
 # User Interface
+
 Users can see the following notifications in Teams Channel.
 
 ![Message UI](/images/message_ui.jpg =700x)
@@ -9,9 +10,9 @@ Users can see the following notifications in Teams Channel.
 - Clicking on the link takes you to the official documentation.
 - The "Go to commit page" button at the bottom takes you to the commit page on GitHub.
 
-
 # Commit Page
-https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2 
+
+https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
 
 You can see that this update involves modifications to three files, which is consistent with the summary provided by GPT4.
 The left side shows the version before the update, and the right side shows the version after the update.
@@ -27,6 +28,7 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 ![preview_ui](/images/preview_ui.jpg =1000x)
 
 # Implementation :
+
 - Taking Azure OpenAI Documents as an example, each update to the documentation is recorded on this page: https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai.
 - Crawl the update content of each commit.
 - Submit the update content to GPT4 for summarization and generate a title.
@@ -34,18 +36,32 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 - The program checks for new commits every hour.
 
 # Running Configuration
+
 1. pip install -r requirements
-2. Create a .env file based on .env.example.
-3. Create last_crawl_time.txt based on last_crawl_time.txt.example.
-4. Create target_config.json based on target_config.json.example.
+2. Create a copy of .env.example, rename it to .env
+   - [generate github access token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) 
+   - [create Azure OpenAI resource. Please use GPT-4!](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
+   - [create cosmosdb account, database, container, and get the key.](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal)
+
+3. Create a copy of last_crawl_time.txt.example, rename it to last_crawl_time.txt
+   - For the initial setup, the bot will only process changes after the specified timestamp(UTC+0).
+   - If the file is not manually created, the bot will create a new one and put current time into it.
+   - [related code.](https://dev.azure.com/GCR-AI-IoT-Team-Operation/_git/DocUpdateNotificationBot?path=/app.py&version=GBmaster&line=110&lineEnd=135&lineStartColumn=1&lineEndColumn=60&lineStyle=plain&_a=contents)
+
+4. Create a copy of target_config.json.example, rename it to target_config.json
+
+# How to get root_commits_url used in target_config.json?
+
+![root_commits_url](/images/root_commits_url.jpg =1000x)
 
 # How to create Teams Channel Webhook
-https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
 
+https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
 
 # 中文介绍
 
 # 用户界面
+
 用户可以在Teams Channel中看到以下推送。
 
 ![Message UI](/images/message_ui_Chinese.jpg =1000x)
@@ -57,7 +73,8 @@ https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connector
 - 最下方的“Go to commit page”按钮，可以跳转到GitHub的commit页面。
 
 # Commit Page
-https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2 
+
+https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c318335bcb9f2
 
 可以看到这次更新涉及了三个文件的修改，和GPT4给出的总结一致。
 左边是更新前的版本，右边是更新后的版本。
@@ -72,6 +89,7 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 ![preview_ui](/images/preview_ui.jpg =1000x)
 
 # 原理：
+
 - 以Azure OpenAI为例，文档的每次更新记录都会记录在 https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai 这个页面。
 - 爬取每一个commit的更新内容
 - 提交给GPT4进行总结，生成标题
@@ -79,11 +97,12 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 - 程序每小时会去查询是否有新的commits生成
 
 # 运行配置
+
 1. pip install -r requirements
 2. 按照.env.example的示例创建.env文件
 3. 按照last_crawl_time.txt.example的示例创建last_crawl_time.txt
 4. 按照target_config.json.example的示例创建target_config.json文件
 
 # How to create Teams Channel Webhook
+
 https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
- 
