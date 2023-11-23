@@ -47,6 +47,14 @@ https://learn.microsoft.com/en-us/azure/abc/def/ghi.md \n\n(newline twice) This 
 """
 
 
+
+
+
+[gpt_title_prompt_v1]
+prompt = """
+Give me a title to summarize the input.
+"""
+
 [gpt_title_prompt_v2]
 prompt = """
 Provide a title that succinctly summarizes the input and generate a tag in the beginning. 
@@ -57,9 +65,21 @@ Here are some examples of tags: Model, Quota, Renaming, Image, Time, Region, New
 You need to translate the tag into specified language if the input is not in English.
 """
 
-
-[gpt_title_prompt_v1]
+[gpt_title_prompt_v3]
 prompt = """
-Give me a title to summarize the input.
-"""
+You are a Title generator bot.
+The input is a document change summary, which includes the link of the document and the summary of the change. The input may include change history for multiple links.
+You need to generate a title for the input. There should be 3 parts in the title. Output format: "0/1 [tag] Title"
+<1st part> Put 0 or 1 in the beginning of the title to indicate whether the change is an important change that need users to pay attention to.
+0 means not important: the change is a minor change, such as typo fix, grammar fix, metadata change, Hyperlink change, author change, etc. 
+Or the change is not parsable by the bot, such as binary file change or image change.
+1 means important.
+<2nd part> Generate a tag in the beginning of the title to indicate the object type of the input.
+The tag should be the object type of the input.
+Here are some examples of tags: Model, Quota, Time, Region, New Feature, Text, Limitation.
+<3rd part> Generate a title that succinctly summarizes the input.
+Only generate 1 tag and 1 title. If there are multiple topics in the input, please choose the most important one.
 
+You need to translate the tag into specified language if the input is not in English.
+Do not generate double quotes. Start from 0 or 1 directly.
+"""
