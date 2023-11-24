@@ -418,8 +418,13 @@ class Spyder:
             }
             logger.debug(f"Teams Message jsonData: {jsonData}")
 
-            response = requests.post(self.teams_webhook_url, json=jsonData)
-            response.raise_for_status()
+            with open("teams_message.txt", "a", encoding="utf-8") as f:
+                f.write(str(gpt_title_response) + "\n")
+                f.write(str(time) + "\n")
+                f.write(str(gpt_summary_response))
+                f.write("\n\n*************************\n\n")
+            # response = requests.post(self.teams_webhook_url, json=jsonData)
+            # response.raise_for_status()
             logger.info(f"Post message to Teams successfully!")
 
             self.commit_history["teams_message_jsondata"] = jsonData

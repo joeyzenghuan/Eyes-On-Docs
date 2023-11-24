@@ -1,0 +1,35 @@
+
+[新特性] Azure OpenAI中使用PowerShell处理自有数据的新指南发布2023-11-23 04:15:28https://learn.microsoft.com/en-us/azure/ai-services/openai/includes/use-your-data-powershell
+
+这是一个新文件，主要包含了如何使用 PowerShell 在 Azure OpenAI 中使用自己的数据的示例代码。这些代码主要包括设置所需变量，示例 PowerShell 命令，以及示例输出。此外，还提供了一些重要的提示和建议，例如如何安全地存储和访问凭据，以及如何使用 web 应用与模型进行聊天。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/use-your-data-quickstart
+
+在这个文件中，更新了日期，并在文件中添加了一个新的区域，该区域包含了 PowerShell 快速入门的链接。
+
+https://learn.microsoft.com/en-us/azure/zone-pivot-groups
+
+在这个文件中，添加了一个新的编程语言 - PowerShell。
+
+*************************
+
+[模型] 子服务名称更新：从"core"更改为"prompt-flow"2023-11-23 07:52:01https://learn.microsoft.com/en-us/azure/machine-learning/how-to-retrieval-augmented-generation-cloud-to-local
+
+这个文件的修改主要是更新了子服务的名称，从"core"更改为"prompt-flow"。
+
+*************************
+
+[Model] New PowerShell Sample for Azure OpenAI Chat Models Introduced2023-11-23 04:15:28https://learn.microsoft.com/en-us/azure/ai-services/openai/includes/use-your-data-powershell
+
+This new file provides a PowerShell sample for the "Use Your Own Data Quickstart" guide. It includes instructions and code snippets on how to set up required variables, example PowerShell commands for interacting with Azure OpenAI chat models, and tips on how to trigger a response from the model. It also provides an example output and important notes on credential security and troubleshooting. Lastly, it provides information on how to chat with the model using a web app.
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/use-your-data-quickstart
+
+This file has been updated to include the PowerShell quickstart guide in the programming language pivot section. The date of the document has also been updated.
+
+https://learn.microsoft.com/en-us/azure/zone-pivot-groups
+
+This file has been updated to include PowerShell in the list of programming languages.
+
+*************************
+
