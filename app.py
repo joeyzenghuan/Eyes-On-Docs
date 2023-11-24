@@ -40,6 +40,7 @@ with open('prompts.toml', 'r') as f:
 gpt_summary_prompt = data['gpt_summary_prompt_v2']['prompt']
 # gpt_title_prompt = data['gpt_title_prompt_v2']['prompt']
 gpt_title_prompt = data['gpt_title_prompt_v3']['prompt']
+gpt_similarity_prompt = data['gpt_similarity_prompt_v1']['prompt']
 
 
 from azure.identity import DefaultAzureCredential  
@@ -356,29 +357,33 @@ class Spyder:
                 gpt_title_response = "Error in Getting Patch Data"
                 status = "Error in Getting Patch Data"
             else:
-                gpt_summary_response = self.gpt_summary(input_dic)
-                if gpt_summary_response == None:
-                    gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                    # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
-                    gpt_title_response = "Error in getting Summary"
-                    status = "Error in getting Summary"
+                if self.get_similarity(input_dic).split("\n")[1][0] == "1":
+                    logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
+                    continue
                 else:
-                    gpt_title_response = self.gpt_title(gpt_summary_response)
-                    if gpt_title_response == None:
-                        # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                        gpt_title_response = "Error in getting Title"
-                        status = "Error in getting Title"
+                    gpt_summary_response = self.gpt_summary(input_dic)
+                    if gpt_summary_response == None:
+                        gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
+                        gpt_title_response = "Error in getting Summary"
+                        status = "Error in getting Summary"
                     else:
-
-                        # check the first two characters of gpt_title_response, if it is '0 ', skip this commit
-                        first_two_chars = gpt_title_response[:2]
-                        if first_two_chars in ['0 ','"0']:
-                            status = '0 skip'
-                            logger.error(f"Skip this commit: {gpt_title_response}")
+                        gpt_title_response = self.gpt_title(gpt_summary_response)
+                        if gpt_title_response == None:
+                            # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                            gpt_title_response = "Error in getting Title"
+                            status = "Error in getting Title"
                         else:
-                            status = '1 post'
-                            logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
-                            self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
+
+                            # check the first two characters of gpt_title_response, if it is '0 ', skip this commit
+                            first_two_chars = gpt_title_response[:2]
+                            if first_two_chars in ['0 ','"0']:
+                                status = '0 skip'
+                                logger.error(f"Skip this commit: {gpt_title_response}")
+                            else:
+                                status = '1 post'
+                                logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
+                                self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
 
             self.commit_history['status'] = status
 
@@ -418,13 +423,8 @@ class Spyder:
             }
             logger.debug(f"Teams Message jsonData: {jsonData}")
 
-            with open("teams_message.txt", "a", encoding="utf-8") as f:
-                f.write(str(gpt_title_response) + "\n")
-                f.write(str(time) + "\n")
-                f.write(str(gpt_summary_response))
-                f.write("\n\n*************************\n\n")
-            # response = requests.post(self.teams_webhook_url, json=jsonData)
-            # response.raise_for_status()
+            response = requests.post(self.teams_webhook_url, json=jsonData)
+            response.raise_for_status()
             logger.info(f"Post message to Teams successfully!")
 
             self.commit_history["teams_message_jsondata"] = jsonData
@@ -442,16 +442,14 @@ class Spyder:
         commit_patch_data = input_dict.get("commits")
 
         system_message = f"{gpt_summary_prompt} Reply in {self.language}."
-        with open("teams_message.txt", "a", encoding="utf-8") as f:
-            f.write("commit_patch_data :\n\n" + str(commit_patch_data) + "\n")
-            f.write("\n\n")
+
         messages = [
             {
                 "role": "system",
                 "content": system_message,
             },
             # {"role": "user", "content": str(input_dict)},
-            {"role": "user", "content": f"Here are the commit patch data. ###{commit_patch_data} ### Reply in {self.language}"},
+            {"role": "user", "content": f"Here are the commit patch data. #####{commit_patch_data} ##### Reply in {self.language}"},
         ]
 
         logger.info(f"GPT_Summary Request body: {messages}")
@@ -530,6 +528,44 @@ class Spyder:
         self.commit_history["gpt_title_total_tokens"] = total_tokens
 
         return gpt_title_response
+    def get_similarity(self, input_dict):
+        with open("logs/log.txt", "r", encoding="utf-8") as l:
+            previous_prompt = l.read().split("'Here are the commit patch data. ")[-1].split("#####")[1]
+
+        commit_patch_data = input_dict.get("commits")
+
+        system_message = f"{gpt_similarity_prompt} Reply in {self.language}."
+
+        messages = [
+            {
+                "role": "system",
+                "content": system_message,
+            },
+            # {"role": "user", "content": str(input_dict)},
+            {"role": "user", "content": f"""Patch 1 data:  
+                                            {previous_prompt}
+                                            
+                                            Patch 2 data:  
+                                            {commit_patch_data}
+                                            
+                                            Output (1 for similar, 0 for not similar): 
+                                            [Placeholder for the AI's binary output]  
+                                            
+                                            Reasoning:  
+                                            [Placeholder for the AI's explanation]
+                                            """},
+        ]
+
+        logger.info(f"GPT_Similarity Request body: {messages}")
+
+        gpt_similarity_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
+        
+        logger.warning(f"GPT_Similarity Response:\n  {gpt_similarity_response}")
+        logger.info(f"GPT_Similarity Prompt tokens:  {prompt_tokens}")
+        logger.info(f"GPT_Similarity Completion tokens:  {completion_tokens}")
+        logger.info(f"GPT_Similarity Total tokens:  {total_tokens}")
+
+        return gpt_similarity_response
 
         
 if __name__ == "__main__": 

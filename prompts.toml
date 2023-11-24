@@ -83,3 +83,9 @@ Only generate 1 tag and 1 title. If there are multiple topics in the input, plea
 You need to translate the tag into specified language if the input is not in English.
 Do not generate double quotes. Start from 0 or 1 directly.
 """
+
+[gpt_similarity_prompt_v1]
+prompt = """
+The task is to analyze two sets of commit patch data. Evaluate the changes made in each patch, considering the files changed, lines of code added or deleted, and the intent of the changes. 
+Provide a binary output based on the analysis: '1' for similar patches and '0' for dissimilar patches. Additionally, explain the reasoning behind the given output, detailing why the patches are considered similar or dissimilar.  
+"""
