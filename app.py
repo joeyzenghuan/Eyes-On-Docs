@@ -534,7 +534,7 @@ class Spyder:
 
         commit_patch_data = input_dict.get("commits")
 
-        system_message = f"{gpt_similarity_prompt} Reply in {self.language}."
+        system_message = f"{gpt_similarity_prompt} Reply Reasoning in {self.language}."
 
         messages = [
             {
