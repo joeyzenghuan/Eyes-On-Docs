@@ -442,7 +442,9 @@ class Spyder:
         commit_patch_data = input_dict.get("commits")
 
         system_message = f"{gpt_summary_prompt} Reply in {self.language}."
-
+        with open("teams_message.txt", "a", encoding="utf-8") as f:
+            f.write("commit_patch_data :\n\n" + str(commit_patch_data) + "\n")
+            f.write("\n\n")
         messages = [
             {
                 "role": "system",
