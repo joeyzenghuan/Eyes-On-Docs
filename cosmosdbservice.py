@@ -264,3 +264,41 @@ class CosmosConversationClient():
         else:
             return messages
 
+    def get_weekly_commit(self, topic, language, root_commits_url, sort_order = 'DESC'):
+        parameters = [
+            {
+                'name': '@topic',
+                'value': topic
+            },
+            {
+                'name': '@language',
+                'value': language
+            },
+            {
+                'name': '@root_commits_url',
+                'value': root_commits_url
+            }
+        ]
+        from datetime import datetime, timedelta
+
+        # 計算7天前的日期時間
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        # 格式化爲ISO8601字符串
+        seven_days_ago_str = seven_days_ago.strftime('%Y-%m-%dT%H:%M:%SZ')
+        query = f"""
+            SELECT * FROM c
+            WHERE
+                c.topic = @topic
+                AND c.root_commits_url = @root_commits_url
+                AND c.language = @language
+                AND c.commit_time >= '{seven_days_ago_str}'
+            ORDER BY c.commit_time {sort_order}
+        """
+        # query = f"SELECT TOP 1 *FROM c WHERE c.topic = @topic AND c.root_commits_url = @root_commits_url AND c.language = @language AND c.commit_time >= (DateTimeOffset() - 7) ORDER BY c.commit_time {sort_order}"
+        weekly_commit_list = list(self.container_client.query_items(query=query, parameters=parameters,
+                                                                               enable_cross_partition_query =True))
+        ## if no conversations are found, return None
+        if len(weekly_commit_list) == 0:
+            return None
+        else:
+            return weekly_commit_list

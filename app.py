@@ -41,7 +41,7 @@ gpt_summary_prompt = data['gpt_summary_prompt_v2']['prompt']
 # gpt_title_prompt = data['gpt_title_prompt_v2']['prompt']
 gpt_title_prompt = data['gpt_title_prompt_v3']['prompt']
 gpt_similarity_prompt = data['gpt_similarity_prompt_v1']['prompt']
-
+gpt_weekly_summary_prompt = data['gpt_weekly_summary_prompt_v1']['prompt']
 
 from azure.identity import DefaultAzureCredential  
 from cosmosdbservice import CosmosConversationClient
@@ -86,10 +86,8 @@ class Spyder:
         self.personal_token = os.getenv("PERSONAL_TOKEN")
         # print(self.personal_token)
         self.headers = {"Authorization": "token " + self.personal_token}
-
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.schedule = 7200
-
         lastest_commit_time_in_cosmosdb = None
         if save_commit_history_to_cosmosdb:
             try:
@@ -383,6 +381,7 @@ class Spyder:
                             else:
                                 status = '1 post'
                                 logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
+
                                 self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
 
             self.commit_history['status'] = status
@@ -566,7 +565,86 @@ class Spyder:
         logger.info(f"GPT_Similarity Total tokens:  {total_tokens}")
 
         return gpt_similarity_response
+    
+    def get_weekly_summary(self):
+        weekly_commit_list = cosmos_conversation_client.get_weekly_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
+        
+        init_prompt = "Here are the document titles and summaries for this week's updates from Microsoft Learn:\n\n"
+        for commit in weekly_commit_list:
+            if commit["gpt_title_response"][0] == "1":
+                init_prompt += commit["gpt_title_response"][2:] + "\n\n" + commit["gpt_summary_response"] + "\n\n"
+        prompt = init_prompt + "Please format the updates in a numbered list, with each entry containing the title tag, title, summary, and link, prioritized by their significance with the most important updates at the top."
 
+        messages = [
+            {
+                "role": "system",
+                "content": f"{gpt_weekly_summary_prompt}\n  Reply Reasoning in {self.language}.",
+            },
+            {"role": "user", "content": prompt},
+        ]
+
+        logger.info(f"GPT_Weekly_Summary Request body: {messages}")
+
+        gpt_weekly_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
+        
+        logger.warning(f"GPT_Weekly_Summary Response:\n  {gpt_weekly_summary_response}")
+        logger.info(f"GPT_Weekly_Summary Prompt tokens:  {prompt_tokens}")
+        logger.info(f"GPT_Weekly_Summary Completion tokens:  {completion_tokens}")
+        logger.info(f"GPT_Weekly_Summary Total tokens:  {total_tokens}")
+
+        self.commit_history["gpt_weekly_summary_response"] = gpt_weekly_summary_response
+        self.commit_history["gpt_weekly_summary_prompt_tokens"] = prompt_tokens
+        self.commit_history["gpt_weekly_summary_completion_tokens"] = completion_tokens
+        self.commit_history["gpt_weekly_summary_total_tokens"] = total_tokens
+
+        return gpt_weekly_summary_response
+    
+    def push_weekly_summary(self):
+        self.commit_history.clear()
+        logger.warning(f"Push weekly summary report to teams")
+        gpt_weekly_summary_response = self.get_weekly_summary()
+        today = datetime.date.today()  
+  
+        # 計算今天是週幾（週一為0，週日為6）  
+        weekday = today.weekday()  
+        
+        # 計算上周一的日期  
+        last_monday = today - datetime.timedelta(days=weekday+7)  
+        
+        # 計算上周日的日期  
+        last_sunday = last_monday + datetime.timedelta(days=6)  
+        try:
+            jsonData = {  # 向teams 发送的message必须是json格式
+                "@type": "MessageCard",
+                "themeColor": "0076D7",
+                "title": f"[Weekly Summary] {last_monday} ~ {last_sunday}",
+                "text": str(gpt_weekly_summary_response),
+            }
+            logger.debug(f"Teams Message jsonData: {jsonData}")
+
+            response = requests.post(self.teams_webhook_url, json=jsonData)
+            response.raise_for_status()
+            logger.info(f"Post message to Teams successfully!")
+
+            self.commit_history["teams_message_jsondata"] = jsonData
+            self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
+            self.commit_history['commit_time'] = f"{last_monday} ~ {last_sunday}"
+            self.commit_history['topic'] = self.topic
+            self.commit_history['root_commits_url'] = self.root_commits_url
+            self.commit_history['language'] = self.language
+
+            if save_commit_history_to_cosmosdb:
+                if cosmos_conversation_client.create_commit_history(self.commit_history):
+                    logger.warning(f"Create commit history in CosmosDB successfully!")
+                else:
+                    logger.error(f"Create commit history in CosmosDB failed!")
+            self.commit_history.clear()
+        except requests.exceptions.HTTPError as err:
+            logger.error(f"Error occured while sending message to Teams: {err}")
+            logger.exception("HTTPError in post_teams_message:", err)
+        except Exception as err:
+            logger.error(f"An error occured in post_teams_message: {err}")
+            logger.exception("Unknown Exception in post_teams_message:", err)
         
 if __name__ == "__main__": 
     while True:
@@ -588,7 +666,6 @@ if __name__ == "__main__":
                     all_commits_from_root_commits_url = git_spyder.get_all_commits()
                     selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
                     # selected_commits = git_spyder.select_latest_commits(all_commits_from_root_commits_url)
-
                     git_spyder.process_each_commit(selected_commits)
                     logger.warning(f"Finish processing topic: {topic}")
 
@@ -601,7 +678,10 @@ if __name__ == "__main__":
                     # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
             # git_spyder.write_time(last_crawl_time)
-
+            now = datetime.datetime.now()  
+            # 檢查今天是否是週一並且現在的時間是否在第一次執行的時間範圍內  
+            if now.weekday() == 0 and now.second < git_spyder.schedule:
+                git_spyder.push_weekly_summary()
             logger.warning(f"Waiting for {git_spyder.schedule} seconds")
             time.sleep(git_spyder.schedule)
            
