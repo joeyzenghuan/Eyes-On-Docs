@@ -25,7 +25,7 @@ deployment_name = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 def chat_completion_with_backoff(**kwargs):
     return openai.ChatCompletion.create(**kwargs)
 
-def get_gpt_response(messages):
+def get_gpt_response(messages, max_tokens=1000):
         try:
             # response = openai.ChatCompletion.create(
             #     engine=deployment_name,  # engine = "deployment_name".
@@ -38,7 +38,7 @@ def get_gpt_response(messages):
                 messages=messages,
                 temperature=0,
                 request_timeout = 300,
-                max_tokens = 1000,
+                max_tokens = max_tokens,
             )
 
             gpt_response = response["choices"][0]["message"]["content"]

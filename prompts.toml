@@ -89,3 +89,15 @@ prompt = """
 The task is to analyze two sets of commit patch data. Evaluate the changes made in each patch, considering the files changed, lines of code added or deleted, and the intent of the changes. 
 Provide a binary output based on the analysis: '1' for similar patches and '0' for dissimilar patches. Additionally, explain the reasoning behind the given output, detailing why the patches are considered similar or dissimilar.  
 """
+
+[gpt_weekly_summary_prompt_v1]
+prompt = """
+Organize Microsoft Learn document updates by relevance, using numbered entries with title tags, titles, summaries, and links.
+Output format:
+1.[Title Tag] Title\n
+Update Summary\n
+Link \n\n(newline twice)
+2.[Title Tag] Title\n
+Update Summary\n
+Link \n\n(newline twice)
+"""
