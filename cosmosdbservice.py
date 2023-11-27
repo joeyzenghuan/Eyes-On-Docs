@@ -279,21 +279,34 @@ class CosmosConversationClient():
                 'value': root_commits_url
             }
         ]
-        from datetime import datetime, timedelta
-
-        # 計算7天前的日期時間
-        seven_days_ago = datetime.utcnow() - timedelta(days=7)
-        # 格式化爲ISO8601字符串
-        seven_days_ago_str = seven_days_ago.strftime('%Y-%m-%dT%H:%M:%SZ')
-        query = f"""
-            SELECT * FROM c
-            WHERE
-                c.topic = @topic
-                AND c.root_commits_url = @root_commits_url
-                AND c.language = @language
-                AND c.commit_time >= '{seven_days_ago_str}'
-            ORDER BY c.commit_time {sort_order}
-        """
+        from datetime import datetime, timedelta  
+  
+        # 取得當前時間的UTC  
+        now = datetime.utcnow()  
+        
+        # 計算今天是這周的第幾天，週一是0，週日是6  
+        today_weekday = now.weekday()  
+        
+        # 計算上周的週日（假設週一為一周的開始）  
+        last_sunday = now - timedelta(days=today_weekday + 1)  
+        
+        # 計算上周的週一  
+        last_monday = last_sunday - timedelta(days=6)  
+        
+        # 格式化為ISO8601字符串  
+        last_monday_str = last_monday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        last_sunday_str = last_sunday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        
+        query = f"""  
+            SELECT * FROM c  
+            WHERE  
+                c.topic = @topic  
+                AND c.root_commits_url = @root_commits_url  
+                AND c.language = @language  
+                AND c.commit_time >= '{last_monday_str}'  
+                AND c.commit_time < '{last_sunday_str}'  
+            ORDER BY c.commit_time {sort_order}  
+        """  
         # query = f"SELECT TOP 1 *FROM c WHERE c.topic = @topic AND c.root_commits_url = @root_commits_url AND c.language = @language AND c.commit_time >= (DateTimeOffset() - 7) ORDER BY c.commit_time {sort_order}"
         weekly_commit_list = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                                enable_cross_partition_query =True))
@@ -302,3 +315,56 @@ class CosmosConversationClient():
             return None
         else:
             return weekly_commit_list
+        
+    def check_weekly_summary(self, topic, language, root_commits_url, sort_order = 'DESC'):
+        parameters = [
+            {
+                'name': '@topic',
+                'value': topic
+            },
+            {
+                'name': '@language',
+                'value': language
+            },
+            {
+                'name': '@root_commits_url',
+                'value': root_commits_url
+            }
+        ]
+        from datetime import datetime, timedelta  
+  
+        # 取得當前時間的UTC  
+        now = datetime.utcnow()  
+        
+        # 計算今天是這周的第幾天，週一是0，週日是6  
+        today_weekday = now.weekday()  
+        
+        # 計算這周的週一  
+        this_monday = now - timedelta(days=today_weekday)  
+        
+        # 計算這周的週日（週一加6天）  
+        this_sunday = this_monday + timedelta(days=6)  
+        
+        # 格式化為ISO8601字符串  
+        this_monday_str = this_monday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        this_sunday_str = this_sunday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        
+        query = f"""  
+            SELECT * FROM c  
+            WHERE  
+                c.title LIKE '%[Weekly Summary]%'  
+                AND c.commit_time >= '{this_monday_str}'  
+                AND c.commit_time <= '{this_sunday_str}'  
+            ORDER BY c.commit_time {sort_order}  
+        """  
+        
+        # 執行查詢  
+        weekly_summary_list = list(self.container_client.query_items(  
+            query=query,  
+            parameters=parameters,  
+            enable_cross_partition_query=True))  
+        
+        if len(weekly_summary_list) == 0:
+            return None
+        else:
+            return weekly_summary_list

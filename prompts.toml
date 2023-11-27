@@ -92,12 +92,12 @@ Provide a binary output based on the analysis: '1' for similar patches and '0' f
 
 [gpt_weekly_summary_prompt_v1]
 prompt = """
-Organize the provided Microsoft Learn document updates by their importance and format them as numbered entries with title tags, titles, summaries, and links.
+Organize Microsoft Learn document updates by relevance, using numbered entries with title tags, titles, summaries, and links.
 Output format:
 1.[Title Tag] Title\n
-    Update Summary\n
-    Link
+Update Summary\n
+Link \n\n(newline twice)
 2.[Title Tag] Title\n
-    Update Summary\n
-    Link
+Update Summary\n
+Link \n\n(newline twice)
 """

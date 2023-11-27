@@ -151,7 +151,7 @@ class Spyder:
         
         # self.gitprefix = "https://github.com/MicrosoftDocs/azure-docs/blob/main/"
         # self.mslearnprefix = "https://learn.microsoft.com/en-us/azure/"
-
+        self.this_week_summary = cosmos_conversation_client.check_weekly_summary(topic, language, root_commits_url)
         #记录每次爬取的commit的时间，url，gpt生成的标题和总结等信息
         self.commit_history = {}
 
@@ -585,7 +585,7 @@ class Spyder:
 
         logger.info(f"GPT_Weekly_Summary Request body: {messages}")
 
-        gpt_weekly_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)
+        gpt_weekly_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages, max_tokens=2000)
         
         logger.warning(f"GPT_Weekly_Summary Response:\n  {gpt_weekly_summary_response}")
         logger.info(f"GPT_Weekly_Summary Prompt tokens:  {prompt_tokens}")
@@ -680,7 +680,7 @@ if __name__ == "__main__":
             # git_spyder.write_time(last_crawl_time)
             now = datetime.datetime.now()  
             # 檢查今天是否是週一並且現在的時間是否在第一次執行的時間範圍內  
-            if now.weekday() == 0 and now.second < git_spyder.schedule:
+            if now.weekday() == 0 and now.second < git_spyder.schedule or git_spyder.this_week_summary == None:
                 git_spyder.push_weekly_summary()
             logger.warning(f"Waiting for {git_spyder.schedule} seconds")
             time.sleep(git_spyder.schedule)
