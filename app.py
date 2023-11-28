@@ -355,34 +355,33 @@ class Spyder:
                 gpt_title_response = "Error in Getting Patch Data"
                 status = "Error in Getting Patch Data"
             else:
-                if self.get_similarity(input_dic).split("\n")[1][0] == "1":
-                    logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
-                    continue
+                gpt_summary_response = self.gpt_summary(input_dic)
+                if gpt_summary_response == None:
+                    gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                    # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
+                    gpt_title_response = "Error in getting Summary"
+                    status = "Error in getting Summary"
                 else:
-                    gpt_summary_response = self.gpt_summary(input_dic)
-                    if gpt_summary_response == None:
-                        gpt_summary_response = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                        # gpt_title_response = "[!!]Need to check the update in commit page manually.😂"
-                        gpt_title_response = "Error in getting Summary"
-                        status = "Error in getting Summary"
+                    gpt_title_response = self.gpt_title(gpt_summary_response)
+                    if gpt_title_response == None:
+                        # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        gpt_title_response = "Error in getting Title"
+                        status = "Error in getting Title"
                     else:
-                        gpt_title_response = self.gpt_title(gpt_summary_response)
-                        if gpt_title_response == None:
-                            # gpt_title_response = "Something went wrong when generating Title😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                            gpt_title_response = "Error in getting Title"
-                            status = "Error in getting Title"
+
+                        # check the first two characters of gpt_title_response, if it is '0 ', skip this commit
+                        first_two_chars = gpt_title_response[:2]
+                        if first_two_chars in ['0 ','"0']:
+                            status = '0 skip'
+                            logger.error(f"Skip this commit: {gpt_title_response}")
                         else:
+                            # if self.get_similarity(input_dic).split("\n")[1][0] == "1":
+                            #     logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
+                            # else:
+                            status = '1 post'
+                            logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
 
-                            # check the first two characters of gpt_title_response, if it is '0 ', skip this commit
-                            first_two_chars = gpt_title_response[:2]
-                            if first_two_chars in ['0 ','"0']:
-                                status = '0 skip'
-                                logger.error(f"Skip this commit: {gpt_title_response}")
-                            else:
-                                status = '1 post'
-                                logger.warning(f"GPT_Title without first 2 chars: {gpt_title_response[2:]}")
-
-                                self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
+                            # self.post_teams_message(gpt_title_response[2:], time_, gpt_summary_response, commit_url)
 
             self.commit_history['status'] = status
 
@@ -622,13 +621,13 @@ class Spyder:
             }
             logger.debug(f"Teams Message jsonData: {jsonData}")
 
-            response = requests.post(self.teams_webhook_url, json=jsonData)
-            response.raise_for_status()
+            # response = requests.post(self.teams_webhook_url, json=jsonData)
+            # response.raise_for_status()
             logger.info(f"Post message to Teams successfully!")
 
             self.commit_history["teams_message_jsondata"] = jsonData
             self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
-            self.commit_history['commit_time'] = f"{last_monday} ~ {last_sunday}"
+            self.commit_history['commit_time'] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             self.commit_history['topic'] = self.topic
             self.commit_history['root_commits_url'] = self.root_commits_url
             self.commit_history['language'] = self.language
@@ -678,9 +677,13 @@ if __name__ == "__main__":
                     # git_spyder.get_change_from_each_url("12345", "https://github.com/MicrosoftDocs/azure-docs/commit/a2332df378bcd1f30acbed9dad066c70f9410bb8")
 
             # git_spyder.write_time(last_crawl_time)
-            now = datetime.datetime.now()  
+            now = datetime.datetime.now()
+            now_second = now - now.replace(hour=0, minute=0, second=0, microsecond=0)  
+            # 獲取總秒數  
+            seconds_since_midnight = now_second.total_seconds()  
+            this_week_summary = cosmos_conversation_client.check_weekly_summary(topic, language, root_commits_url)
             # 檢查今天是否是週一並且現在的時間是否在第一次執行的時間範圍內  
-            if now.weekday() == 0 and now.second < git_spyder.schedule or git_spyder.this_week_summary == None:
+            if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary == None:
                 git_spyder.push_weekly_summary()
             logger.warning(f"Waiting for {git_spyder.schedule} seconds")
             time.sleep(git_spyder.schedule)

@@ -287,15 +287,15 @@ class CosmosConversationClient():
         # 計算今天是這周的第幾天，週一是0，週日是6  
         today_weekday = now.weekday()  
         
-        # 計算上周的週日（假設週一為一周的開始）  
-        last_sunday = now - timedelta(days=today_weekday + 1)  
-        
         # 計算上周的週一  
-        last_monday = last_sunday - timedelta(days=6)  
+        last_monday = now - timedelta(days=(today_weekday+7))
+        
+        # 計算上周的週日（週一加6天）  
+        last_sunday = last_monday + timedelta(days=6)
         
         # 格式化為ISO8601字符串  
-        last_monday_str = last_monday.strftime('%Y-%m-%dT%H:%M:%SZ')  
-        last_sunday_str = last_sunday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        last_monday_str = last_monday.strftime("%Y-%m-%dT00:00:00")  
+        last_sunday_str = last_sunday.strftime('%Y-%m-%dT23:59:59')  
         
         query = f"""  
             SELECT * FROM c  
@@ -304,7 +304,7 @@ class CosmosConversationClient():
                 AND c.root_commits_url = @root_commits_url  
                 AND c.language = @language  
                 AND c.commit_time >= '{last_monday_str}'  
-                AND c.commit_time < '{last_sunday_str}'  
+                AND c.commit_time <= '{last_sunday_str}'  
             ORDER BY c.commit_time {sort_order}  
         """  
         # query = f"SELECT TOP 1 *FROM c WHERE c.topic = @topic AND c.root_commits_url = @root_commits_url AND c.language = @language AND c.commit_time >= (DateTimeOffset() - 7) ORDER BY c.commit_time {sort_order}"
@@ -346,16 +346,19 @@ class CosmosConversationClient():
         this_sunday = this_monday + timedelta(days=6)  
         
         # 格式化為ISO8601字符串  
-        this_monday_str = this_monday.strftime('%Y-%m-%dT%H:%M:%SZ')  
-        this_sunday_str = this_sunday.strftime('%Y-%m-%dT%H:%M:%SZ')  
+        this_monday_str = this_monday.strftime("%Y-%m-%dT00:00:00")  
+        this_sunday_str = this_sunday.strftime('%Y-%m-%dT23:59:59')  
         
         query = f"""  
             SELECT * FROM c  
             WHERE  
-                c.title LIKE '%[Weekly Summary]%'  
-                AND c.commit_time >= '{this_monday_str}'  
-                AND c.commit_time <= '{this_sunday_str}'  
-            ORDER BY c.commit_time {sort_order}  
+                CONTAINS(LOWER(c.teams_message_jsondata.title), '[weekly summary]') 
+                AND c.topic = @topic  
+                AND c.root_commits_url = @root_commits_url  
+                AND c.language = @language 
+                AND c.log_time >= '{this_monday_str}'  
+                AND c.log_time <= '{this_sunday_str}'  
+            ORDER BY c.log_time {sort_order}  
         """  
         
         # 執行查詢  
