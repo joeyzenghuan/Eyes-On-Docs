@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 # from flask import Flask, request
 from azure.identity import DefaultAzureCredential  
 from azure.cosmos import CosmosClient, PartitionKey  
@@ -279,8 +279,7 @@ class CosmosConversationClient():
                 'value': root_commits_url
             }
         ]
-        from datetime import datetime, timedelta  
-  
+
         # 取得當前時間的UTC  
         now = datetime.utcnow()  
         
@@ -331,7 +330,6 @@ class CosmosConversationClient():
                 'value': root_commits_url
             }
         ]
-        from datetime import datetime, timedelta  
   
         # 取得當前時間的UTC  
         now = datetime.utcnow()  
@@ -340,10 +338,10 @@ class CosmosConversationClient():
         today_weekday = now.weekday()  
         
         # 計算這周的週一  
-        this_monday = now - timedelta(days=today_weekday)  
+        this_monday = now - timedelta(days=(today_weekday))
         
         # 計算這周的週日（週一加6天）  
-        this_sunday = this_monday + timedelta(days=6)  
+        this_sunday = this_monday + timedelta(days=6)
         
         # 格式化為ISO8601字符串  
         this_monday_str = this_monday.strftime("%Y-%m-%dT00:00:00")  
@@ -360,13 +358,12 @@ class CosmosConversationClient():
                 AND c.log_time <= '{this_sunday_str}'  
             ORDER BY c.log_time {sort_order}  
         """  
-        
         # 執行查詢  
         weekly_summary_list = list(self.container_client.query_items(  
             query=query,  
             parameters=parameters,  
             enable_cross_partition_query=True))  
-        
+
         if len(weekly_summary_list) == 0:
             return None
         else:
