@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from azure.identity import DefaultAzureCredential  
 from azure.cosmos import CosmosClient, PartitionKey  
   
-class CosmosConversationClient():
+class CosmosConversationClient:
     
     def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str):
         self.cosmosdb_endpoint = cosmosdb_endpoint
@@ -368,3 +368,5 @@ class CosmosConversationClient():
             return None
         else:
             return weekly_summary_list
+
+

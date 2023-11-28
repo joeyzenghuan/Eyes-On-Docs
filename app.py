@@ -6,7 +6,7 @@ import toml
   
 from logs import logger  
 from gpt_reply import *  
-from spyder_cosmosdb import *  
+from spyder import *  
   
 load_dotenv()  
   
@@ -31,7 +31,11 @@ def load_targets_config():
     with open('target_config.json', 'r') as f:  
         return json.load(f)  
   
-def process_targets(targets, system_prompts):  
+def process_targets(targets, system_prompts):
+    """
+    根據target_config.json的目標依次爬取更新並總結推送至teams的channel
+    並在每週一推送一次上週更新總結
+    """
     for target in targets:  
         topic = target['topic_name']  
         root_commits_url = target['root_commits_url']  
@@ -44,28 +48,29 @@ def process_targets(targets, system_prompts):
         logger.info(f"Teams webhook url: {teams_webhook_url}")  
   
         git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, system_prompts)  
-        all_commits = git_spyder.get_all_commits()  
-        selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
-        git_spyder.process_each_commit(selected_commits)  
-        git_spyder.write_time(latest_crawl_time)  
-        this_week_summary = cosmos_conversation_client.check_weekly_summary(topic, language, root_commits_url)  
+        # all_commits = git_spyder.get_all_commits()  
+        # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
+        git_spyder.process_commits(git_spyder.latest_commits)  
 
-        now = datetime.datetime.now()  
+        this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
+
+        now = datetime.datetime.now()
         seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
         if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
             git_spyder.push_weekly_summary()  
-  
         logger.warning(f"Finish processing topic: {topic}")  
     return git_spyder.schedule
-def main():  
+
+def main():
+    """
+    以循環方式固定時間爬取一次檢測是否有文檔更新
+    """
     system_prompts = load_system_prompts()  
     targets = load_targets_config()  
   
     while True:  
         try:  
             schedule = process_targets(targets, system_prompts)  
-            
-            
             logger.warning(f"Waiting for {schedule} seconds")  
             time.sleep(schedule)  
         except Exception as e:  
