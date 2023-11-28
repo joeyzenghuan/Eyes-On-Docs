@@ -3,7 +3,7 @@ from gpt_reply import get_gpt_response
   
   
 class CallGPT:  
-    
+
     def correct_links(self, response):  
         """  
         修正响应中的链接。  
@@ -12,10 +12,13 @@ class CallGPT:
         """  
         replacements = {  
             "/articles/": "https://learn.microsoft.com/en-us/azure/",  
+            "articles/": "https://learn.microsoft.com/en-us/azure/", 
             ".md": "",  
             ".yml": "",  
             "/windows-driver-docs-pr/": "https://learn.microsoft.com/en-us/windows-hardware/drivers/",  
-            "/docs/": "https://learn.microsoft.com/en-us/fabric/"  
+            "windows-driver-docs-pr/": "https://learn.microsoft.com/en-us/windows-hardware/drivers/",  
+            "/docs/": "https://learn.microsoft.com/en-us/fabric/",  
+            "docs/": "https://learn.microsoft.com/en-us/fabric/"  
         }  
         for old, new in replacements.items():  
             response = response.replace(old, new)  
