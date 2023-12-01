@@ -25,13 +25,7 @@ class CallGPT:
         logger.warning(f"Correct Links in GPT_Summary Response:\n  {response}")  
         return response  
   
-    def update_commit_history(self, key, value):  
-        """  
-        更新提交历史记录。  
-        :param key: 记录的键  
-        :param value: 记录的值  
-        """  
-        self.commit_history[key] = value  
+    
     def gpt_summary(self, input_dict, language, gpt_summary_prompt):  
         """  
         使用GPT模型总结提交的更改内容。  
@@ -61,17 +55,14 @@ class CallGPT:
   
         # 替换响应中的链接  
         gpt_summary_response = self.correct_links(gpt_summary_response)  
-  
-        # 更新提交历史记录  
-        self.update_commit_history("gpt_commit_patch_data", commit_patch_data)  
-        self.update_commit_history("gpt_summary_response", gpt_summary_response)  
-        self.update_commit_history("gpt_summary_tokens", {  
+   
+        gpt_summary_tokens = {  
             "prompt": prompt_tokens,  
             "completion": completion_tokens,  
             "total": total_tokens  
-        })  
+        }
   
-        return gpt_summary_response  
+        return gpt_summary_response, gpt_summary_tokens, commit_patch_data
   
     def gpt_title(self, input_, language, gpt_title_prompt):  
         """  
@@ -97,15 +88,13 @@ class CallGPT:
         logger.warning(f"GPT_Title Response:\n {gpt_title_response}")  
         logger.info(f"GPT_Title Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")  
   
-        # 更新提交历史记录  
-        self.update_commit_history("gpt_title_response", gpt_title_response)  
-        self.update_commit_history("gpt_title_tokens", {  
+        gpt_title_tokens = {  
             "prompt": prompt_tokens,  
             "completion": completion_tokens,  
             "total": total_tokens  
-        })  
+        } 
   
-        return gpt_title_response  
+        return gpt_title_response, gpt_title_tokens
   
     
 
@@ -139,16 +128,14 @@ class CallGPT:
         # 记录日志  
         logger.warning(f"GPT_Weekly_Summary Response:\n  {gpt_weekly_summary_response}")  
         logger.info(f"GPT_Weekly_Summary Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")    
-  
-        # 更新 commit 历史记录  
-        self.update_commit_history("gpt_weekly_summary_response", gpt_weekly_summary_response)  
-        self.update_commit_history("gpt_weekly_summary_tokens", {  
+
+        gpt_weekly_summary_tokens = {  
             "prompt": prompt_tokens,  
             "completion": completion_tokens,  
             "total": total_tokens  
-        })  
+        }
 
-        return gpt_weekly_summary_response  
+        return gpt_weekly_summary_response, gpt_weekly_summary_tokens
   
     def get_similarity(self, input_dict, language, latest_commit_in_cosmosdb, gpt_similarity_prompt):  
         """  

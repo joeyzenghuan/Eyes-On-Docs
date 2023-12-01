@@ -6,11 +6,12 @@ from logs import logger
 from commit_fetch import CommitFetcher  
 from cosmosdb_client import CosmosDBHandler  
 from call_gpt import CallGPT
+from teams_notifier import TeamsNotifier
 
 load_dotenv()  
 PERSONAL_TOKEN = os.getenv("PERSONAL_TOKEN")  
   
-class Spyder(CommitFetcher, CallGPT):  
+class Spyder(CommitFetcher, CallGPT, TeamsNotifier):  
     def __init__(self, topic, root_commits_url, language, teams_webhook_url, system_prompt_dict):  
         self.topic = topic
         self.language = language
@@ -52,7 +53,7 @@ class Spyder(CommitFetcher, CallGPT):
                 # Use GPT model to generate summary and title  
                 gpt_summary, gpt_title, status = self.generate_gpt_responses(input_dic, self.language, self.system_prompt_dict)  
                 # Save commit history to CosmosDB  
-                self.save_commit_history(time_, commit_url, gpt_title, gpt_summary, status)  
+                  
                 if gpt_summary == None:
                     gpt_summary = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
                     gpt_title = "Error in getting Summary"
@@ -72,30 +73,43 @@ class Spyder(CommitFetcher, CallGPT):
                             # else:
                             logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
 
-                            # self.post_teams_message(gpt_title[2:], time_, gpt_summary, commit_url)
-                            print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
-        # Update the start time in CosmosDB  
+                            self.post_teams_message(gpt_title[2:], time_, gpt_summary, commit_url)
+                            # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
+        # Update the start time in CosmosDB 
+        self.save_commit_history(time_, commit_url, status) 
+        self.upload_commit_history()
         self.commit_history.clear()
         self.cosmosDB.write_time(self.latest_time)  
   
     def generate_gpt_responses(self, commit_data, language, prompts):  
-        gpt_summary = self.gpt_summary(commit_data, language, prompts["GPT_SUMMARY_PROMPT"])  
-        gpt_title = self.gpt_title(gpt_summary, language, prompts["GPT_TITLE_PROMPT"])  
+        gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_data, language, prompts["GPT_SUMMARY_PROMPT"])  
+        self.update_commit_history("gpt_summary", gpt_summary)
+        self.update_commit_history("gpt_summary_tokens", gpt_summary_tokens)
+        self.update_commit_history("commit_patch_data", commit_patch_data)
+        gpt_title, gpt_title_tokens = self.gpt_title(gpt_summary, language, prompts["GPT_TITLE_PROMPT"])  
+        self.update_commit_history("gpt_title", gpt_title)
+        self.update_commit_history("gpt_title_tokens", gpt_title_tokens)
         status = self.determine_status(gpt_title)  
         return gpt_summary, gpt_title, status  
   
-    def save_commit_history(self, commit_time, commit_url, gpt_title, gpt_summary, status):  
-        commit_history = {  
-            'commit_time': str(commit_time),  
-            'commit_url': str(commit_url),  
-            'gpt_title_response': str(gpt_title),  
-            'gpt_summary_response': str(gpt_summary),  
-            'status': status,  
-            'topic': self.topic,  
-            'root_commits_url': self.root_commits_url,  
-            'language': self.language  
-        }  
-        if self.cosmosDB_client.create_commit_history(commit_history):  
+    def save_commit_history(self, commit_time, commit_url, status):  
+        self.update_commit_history("commit_time", str(commit_time)) 
+        self.update_commit_history("commit_url", str(commit_url)) 
+        self.update_commit_history("status", status) 
+        self.update_commit_history("topic", self.topic) 
+        self.update_commit_history("language", self.language) 
+        self.update_commit_history("root_commits_url", self.root_commits_url) 
+
+    def update_commit_history(self, key, value):  
+        """  
+        更新提交历史记录。  
+        :param key: 记录的键  
+        :param value: 记录的值  
+        """  
+        self.commit_history[key] = value  
+
+    def upload_commit_history(self):
+        if self.cosmosDB_client.create_commit_history(self.commit_history):  
             logger.info("Successfully created commit history in CosmosDB!")  
         else:  
             logger.error("Failed to create commit history in CosmosDB!")  
@@ -132,8 +146,8 @@ class Spyder(CommitFetcher, CallGPT):
             response.raise_for_status()
             logger.info(f"Post message to Teams successfully!")
 
-            self.commit_history["teams_message_jsondata"] = jsonData
-            self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
+            self.update_commit_history("teams_message_jsondata", jsonData)
+            self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
         except requests.exceptions.HTTPError as err:
             logger.error(f"Error occured while sending message to Teams: {err}")
             logger.exception("HTTPError in post_teams_message:", err)
@@ -148,7 +162,7 @@ class Spyder(CommitFetcher, CallGPT):
         self.commit_history.clear()
         logger.warning(f"Push weekly summary report to teams")
         weekly_commit_list = self.cosmosDB_client.get_weekly_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
-        gpt_weekly_summary_response = self.get_weekly_summary(self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"])
+        gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.get_weekly_summary(self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"])
         today = datetime.date.today() 
   
         # 計算今天是週幾（週一為0，週日為6）  
@@ -208,19 +222,20 @@ class Spyder(CommitFetcher, CallGPT):
                 }
                 logger.debug(f"Teams Message jsonData: {json_data}")
 
-                # response = requests.post(self.teams_webhook_url, json=json_data)
-                # response.raise_for_status()
+                response = requests.post(self.teams_webhook_url, json=json_data)
+                response.raise_for_status()
                 logger.info(f"Post message to Teams successfully!")
-                self.commit_history["get_weekly_summary_status"] = "succeed"
-                self.commit_history["teams_message_jsondata"] = json_data
+                self.update_commit_history("get_weekly_summary_status", "succeed")
+                self.update_commit_history("teams_message_jsondata", json_data)
+                self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
             else:
-                self.commit_history["get_weekly_summary_status"] = "failed"
+                self.update_commit_history("get_weekly_summary_status", "failed")
 
-            self.commit_history["teams_message_webhook_url"] = self.teams_webhook_url
-            self.commit_history['commit_time'] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-            self.commit_history['topic'] = self.topic
-            self.commit_history['root_commits_url'] = self.root_commits_url
-            self.commit_history['language'] = self.language
+            self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
+            self.update_commit_history("commit_time", datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+            self.update_commit_history("topic", self.topic)
+            self.update_commit_history("root_commits_url", self.root_commits_url)
+            self.update_commit_history("language", self.language)
 
             if self.cosmosDB.save_commit_history_to_cosmosdb:
                 if self.cosmosDB_client.create_commit_history(self.commit_history):

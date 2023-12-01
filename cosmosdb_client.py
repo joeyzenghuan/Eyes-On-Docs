@@ -74,7 +74,6 @@ class CosmosDBHandler:
             f.close()
             logger.warning(f"Update last_crawl_time.txt: {update_time}")
         except Exception as e:
-            # logger.error(f"Error writing time: {e}")
             logger.exception("Exception in write_time", e)
 
     def read_time(self):
@@ -88,43 +87,4 @@ class CosmosDBHandler:
             # logger.error(f"Error reading time from file: {e}")
             logger.exception("Exception in read_time", e)
             time_in_file = None
-
-            # # if file doesn't exist, create a file, and use current time as start time
-            # local_time = datetime.datetime.now()
-            # time_struct = time.mktime(local_time.timetuple())
-            # utc_st = datetime.datetime.utcfromtimestamp(time_struct)
-            # time_in_file = utc_st
-            # self.write_time(time_in_file)
-            # logger.warning(f"Use current time as start time, and update last_crawl_time: {time_in_file}")
-
         return time_in_file
-  
-    def save_commit_history(self, commit_history):  
-        """將提交歷史記錄保存到 CosmosDB"""  
-        if self.client and commit_history:  
-            try:  
-                if self.client.create_commit_history(commit_history):  
-                    logger.exception("An exception occurred during CosmosDB initialization", e)  
-                    return True  
-                else:  
-                    logger.error("Failed to save commit history to CosmosDB!")  
-                    return False  
-            except Exception as e:  
-                logger.exception("An exception occurred while saving commit history to CosmosDB", e)  
-                return False  
-        return False  
-  
- 
-if __name__ == "__main__":
-    cosmos_db_handler = CosmosDBHandler()  
-    commit_history_data = {  
-        'commit_time': '2023-11-28 00:00:00',  
-        'commit_url': 'https://github.com/example/repo/commit/abc123',  
-        'gpt_title_response': 'Updated documentation for feature XYZ',  
-        'gpt_summary_response': 'Feature XYZ documentation has been updated with the latest information.',  
-        'topic': 'Documentation Update',  
-        'root_commits_url': 'https://github.com/example/repo/commits',  
-        'language': 'en',
-        'who you are': "Nick Shieh >///<"  
-    }  
-    cosmos_db_handler.save_commit_history(commit_history_data)  
