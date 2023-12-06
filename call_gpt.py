@@ -1,6 +1,6 @@
 from logs import logger  
 from gpt_reply import get_gpt_response  
-  
+import tiktoken
   
 class CallGPT:  
 
@@ -98,7 +98,7 @@ class CallGPT:
   
     
 
-    def get_weekly_summary(self, language, weekly_commit_list, gpt_weekly_summary_prompt):  
+    def get_weekly_summary(self, language, weekly_commit_list, gpt_weekly_summary_prompt, max_input_token):  
         """  
         获取一周 commit 的总结  
   
@@ -109,12 +109,15 @@ class CallGPT:
         """  
         # 构建初始提示信息  
         init_prompt = "Here are the document titles and summaries for this week's updates from Microsoft Learn:\n\n"  
+        end_prompt = "Please format the updates in a numbered list, with each entry containing the title tag, title, summary, and link, prioritized by their significance with the most important updates at the top."
         for commit in weekly_commit_list:  
-            if commit["gpt_title_response"][0] == "1":  
-                init_prompt += f"{commit['gpt_title_response'][2:]}\n\n{commit['gpt_summary_response']}\n\n"  
-  
-        prompt = init_prompt + "Please format the updates in a numbered list, with each entry containing the title tag, title, summary, and link, prioritized by their significance with the most important updates at the top."  
-  
+            if commit["gpt_title_response"][0] == "1":
+                init_prompt += f"{commit['gpt_title_response'][2:]}\n\n{commit['gpt_summary_response']}\n\n"
+                used_tokens = self.num_tokens_from_string(gpt_weekly_summary_prompt+init_prompt+end_prompt, "cl100k_base")
+                if used_tokens > max_input_token:
+                    logger.warning(f"Input tokens exceed the limit value: {messages} / {max_input_token}")  
+                    break
+        prompt = init_prompt + end_prompt
         messages = [  
             {"role": "system", "content": f"{gpt_weekly_summary_prompt}\n  Reply Reasoning in {language}."},  
             {"role": "user", "content": prompt},  
@@ -170,4 +173,8 @@ class CallGPT:
 
         return gpt_similarity_response  
   
-    
+    def num_tokens_from_string(self, string: str, encoding_name: str) -> int:
+        """Returns the number of tokens in a text string."""
+        encoding = tiktoken.get_encoding(encoding_name)
+        num_tokens = len(encoding.encode(string))
+        return num_tokens

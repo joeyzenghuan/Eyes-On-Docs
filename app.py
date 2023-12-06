@@ -1,8 +1,10 @@
 import json  
 import time  
-import datetime  
-from dotenv import load_dotenv  
 import toml  
+import datetime
+from dotenv import load_dotenv  
+from threading import Thread
+
   
 from logs import logger  
 from gpt_reply import *  
@@ -47,7 +49,7 @@ def process_targets(targets, system_prompts):
         logger.info(f"Language: {language}")  
         logger.info(f"Teams webhook url: {teams_webhook_url}")  
   
-        git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, system_prompts)  
+        git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, system_prompts, 30000)  
         # all_commits = git_spyder.get_all_commits()  
         # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
         git_spyder.process_commits(git_spyder.latest_commits)  
@@ -57,7 +59,7 @@ def process_targets(targets, system_prompts):
         now = datetime.datetime.now()
         seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
         if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
-            git_spyder.push_weekly_summary()  
+            git_spyder.generate_weekly_summary()  
         logger.warning(f"Finish processing topic: {topic}")  
     return git_spyder.schedule
 

@@ -17,7 +17,10 @@ class CosmosDBHandler:
         """初始化 CosmosDB 客戶端"""  
         try:  
             endpoint = f'https://{self.account}.documents.azure.com:443/'  
-            credential = self.account_key or DefaultAzureCredential()  
+            if not self.account_key:
+                credential = DefaultAzureCredential()
+            else:
+                credential = self.account_key
             client = CosmosConversationClient(  
                 cosmosdb_endpoint=endpoint,   
                 credential=credential,   
@@ -36,9 +39,13 @@ class CosmosDBHandler:
         """Get the starting point in time for fetching commits."""  
         lastest_commit_time_in_cosmosdb = None  
         try:
-            lastest_commit_time_in_cosmosdb = datetime.datetime.strptime(  
-                lastest_commit_in_cosmosdb['commit_time'], "%Y-%m-%d %H:%M:%S"  
-                )  
+            if lastest_commit_in_cosmosdb:
+                lastest_commit_time_in_cosmosdb = lastest_commit_in_cosmosdb['commit_time']
+
+                lastest_commit_time_in_cosmosdb = lastest_commit_time_in_cosmosdb.strip()
+                lastest_commit_time_in_cosmosdb = datetime.datetime.strptime(
+                    lastest_commit_time_in_cosmosdb, "%Y-%m-%d %H:%M:%S"
+                )
         except Exception as e:  
             logger.exception("Exception in getting lastest_commit_time_in_cosmosdb", e)  
   

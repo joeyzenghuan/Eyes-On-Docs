@@ -4,7 +4,6 @@ import datetime
 from logs import logger  
 
 class CommitFetcher:  
-
     def get_all_commits(self, root_commits_url, headers={}):  
         logger.info(f"Commit Root page: {root_commits_url}")  
   
@@ -40,7 +39,31 @@ class CommitFetcher:
         commits_dic_time_url = dict(zip(precise_time_list, commits_url_list))  
         return commits_dic_time_url  
 
+    def get_change_from_each_url(self, time, commit_url, max_input_token):  
+        logger.warning(f"Getting changes from url: {commit_url}")  
   
+        # 獲取commit頁面的內容  
+        response = self._make_request(commit_url)  
+  
+        # 解析commit頁面  
+        soup = BeautifulSoup(response, "html.parser")  
+        commit_title = soup.find("div", class_="commit-title markdown-title").get_text(strip=True) if soup.find("div", class_="commit-title markdown-title") else ""  
+        commit_desc = soup.find("div", {"class": "commit-desc"}).pre.get_text(strip=True) if soup.find("div", {"class": "commit-desc"}) else ""  
+  
+        # 獲取patch數據  
+        patch_url = commit_url + ".patch"  
+        patch_data = self._make_request(patch_url, is_stream=True)  
+  
+        # 構建結果字典  
+        result_dic = {  
+            "commits": patch_data[:max_input_token] if len(patch_data) >= max_input_token else patch_data,  
+            "urls": []  
+        }  
+  
+        logger.debug(f"Get Change result_dic: {result_dic}")  
+  
+        return result_dic, time, f"{commit_title}, {commit_desc}", commit_url  
+
     def select_latest_commits(self, commits_dic_time_url, start_time):  
         # 篩選出開始時間之後的提交  
         selected_commits = {key: url for key, url in commits_dic_time_url.items() if key > start_time}  
@@ -62,32 +85,7 @@ class CommitFetcher:
   
         # 返回篩選後的提交以及最新的爬取時間  
         return selected_commits, latest_crawl_time 
-  
-    def get_change_from_each_url(self, time, commit_url):  
-        logger.warning(f"Getting changes from url: {commit_url}")  
-  
-        # 獲取commit頁面的內容  
-        response = self._make_request(commit_url)  
-  
-        # 解析commit頁面  
-        soup = BeautifulSoup(response, "html.parser")  
-        commit_title = soup.find("div", class_="commit-title markdown-title").get_text(strip=True) if soup.find("div", class_="commit-title markdown-title") else ""  
-        commit_desc = soup.find("div", {"class": "commit-desc"}).pre.get_text(strip=True) if soup.find("div", {"class": "commit-desc"}) else ""  
-  
-        # 獲取patch數據  
-        patch_url = commit_url + ".patch"  
-        patch_data = self._make_request(patch_url, is_stream=True)  
-  
-        # 構建結果字典  
-        result_dic = {  
-            "commits": patch_data[:30000] if len(patch_data) >= 30000 else patch_data,  
-            "urls": []  
-        }  
-  
-        logger.debug(f"Get Change result_dic: {result_dic}")  
-  
-        return result_dic, time, f"{commit_title}, {commit_desc}", commit_url  
-  
+
     def _make_request(self, url, is_stream=False, headers={}):  
         try:  
             response = requests.get(url, stream=is_stream, headers=headers)  
