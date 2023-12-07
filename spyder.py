@@ -57,29 +57,34 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
     
     def generate_weekly_summary(self):
         self.commit_history.clear()
-        logger.warning(f"Push weekly summary report to teams")
+        logger.warning(f"Get last week summary from CosmosDB")
         weekly_commit_list = self.cosmosDB_client.get_weekly_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
-        gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.get_weekly_summary(
-            self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"], self.max_input_token
-            )
-        try:
-            if gpt_weekly_summary_response:
-                title = self.generate_weekly_title()
-                time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
-                logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
+        if weekly_commit_list:
+            logger.debug(f"Find {len(weekly_commit_list)} last week summary in CosmosDB")
+            gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.get_weekly_summary(
+                self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"], self.max_input_token
+                )
+            try:
+                if gpt_weekly_summary_response:
+                    title = self.generate_weekly_title()
+                    time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                    logger.warning(f"Push weekly summary report to teams")
+                    teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
+                    logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
 
-                self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
-                self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
-                self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
-            self.upload_commit_history()
+                    self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
+                    self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
+                    self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
+                self.upload_commit_history()
 
-        except requests.exceptions.HTTPError as err:
-            logger.error(f"Error occured while sending message to Teams: {err}")
-            logger.exception("HTTPError in post_teams_message:", err)
-        except Exception as err:
-            logger.error(f"An error occured in post_teams_message: {err}")
-            logger.exception("Unknown Exception in post_teams_message:", err)
+            except requests.exceptions.HTTPError as err:
+                logger.error(f"Error occured while sending message to Teams: {err}")
+                logger.exception("HTTPError in post_teams_message:", err)
+            except Exception as err:
+                logger.error(f"An error occured in post_teams_message: {err}")
+                logger.exception("Unknown Exception in post_teams_message:", err)
+        else:
+            logger.warning(f"Last week summary in CosmosDB is empty")
 
     def generate_weekly_title(self):
         last_monday = datetime.date.today() - datetime.timedelta(days=datetime.date.today().weekday() + 7)
