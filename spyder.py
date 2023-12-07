@@ -133,7 +133,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             self.upload_commit_history()
             self.commit_history.clear()
   
-    def save_commit_history(self, commit_time, commit_url, status, teams_message_jsondata, post_status, error_message):  
+    def save_commit_history(self, commit_time, commit_url=None, status=None, teams_message_jsondata=None, post_status=None, error_message=None):  
         self.update_commit_history("commit_time", str(commit_time)) 
         self.update_commit_history("commit_url", str(commit_url)) 
         self.update_commit_history("status", status) 

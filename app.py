@@ -9,7 +9,7 @@ from threading import Thread
 from logs import logger  
 from gpt_reply import *  
 from spyder import *  
-  
+
 load_dotenv()  
   
 def load_system_prompts():  
