@@ -46,11 +46,11 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
 
     def generate_gpt_responses(self, commit_data, language, prompts):  
         gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_data, language, prompts["GPT_SUMMARY_PROMPT"])  
-        self.update_commit_history("gpt_summary_response", gpt_summary)
+        # self.update_commit_history("gpt_summary_response", gpt_summary)
         self.update_commit_history("gpt_summary_tokens", gpt_summary_tokens)
         self.update_commit_history("commit_patch_data", commit_patch_data)
         gpt_title, gpt_title_tokens = self.gpt_title(gpt_summary, language, prompts["GPT_TITLE_PROMPT"])  
-        self.update_commit_history("gpt_title_response", gpt_title)
+        # self.update_commit_history("gpt_title_response", gpt_title)
         self.update_commit_history("gpt_title_tokens", gpt_title_tokens)
         status = self.determine_status(gpt_title)  
         return gpt_summary, gpt_title, status  
@@ -95,6 +95,9 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                 logger.error(f"Error getting change from url: {url}, Exception: {e}")
                 logger.exception("Exception in process_each_commit:", e)
                 
+            teams_message_jsondata = None
+            post_status = None
+            error_message = None
 
             commit_patch_data = input_dic.get("commits")
             if commit_patch_data == "Error":
@@ -129,6 +132,10 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                             teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time_, gpt_summary, self.teams_webhook_url, commit_url)
                             # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
             # Update the start time in CosmosDB 
+            self.update_commit_history("gpt_summary_response", gpt_summary)
+            self.update_commit_history("gpt_title_response", gpt_title)
+
+
             self.save_commit_history(time_, commit_url, status, teams_message_jsondata, post_status, error_message) 
             self.upload_commit_history()
             self.commit_history.clear()

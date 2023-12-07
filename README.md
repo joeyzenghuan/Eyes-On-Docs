@@ -39,15 +39,15 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 1. pip install -r requirements
 2. Create a copy of .env.example, rename it to .env
-   - [generate github access token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) 
+
+   - [generate github access token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
    - [create Azure OpenAI resource. Please use GPT-4!](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
    - [create cosmosdb account, database, container, and get the key.](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal)
-
 3. Create a copy of last_crawl_time.txt.example, rename it to last_crawl_time.txt
+
    - For the initial setup, the bot will only process changes after the specified timestamp(UTC+0).
    - If the file is not manually created, the bot will create a new one and put current time into it.
    - [related code.](https://dev.azure.com/GCR-AI-IoT-Team-Operation/_git/DocUpdateNotificationBot?path=/app.py&version=GBmaster&line=110&lineEnd=135&lineStartColumn=1&lineEndColumn=60&lineStyle=plain&_a=contents)
-
 4. Create a copy of target_config.json.example, rename it to target_config.json
 
 # How to get root_commits_url used in target_config.json?
