@@ -19,7 +19,17 @@ def load_system_prompts(target):
     """
     with open('prompts.toml', 'r') as f:  
         data = toml.load(f)
-        return {k: v for k, v in target.items() if "GPT" in k}
+        default_prompt = {
+        "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
+        "GPT_TITLE_PROMPT": "gpt_title_prompt_v3",  
+        "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
+        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
+        }
+    system_prompt =  {k: v for k, v in target.items() if "GPT" in k}
+    for k, v in default_prompt.items():
+        system_prompt.setdefault(k, v)
+        system_prompt.update({k: data[system_prompt[k]]['prompt'] })
+    return system_prompt
   
 def load_targets_config(): 
     """

@@ -3,30 +3,18 @@
         "topic_name": "OpenAI zehua Chinese",
         "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/",
         "language": "Chinese",
-        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***",
-        "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
-        "GPT_TITLE_PROMPT": "gpt_title_prompt_v3",  
-        "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
-        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
+        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***"
     },
     {
         "topic_name": "Azure Machine Learning zehua Chinese",
         "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/machine-learning/",
         "language": "Chinese",
-        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***",
-        "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
-        "GPT_TITLE_PROMPT": "gpt_title_prompt_v3",  
-        "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
-        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
+        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***"
     },
     {
         "topic_name": "OpenAI zehua English",
         "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/",
         "language": "English",
-        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***",
-        "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
-        "GPT_TITLE_PROMPT": "gpt_title_prompt_v3",  
-        "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
-        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
+        "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***"
     }
 ]
