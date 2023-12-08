@@ -60,12 +60,19 @@ def process_targets(targets):
         # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
         git_spyder.process_commits(git_spyder.latest_commits)  
 
-        this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
 
-        now = datetime.datetime.now()
-        seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
-        if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
-            git_spyder.generate_weekly_summary()
+
+
+
+        # this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
+
+        # now = datetime.datetime.now()
+        # seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
+        # if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
+        #     git_spyder.generate_weekly_summary()
+
+
+
         logger.warning(f"Finish processing topic: {topic}")  
     return git_spyder.schedule
 

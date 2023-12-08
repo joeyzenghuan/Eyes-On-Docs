@@ -60,7 +60,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         logger.warning(f"Get last week summary from CosmosDB")
         weekly_commit_list = self.cosmosDB_client.get_weekly_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
         if weekly_commit_list:
-            logger.debug(f"Find {len(weekly_commit_list)} last week summary in CosmosDB")
+            logger.info(f"Find {len(weekly_commit_list)} last week summary in CosmosDB")
             gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.get_weekly_summary(
                 self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"], self.max_input_token
                 )
