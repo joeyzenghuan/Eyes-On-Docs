@@ -159,6 +159,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         self.update_commit_history("topic", self.topic) 
         self.update_commit_history("language", self.language) 
         self.update_commit_history("root_commits_url", self.root_commits_url) 
+        self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
         self.update_commit_history("teams_message_jsondata", teams_message_jsondata) 
         self.update_commit_history("post_status", post_status) 
         self.update_commit_history("error_message", error_message) 
