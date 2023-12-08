@@ -92,12 +92,41 @@ Provide a binary output based on the analysis: '1' for similar patches and '0' f
 
 [gpt_weekly_summary_prompt_v1]
 prompt = """
-Organize Microsoft Learn document updates by relevance, using numbered entries with title tags, titles, summaries, and links.
+
+Summarize up to 10 Microsoft Learn document updates by level of importance, using numbered entries with title tags, titles, summaries, and links.
 Output format:
 1.[Title Tag] Title\n
 Update Summary\n
-Link \n\n(newline twice)
+Link \n\n (newline twice)
 2.[Title Tag] Title\n
 Update Summary\n
-Link \n\n(newline twice)
+Link \n\n (newline twice)
+"""
+
+[gpt_weekly_summary_prompt_v2]
+prompt = """
+Summarize up to 10 Microsoft Learn document updates by level of importance, using numbered entries with title tags, titles, summaries, and links. There should be no other text outside the list
+Output format:
+[
+    {
+        "type": "TextBlock",
+        "text": 1.[Title Tag] Title,
+        "size": "medium",
+        "weight": "bolder",
+        "color": "good"
+    },
+    {
+        "type": "TextBlock",
+        "text": Update Summary \nLink,
+        "wrap": True,
+        "color": "default"
+    },
+]
+"""
+
+[gpt_weekly_summary_prompt_v3]
+prompt = """
+Summarize up to 10 Microsoft Learn document updates by level of importance, using numbered entries with title tags, titles, summaries, and links. There should be no other text outside the list
+Output format:
+[1.[Title Tag] Title, Update Summary \nLink, "\n\n"(newline twice), 2.[Title Tag] Title, Update Summary \nLink, "\n\n"(newline twice)]
 """
