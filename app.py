@@ -53,6 +53,10 @@ def process_targets(targets):
             show_topic_in_title = True
         else:
             show_topic_in_title = False
+        if target["push_summary"] in ("True", "true"):
+            show_weekly_summary = True
+        else:
+            show_weekly_summary = False
         logger.warning(f"========================= Start to process topic: {topic} =========================")  
         logger.info(f"Root commits url: {root_commits_url}")  
         logger.info(f"Language: {language}")  
@@ -63,16 +67,13 @@ def process_targets(targets):
         # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
         git_spyder.process_commits(git_spyder.latest_commits)  
 
+        if show_weekly_summary:
+            this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
 
-
-
-
-        this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
-
-        now = datetime.datetime.now()
-        seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
-        if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
-            git_spyder.generate_weekly_summary()
+            now = datetime.datetime.now()
+            seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
+            if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
+                git_spyder.generate_weekly_summary()
 
 
 

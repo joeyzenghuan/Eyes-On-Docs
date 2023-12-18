@@ -4,7 +4,9 @@ import time
 from azure.identity import DefaultAzureCredential  
 from cosmosdbservice import CosmosConversationClient  
 from logs import logger  
-  
+from dotenv import load_dotenv
+load_dotenv()
+
 class CosmosDBHandler:  
     def __init__(self):  
         self.database = os.getenv("AZURE_COSMOSDB_DATABASE")  
