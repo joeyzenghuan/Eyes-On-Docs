@@ -49,15 +49,22 @@ def process_targets(targets):
         language = target['language']  
         teams_webhook_url = target['teams_webhook_url']
         system_prompts = load_system_prompts(target)
-        if target["show_topic_in_title"] in ("True", "true"):
+
+        if target.get("show_topic_in_title", "False") in ("True", "true"):
             show_topic_in_title = True
         else:
             show_topic_in_title = False
-        if target["push_summary"] in ("True", "true"):
+        
+
+        if target.get("push_summary", "False") in ("True", "true"):
             show_weekly_summary = True
         else:
             show_weekly_summary = False
+        
+
         logger.warning(f"========================= Start to process topic: {topic} =========================")  
+        logger.info(f"show_topic_in_title: {show_topic_in_title}, show_weekly_summary: {show_weekly_summary}")  
+
         logger.info(f"Root commits url: {root_commits_url}")  
         logger.info(f"Language: {language}")  
         logger.info(f"Teams webhook url: {teams_webhook_url}")  
