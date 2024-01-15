@@ -13,3 +13,4 @@ azure.identity==1.15.0
 pandas
 bs4
 tiktoken
+matplotlib

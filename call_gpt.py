@@ -110,13 +110,17 @@ class CallGPT:
         # 构建初始提示信息  
         init_prompt = "Here are the document titles and summaries for this week's updates from Microsoft Learn:\n\n"  
         end_prompt = "Please format the updates in a numbered list, with each entry containing the title tag, title, summary, and link, prioritized by their significance with the most important updates at the top."
+        post_data = False
         for commit in weekly_commit_list:  
             if commit["gpt_title_response"][0] == "1":
+                post_data = True
                 init_prompt += f"{commit['gpt_title_response'][2:]}\n\n{commit['gpt_summary_response']}\n\n"
                 used_tokens = self.num_tokens_from_string(gpt_weekly_summary_prompt+init_prompt+end_prompt, "cl100k_base")
                 if used_tokens > max_input_token:
                     logger.warning(f"Input tokens exceed the limit value: {messages} / {max_input_token}")  
                     break
+        if not post_data:
+            return None, None
         prompt = init_prompt + end_prompt
         messages = [  
             {"role": "system", "content": f"{gpt_weekly_summary_prompt}\n  Reply Reasoning in {language}."},  

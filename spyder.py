@@ -12,13 +12,14 @@ load_dotenv()
 PERSONAL_TOKEN = os.getenv("PERSONAL_TOKEN")  
   
 class Spyder(CommitFetcher, CallGPT, TeamsNotifier):  
-    def __init__(self, topic, root_commits_url, language, teams_webhook_url, system_prompt_dict, max_input_token):  
+    def __init__(self, topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompt_dict, max_input_token):  
         self.topic = topic
         self.language = language
         self.root_commits_url = root_commits_url
         self.teams_webhook_url = teams_webhook_url
         self.system_prompt_dict = system_prompt_dict
         self.max_input_token = max_input_token
+        self.show_topic_in_title = show_topic_in_title
         
         self.headers = {"Authorization": "token " + PERSONAL_TOKEN}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
@@ -75,6 +76,9 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                     self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
                     self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
                     self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
+                else:
+                    logger.warning(f"No weekly summary report to teams")
+                    self.save_commit_history(time, "", "", "", "failed", "No important update last week")
                 self.upload_commit_history()
 
             except requests.exceptions.HTTPError as err:
@@ -133,8 +137,11 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                             #     logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
                             # else:
                             logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
-
-                            teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time_, gpt_summary, self.teams_webhook_url, commit_url)
+                            if self.show_topic_in_title:
+                                time = self.topic + "\n\n" + str(time_)
+                            else:
+                                time = time_
+                            teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
                             # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
             # Update the start time in CosmosDB 
             self.update_commit_history("gpt_summary_response", gpt_summary)
@@ -152,7 +159,8 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         self.update_commit_history("topic", self.topic) 
         self.update_commit_history("language", self.language) 
         self.update_commit_history("root_commits_url", self.root_commits_url) 
-        self.update_commit_history("root_commiteams_message_jsondatats_url", teams_message_jsondata) 
+        self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
+        self.update_commit_history("teams_message_jsondata", teams_message_jsondata) 
         self.update_commit_history("post_status", post_status) 
         self.update_commit_history("error_message", error_message) 
 
