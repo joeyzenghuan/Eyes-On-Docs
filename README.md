@@ -60,6 +60,11 @@ https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connector
 
 # 中文介绍
 
+教学视频 
+[录屏第一段](https://microsoftapc-my.sharepoint.com/:v:/g/personal/zehua_microsoft_com/EUGH-FF3AolDgZt4tx99XqgBGiWEdpHHjQgNCETh71C3xg?e=2qIg4j&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
+[录屏第二段](https://microsoftapc-my.sharepoint.com/:v:/g/personal/zehua_microsoft_com/EXJocHoLdMpNtqzOeyn4yEwBUlgDRSOUKPyZmFHasAOgDg?e=VB9siS&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
+
+
 # 用户界面
 
 用户可以在Teams Channel中看到以下推送。
