@@ -26,7 +26,7 @@ class CallGPT:
         return response  
   
     
-    def gpt_summary(self, input_dict, language, gpt_summary_prompt):  
+    def gpt_summary(self, commit_patch_data, language, gpt_summary_prompt):  
         """  
         使用GPT模型总结提交的更改内容。  
         :param input_dict: 包含提交信息的字典  
@@ -34,7 +34,7 @@ class CallGPT:
         :param gpt_summary_prompt: 提示信息  
         :return: GPT模型的回复  
         """  
-        commit_patch_data = input_dict.get("commits")  
+        # commit_patch_data = input_dict.get("commits")  
         system_message = f"{gpt_summary_prompt} Reply in {language}."  
   
         # 构建消息列表，用于发送给GPT模型  
