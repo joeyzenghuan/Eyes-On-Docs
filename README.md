@@ -58,6 +58,10 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
 
+# Architecture
+![flow](/image/README/flow.png =1000x)
+![arc](/image/README/arc.png =1000x)
+
 # 中文介绍
 
 教学视频 
