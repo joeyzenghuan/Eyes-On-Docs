@@ -1,7 +1,7 @@
 [
     {
         "topic_name": "OpenAI zehua Chinese",
-        "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/",
+        "root_commits_url": "https://api.github.com/repos/MicrosoftDocs/azure-docs/commits?path=articles/ai-services/openai/",
         "language": "Chinese",
         "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***",
         "show_topic_in_title": "False",
@@ -9,7 +9,7 @@
     },
     {
         "topic_name": "Azure Machine Learning zehua Chinese",
-        "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/machine-learning/",
+        "root_commits_url": "https://api.github.com/repos/MicrosoftDocs/azure-docs/commits?path=articles/machine-learning/",
         "language": "Chinese",
         "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***"
         "show_topic_in_title": "False",
@@ -17,7 +17,7 @@
     },
     {
         "topic_name": "OpenAI zehua English",
-        "root_commits_url": "https://github.com/MicrosoftDocs/azure-docs/commits/main/articles/ai-services/openai/",
+        "root_commits_url": "https://api.github.com/repos/MicrosoftDocs/azure-docs/commits?path=articles/ai-services/openai/",
         "language": "English",
         "teams_webhook_url": "https://microsoft.webhook.office.com/webhookb2/***",
         "show_topic_in_title": "False",
