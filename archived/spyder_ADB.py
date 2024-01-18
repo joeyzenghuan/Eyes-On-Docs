@@ -12,14 +12,13 @@ load_dotenv()
 PERSONAL_TOKEN = os.getenv("PERSONAL_TOKEN")  
   
 class Spyder(CommitFetcher, CallGPT, TeamsNotifier):  
-    def __init__(self, topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompt_dict, max_input_token):  
+    def __init__(self, topic, root_commits_url, language, teams_webhook_url, system_prompt_dict, max_input_token):  
         self.topic = topic
         self.language = language
         self.root_commits_url = root_commits_url
         self.teams_webhook_url = teams_webhook_url
         self.system_prompt_dict = system_prompt_dict
         self.max_input_token = max_input_token
-        self.show_topic_in_title = show_topic_in_title
         
         self.headers = {"Authorization": "token " + PERSONAL_TOKEN}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
@@ -30,6 +29,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
 
         self.start_time = self.cosmosDB.get_start_time(lastest_commit_in_cosmosdb)
         all_commits = self.get_all_commits(self.root_commits_url, self.headers)
+
         self.latest_commits, self.latest_time = self.select_latest_commits(all_commits, self.start_time)  
 
         logger.info(f"Only get changes after the time point: {self.start_time}")
@@ -45,8 +45,8 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             logger.info(f"GPT title (without first 2 chars): {gpt_title[2:]}")  
         return status  
 
-    def generate_gpt_responses(self, commit_patch_data, language, prompts):  
-        gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_patch_data, language, prompts["GPT_SUMMARY_PROMPT"])  
+    def generate_gpt_responses(self, commit_data, language, prompts):  
+        gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_data, language, prompts["GPT_SUMMARY_PROMPT"])  
         # self.update_commit_history("gpt_summary_response", gpt_summary)
         self.update_commit_history("gpt_summary_tokens", gpt_summary_tokens)
         self.update_commit_history("commit_patch_data", commit_patch_data)
@@ -76,9 +76,6 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                     self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
                     self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
                     self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
-                else:
-                    logger.warning(f"No weekly summary report to teams")
-                    self.save_commit_history(time, "", "", "", "failed", "No important update last week")
                 self.upload_commit_history()
 
             except requests.exceptions.HTTPError as err:
@@ -99,12 +96,9 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         for key in selected_commits:
             time_, url = key, selected_commits[key]
 
-            # convert api url to html_url
-            commit_url = url.replace("https://api.github.com/repos", "https://github.com").replace("commits", "commit")
-
             try:
-                # input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url, self.max_input_token)
-                commit_patch_data = self.get_change_from_each_url(time_, url, self.max_input_token, self.headers)
+                input_list = self.get_change_from_each_url(time_, url, self.max_input_token, self.headers)
+
             except Exception as e:
                 logger.error(f"Error getting change from url: {url}, Exception: {e}")
                 logger.exception("Exception in process_each_commit:", e)
@@ -112,50 +106,44 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             teams_message_jsondata = None
             post_status = None
             error_message = None
-
-            # commit_patch_data = input_dic.get("commits")
-            if commit_patch_data == "Error":
-                logger.error(f"Error getting patch data from url: {commit_url}")
-                gpt_summary = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
-                gpt_title = "Error in Getting Patch Data"
-                status = "Error in Getting Patch Data"
-            else:
-                # Use GPT model to generate summary and title  
-                gpt_summary, gpt_title, status = self.generate_gpt_responses(commit_patch_data, self.language, self.system_prompt_dict)  
-                # Save commit history to CosmosDB  
-                  
-                if gpt_summary == None:
-                    gpt_summary = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                    gpt_title = "Error in getting Summary"
-                    status = "Error in getting Summary"
+            
+            for commit_patch_data in input_list:
+                if commit_patch_data == "Error":
+                    logger.error(f"Error getting patch data from url: {url}")
+                    gpt_summary = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
+                    gpt_title = "Error in Getting Patch Data"
+                    status = "Error in Getting Patch Data"
                 else:
-                    if gpt_title == None:
-                        gpt_title = "Error in getting Title"
-                        status = "Error in getting Title"
+                    # Use GPT model to generate summary and title  
+                    input_dic = {
+                        "commits":commit_patch_data,
+                        "urls": []
+                    }  
+                    gpt_summary, gpt_title, status = self.generate_gpt_responses(input_dic, self.language, self.system_prompt_dict)  
+                    # Save commit history to CosmosDB  
+
+                    if gpt_summary == None:
+                        gpt_summary = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        gpt_title = "Error in getting Summary"
+                        status = "Error in getting Summary"
                     else:
-                        # check the first two characters of gpt_title, if it is '0 ', skip this commit
-                        if status == "skip":
-                            logger.error(f"Skip this commit: {gpt_title}")
+                        if gpt_title == None:
+                            gpt_title = "Error in getting Title"
+                            status = "Error in getting Title"
                         else:
-                            # lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
-                            # if self.get_similarity(input_dic, self.language, lastest_commit_in_cosmosdb, self.system_prompt_dict["GPT_SIMILARITL_PROMPT"]).split("\n")[1][0] == "1":
-                            #     logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
-                            # else:
-                            logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
-                            if self.show_topic_in_title:
-                                time = self.topic + "\n\n" + str(time_)
+                            # check the first two characters of gpt_title, if it is '0 ', skip this commit
+                            if status == "skip":
+                                logger.error(f"Skip this commit: {gpt_title}")
                             else:
-                                time = time_
-                            teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
-                            # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
-            # Update the start time in CosmosDB 
-            self.update_commit_history("gpt_summary_response", gpt_summary)
-            self.update_commit_history("gpt_title_response", gpt_title)
-
-
-            self.save_commit_history(time_, commit_url, status, teams_message_jsondata, post_status, error_message) 
-            self.upload_commit_history()
-            self.commit_history.clear()
+                                logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
+                                teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time_, gpt_summary, self.teams_webhook_url, url)
+                # Update the start time in CosmosDB
+                self.update_commit_history("gpt_summary_response", gpt_summary)
+                self.update_commit_history("gpt_title_response", gpt_title)
+                self.save_commit_history(time_, url, status, teams_message_jsondata, post_status, error_message)
+                self.upload_commit_history()
+                self.commit_history.clear()
+ 
   
     def save_commit_history(self, commit_time, commit_url=None, status=None, teams_message_jsondata=None, post_status=None, error_message=None):  
         self.update_commit_history("commit_time", str(commit_time)) 
@@ -164,8 +152,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         self.update_commit_history("topic", self.topic) 
         self.update_commit_history("language", self.language) 
         self.update_commit_history("root_commits_url", self.root_commits_url) 
-        self.update_commit_history("teams_message_webhook_url", self.teams_webhook_url)
-        self.update_commit_history("teams_message_jsondata", teams_message_jsondata) 
+        self.update_commit_history("root_commiteams_message_jsondatats_url", teams_message_jsondata) 
         self.update_commit_history("post_status", post_status) 
         self.update_commit_history("error_message", error_message) 
 
