@@ -44,47 +44,51 @@ def process_targets(targets):
     並在每週一推送一次上週更新總結
     """
     for target in targets:  
-        topic = target['topic_name']  
-        root_commits_url = target['root_commits_url']  
-        language = target['language']  
-        teams_webhook_url = target['teams_webhook_url']
-        system_prompts = load_system_prompts(target)
-
-        if target.get("show_topic_in_title", "False") in ("True", "true"):
-            show_topic_in_title = True
-        else:
-            show_topic_in_title = False
         
+        try:
+                
+            topic = target['topic_name']  
+            root_commits_url = target['root_commits_url']  
+            language = target['language']  
+            teams_webhook_url = target['teams_webhook_url']
+            system_prompts = load_system_prompts(target)
 
-        if target.get("push_summary", "False") in ("True", "true"):
-            show_weekly_summary = True
-        else:
-            show_weekly_summary = False
-        
+            if target.get("show_topic_in_title", "False") in ("True", "true"):
+                show_topic_in_title = True
+            else:
+                show_topic_in_title = False
+            
 
-        logger.warning(f"========================= Start to process topic: {topic} =========================")  
-        logger.info(f"show_topic_in_title: {show_topic_in_title}, show_weekly_summary: {show_weekly_summary}")  
+            if target.get("push_summary", "False") in ("True", "true"):
+                show_weekly_summary = True
+            else:
+                show_weekly_summary = False
+            
 
-        logger.info(f"Root commits url: {root_commits_url}")  
-        logger.info(f"Language: {language}")  
-        logger.info(f"Teams webhook url: {teams_webhook_url}")  
-  
-        git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000)  
-        # all_commits = git_spyder.get_all_commits()  
-        # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
-        git_spyder.process_commits(git_spyder.latest_commits)  
+            logger.warning(f"========================= Start to process topic: {topic} =========================")  
+            logger.info(f"show_topic_in_title: {show_topic_in_title}, show_weekly_summary: {show_weekly_summary}")  
 
-        if show_weekly_summary:
-            this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
+            logger.info(f"Root commits url: {root_commits_url}")  
+            logger.info(f"Language: {language}")  
+            logger.info(f"Teams webhook url: {teams_webhook_url}")  
+    
+            git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000)  
+            # all_commits = git_spyder.get_all_commits()  
+            # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
+            git_spyder.process_commits(git_spyder.latest_commits)  
 
-            now = datetime.datetime.now()
-            seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
-            if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
-                git_spyder.generate_weekly_summary()
+            if show_weekly_summary:
+                this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
+
+                now = datetime.datetime.now()
+                seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
+                if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
+                    git_spyder.generate_weekly_summary()
 
 
-
-        logger.warning(f"Finish processing topic: {topic}")  
+            logger.warning(f"Finish processing topic: {topic}")  
+        except Exception as e:  
+            logger.exception("Unexpected exception:", e) 
     return git_spyder.schedule
 
 def main():
