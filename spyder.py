@@ -97,64 +97,77 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
 
     def process_commits(self, selected_commits):  
         for key in selected_commits:
-            time_, url = key, selected_commits[key]
-
-            # convert api url to html_url
-            commit_url = url.replace("https://api.github.com/repos", "https://github.com").replace("commits", "commit")
-
             try:
-                # input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url, self.max_input_token)
-                commit_patch_data = self.get_change_from_each_url(time_, url, self.max_input_token, self.headers)
-            except Exception as e:
-                logger.error(f"Error getting change from url: {url}, Exception: {e}")
-                logger.exception("Exception in process_each_commit:", e)
-                
-            teams_message_jsondata = None
-            post_status = None
-            error_message = None
 
-            # commit_patch_data = input_dic.get("commits")
-            if commit_patch_data == "Error":
-                logger.error(f"Error getting patch data from url: {commit_url}")
-                gpt_summary = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
-                gpt_title = "Error in Getting Patch Data"
-                status = "Error in Getting Patch Data"
-            else:
-                # Use GPT model to generate summary and title  
-                gpt_summary, gpt_title, status = self.generate_gpt_responses(commit_patch_data, self.language, self.system_prompt_dict)  
-                # Save commit history to CosmosDB  
-                  
-                if gpt_summary == None:
-                    gpt_summary = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
-                    gpt_title = "Error in getting Summary"
-                    status = "Error in getting Summary"
+                time_, commit_url, status, teams_message_jsondata, post_status, error_message, gpt_title, gpt_summary = None, None, None, None, None, None, None, None
+
+                time_, url = key, selected_commits[key]
+
+                # convert api url to html_url
+                commit_url = url.replace("https://api.github.com/repos", "https://github.com").replace("commits", "commit")
+                logger.warning(f"Getting changes from html_url: {commit_url}")  
+
+                try:
+                    # input_dic, time_, summary, commit_url = self.get_change_from_each_url(time_, url, self.max_input_token)
+                    commit_patch_data = self.get_change_from_each_url(time_, url, self.max_input_token, self.headers)
+                except Exception as e:
+                    logger.error(f"Error getting change from url: {url}, Exception: {e}")
+                    logger.exception("Exception in process_each_commit:", e)
+                    
+                teams_message_jsondata = None
+                post_status = None
+                error_message = None
+
+                # commit_patch_data = input_dic.get("commits")
+                if commit_patch_data == "Error":
+                    logger.error(f"Error getting patch data from url: {commit_url}")
+                    gpt_summary = "Too many changes in one commit.🤦‍♂️ \n\nThe bot isn't smart enough to handle temporarily.😢 \n\nPlease check the update via commit page button.🤪"
+                    gpt_title = "Error in Getting Patch Data"
+                    status = "Error in Getting Patch Data"
                 else:
-                    if gpt_title == None:
-                        gpt_title = "Error in getting Title"
-                        status = "Error in getting Title"
+                    # Use GPT model to generate summary and title  
+                    gpt_summary, gpt_title, status = self.generate_gpt_responses(commit_patch_data, self.language, self.system_prompt_dict)  
+                    # Save commit history to CosmosDB  
+                    
+                    if gpt_summary == None:
+                        gpt_summary = "Something went wrong when generating Summary😂.\n\n You can report the issue(\"...\" -> Copy link) to zehua@micrsoft.com, thanks."
+                        gpt_title = "Error in getting Summary"
+                        status = "Error in getting Summary"
                     else:
-                        # check the first two characters of gpt_title, if it is '0 ', skip this commit
-                        if status == "skip":
-                            logger.error(f"Skip this commit: {gpt_title}")
+                        if gpt_title == None:
+                            gpt_title = "Error in getting Title"
+                            status = "Error in getting Title"
                         else:
-                            # lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
-                            # if self.get_similarity(input_dic, self.language, lastest_commit_in_cosmosdb, self.system_prompt_dict["GPT_SIMILARITL_PROMPT"]).split("\n")[1][0] == "1":
-                            #     logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
-                            # else:
-                            logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
-                            if self.show_topic_in_title:
-                                time = self.topic + "\n\n" + str(time_)
+                            # check the first two characters of gpt_title, if it is '0 ', skip this commit
+                            if status == "skip":
+                                logger.error(f"Skip this commit: {gpt_title}")
                             else:
-                                time = time_
-                            teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
-                            # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
-            # Update the start time in CosmosDB 
-            self.update_commit_history("gpt_summary_response", gpt_summary)
-            self.update_commit_history("gpt_title_response", gpt_title)
+                                # lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
+                                # if self.get_similarity(input_dic, self.language, lastest_commit_in_cosmosdb, self.system_prompt_dict["GPT_SIMILARITL_PROMPT"]).split("\n")[1][0] == "1":
+                                #     logger.error(f"Error detected content as similar to the previous entry, therefore skipping.")
+                                # else:
+                                logger.warning(f"GPT_Title without first 2 chars: {gpt_title[2:]}")
+                                if self.show_topic_in_title:
+                                    time = self.topic + "\n\n" + str(time_)
+                                else:
+                                    time = time_
+                                teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
+                                # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
 
 
-            self.save_commit_history(time_, commit_url, status, teams_message_jsondata, post_status, error_message) 
-            self.upload_commit_history()
+            except Exception as e:  
+                logger.exception("Unexpected exception:", e)  
+
+            try: 
+                # Update the start time in CosmosDB 
+                self.update_commit_history("gpt_summary_response", gpt_summary)
+                self.update_commit_history("gpt_title_response", gpt_title)
+
+                self.save_commit_history(time_, commit_url, status, teams_message_jsondata, post_status, error_message) 
+                self.upload_commit_history()
+            except Exception as e:  
+                logger.exception("Unexpected exception:", e)                  
+
             self.commit_history.clear()
   
     def save_commit_history(self, commit_time, commit_url=None, status=None, teams_message_jsondata=None, post_status=None, error_message=None):  
