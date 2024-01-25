@@ -20,7 +20,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         self.system_prompt_dict = system_prompt_dict
         self.max_input_token = max_input_token
         self.show_topic_in_title = show_topic_in_title
-        
+
         self.headers = {"Authorization": "token " + PERSONAL_TOKEN}
         # api_url = 'https://api.github.com/repos/MicrosoftDocs/azure-docs/commits'
         self.schedule = 7200
@@ -45,8 +45,8 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             logger.info(f"GPT title (without first 2 chars): {gpt_title[2:]}")  
         return status  
 
-    def generate_gpt_responses(self, commit_patch_data, language, prompts):  
-        gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_patch_data, language, prompts["GPT_SUMMARY_PROMPT"])  
+    def generate_gpt_responses(self, commit_patch_data, language, prompts, url_mapping):  
+        gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_patch_data, language, prompts["GPT_SUMMARY_PROMPT"], url_mapping)  
         # self.update_commit_history("gpt_summary_response", gpt_summary)
         self.update_commit_history("gpt_summary_tokens", gpt_summary_tokens)
         self.update_commit_history("commit_patch_data", commit_patch_data)
@@ -95,7 +95,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         last_sunday = last_monday + datetime.timedelta(days=6)
         return f"[Weekly Summary] {last_monday} ~ {last_sunday}"
 
-    def process_commits(self, selected_commits):  
+    def process_commits(self, selected_commits, url_mapping):  
         for key in selected_commits:
             try:
 
@@ -126,7 +126,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                     status = "Error in Getting Patch Data"
                 else:
                     # Use GPT model to generate summary and title  
-                    gpt_summary, gpt_title, status = self.generate_gpt_responses(commit_patch_data, self.language, self.system_prompt_dict)  
+                    gpt_summary, gpt_title, status = self.generate_gpt_responses(commit_patch_data, self.language, self.system_prompt_dict, url_mapping)  
                     # Save commit history to CosmosDB  
                     
                     if gpt_summary == None:

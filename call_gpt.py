@@ -4,7 +4,7 @@ import tiktoken
   
 class CallGPT:  
 
-    def correct_links(self, response):  
+    def correct_links(self, response, url_mapping):  
         """  
         修正响应中的链接。  
         :param response: GPT模型的回复  
@@ -16,17 +16,22 @@ class CallGPT:
             ".md": "",  
             ".yml": "",  
             "/windows-driver-docs-pr/": "https://learn.microsoft.com/en-us/windows-hardware/drivers/",  
-            "windows-driver-docs-pr/": "https://learn.microsoft.com/en-us/windows-hardware/drivers/",  
-            "/docs/": "https://learn.microsoft.com/en-us/fabric/",  
-            "docs/": "https://learn.microsoft.com/en-us/fabric/"  
+            "windows-driver-docs-pr/": "https://learn.microsoft.com/en-us/windows-hardware/drivers/"
         }  
+
+        logger.warning(f"url_mapping: {url_mapping}")
+        # 检查'mapping'键是否存在，如果存在，则将其加入到已存在的字典中
+        if url_mapping is not None:
+            replacements.update(url_mapping)
+        print(replacements)
+
         for old, new in replacements.items():  
             response = response.replace(old, new)  
         logger.warning(f"Correct Links in GPT_Summary Response:\n  {response}")  
         return response  
   
     
-    def gpt_summary(self, commit_patch_data, language, gpt_summary_prompt):  
+    def gpt_summary(self, commit_patch_data, language, gpt_summary_prompt, url_mapping):  
         """  
         使用GPT模型总结提交的更改内容。  
         :param input_dict: 包含提交信息的字典  
@@ -54,7 +59,7 @@ class CallGPT:
         logger.info(f"GPT_Summary Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")  
   
         # 替换响应中的链接  
-        gpt_summary_response = self.correct_links(gpt_summary_response)  
+        gpt_summary_response = self.correct_links(gpt_summary_response, url_mapping)  
    
         gpt_summary_tokens = {  
             "prompt": prompt_tokens,  
