@@ -44,7 +44,7 @@ def process_targets(targets):
     並在每週一推送一次上週更新總結
     """
     for target in targets:  
-        
+
         try:
                 
             topic = target['topic_name']  
@@ -64,18 +64,21 @@ def process_targets(targets):
             else:
                 show_weekly_summary = False
             
+            url_mapping = target.get("url_mapping", None)
 
             logger.warning(f"========================= Start to process topic: {topic} =========================")  
             logger.info(f"show_topic_in_title: {show_topic_in_title}, show_weekly_summary: {show_weekly_summary}")  
 
             logger.info(f"Root commits url: {root_commits_url}")  
             logger.info(f"Language: {language}")  
-            logger.info(f"Teams webhook url: {teams_webhook_url}")  
+            logger.info(f"Teams webhook url: {teams_webhook_url}") 
+            logger.warning(f"url_mapping: {url_mapping}")  
+
     
             git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000)  
             # all_commits = git_spyder.get_all_commits()  
             # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
-            git_spyder.process_commits(git_spyder.latest_commits)  
+            git_spyder.process_commits(git_spyder.latest_commits, url_mapping)  
 
             if show_weekly_summary:
                 this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
