@@ -43,7 +43,8 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
    - [Link your GitHub and Microsoft accounts](https://review.learn.microsoft.com/en-us/help/get-started/setup-github?branch=main&branchFallbackFrom=master#2-link-your-github-and-microsoft-accounts)
    - [generate github access token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
    - [Authorizing a personal access token for use with SAML single sign-on](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on)
-     ![SSO](/images/SSO.png =1000x)
+     
+     ![SSO](/images/SSO.png =700x)
    - [create Azure OpenAI resource. Please use GPT-4!](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
    - [create cosmosdb account, database, container, and get the key.](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal)
 3. Create a copy of last_crawl_time.txt.example, rename it to last_crawl_time.txt
@@ -58,16 +59,19 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 # How to get root_commits_url used in target_config.json?
 
-![root_commits_url](/images/root_commits_url.jpg =1000x)
+![root_commits_url](/images/root_commits_url.jpg =700x)
 
 ### Switch to Rest API URL:
 
    /main/        =>   ?path=
+
 github.com   =>   api.github.com/repos
 
 For example:
 https://   ~~github.com~~   /MicrosoftDocs/azure-docs/commits   ~~/main/~~   articles/ai-services/openai/
+
 =>
+
 https://   **api.github.com/repos**   /MicrosoftDocs/azure-docs/commits   **?path=**   articles/ai-services/openai
 
 # How to create Teams Channel Webhook
@@ -75,7 +79,7 @@ https://   **api.github.com/repos**   /MicrosoftDocs/azure-docs/commits   **?pat
 https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
 
 # Set url_mapping in target_config.json
-![url_mapping](/images/url_mapping.png =1000x)
+![url_mapping](/images/url_mapping.png =700x)
 
 # Architecture
 
