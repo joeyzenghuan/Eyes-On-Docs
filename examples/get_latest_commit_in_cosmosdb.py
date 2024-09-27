@@ -4,7 +4,7 @@ import os
 import sys
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv('C:\\GitRepo\\DocUpdateNotificationBot2\\DocUpdateNotificationBot\\.env')
 
 
 # 获取当前文件的路径
@@ -19,18 +19,36 @@ sys.path.append(os.path.abspath(root_dir))
 from logs import logger
 
 from azure.identity import DefaultAzureCredential  
+from azure.identity import ClientSecretCredential  
+
 from cosmosdbservice import CosmosConversationClient
 
 
 # CosmosDB Integration Settings
+# AZURE_COSMOSDB_DATABASE = 'docupdateDB'
+# AZURE_COSMOSDB_ACCOUNT = 'jz-fdpo-cosmosdb'
+# AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = 'docupdateContainer'
 AZURE_COSMOSDB_DATABASE = os.getenv("AZURE_COSMOSDB_DATABASE")
 AZURE_COSMOSDB_ACCOUNT = os.getenv("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.getenv("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
-AZURE_COSMOSDB_ACCOUNT_KEY = os.getenv("AZURE_COSMOSDB_ACCOUNT_KEY")
+
+APP_TENANT_ID = os.getenv("APP_TENANT_ID")
+APP_CLIENT_ID = os.getenv("APP_CLIENT_ID")
+APP_CLIENT_SECRET = os.getenv("APP_CLIENT_SECRET")
+
+# AZURE_COSMOSDB_ACCOUNT_KEY = os.getenv("AZURE_COSMOSDB_ACCOUNT_KEY")
 save_commit_history_to_cosmosdb = False
+
+
 
 # print(AZURE_COSMOSDB_DATABASE, AZURE_COSMOSDB_ACCOUNT, AZURE_COSMOSDB_CONVERSATIONS_CONTAINER)
 # print(AZURE_COSMOSDB_ACCOUNT_KEY)
+
+
+aad_credentials = ClientSecretCredential(
+    tenant_id=APP_TENANT_ID,
+    client_id=APP_CLIENT_ID,
+    client_secret=APP_CLIENT_SECRET)
 
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
@@ -39,10 +57,13 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
     try :
         cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
-        if not AZURE_COSMOSDB_ACCOUNT_KEY:
-            credential = DefaultAzureCredential()
-        else:
-            credential = AZURE_COSMOSDB_ACCOUNT_KEY
+        # if not AZURE_COSMOSDB_ACCOUNT_KEY:
+        #     credential = DefaultAzureCredential()
+        # else:
+        #     credential = AZURE_COSMOSDB_ACCOUNT_KEY
+        credential = aad_credentials
+
+        print(cosmos_endpoint, AZURE_COSMOSDB_DATABASE, AZURE_COSMOSDB_CONVERSATIONS_CONTAINER)
 
         cosmos_conversation_client = CosmosConversationClient(
             cosmosdb_endpoint=cosmos_endpoint, 

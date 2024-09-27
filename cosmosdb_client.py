@@ -1,7 +1,7 @@
 import os  
 import datetime  
 import time
-from azure.identity import DefaultAzureCredential  
+from azure.identity import ClientSecretCredential  
 from cosmosdbservice import CosmosConversationClient  
 from logs import logger  
 from dotenv import load_dotenv
@@ -13,16 +13,26 @@ class CosmosDBHandler:
         self.account = os.getenv("AZURE_COSMOSDB_ACCOUNT")  
         self.container = os.getenv("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")  
         self.account_key = os.getenv("AZURE_COSMOSDB_ACCOUNT_KEY")  
-        
+        self.app_tenant_id = os.getenv("APP_TENANT_ID")
+        self.app_client_id = os.getenv("APP_CLIENT_ID")
+        self.app_client_secret = os.getenv("APP_CLIENT_SECRET")
 
     def initialize_cosmos_client(self):  
         """初始化 CosmosDB 客戶端"""  
         try:  
             endpoint = f'https://{self.account}.documents.azure.com:443/'  
-            if not self.account_key:
-                credential = DefaultAzureCredential()
-            else:
-                credential = self.account_key
+
+            # if not self.account_key:
+            #     credential = DefaultAzureCredential()
+            # else:
+            #     credential = self.account_key
+
+            credential = ClientSecretCredential(
+                tenant_id=self.app_tenant_id,
+                client_id=self.app_client_id,
+                client_secret=self.app_client_secret
+            )
+
             client = CosmosConversationClient(  
                 cosmosdb_endpoint=endpoint,   
                 credential=credential,   

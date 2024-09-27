@@ -8,7 +8,7 @@ Users can see the following notifications in Teams Channel.
 - The second line shows the UTC time of the update.
 - The body contains a summary of the updates made to different documents by GPT4. For example, in the example provided, three documents were updated.
 - Clicking on the link takes you to the official documentation.
-- The "Go to commit page" button at the bottom takes you to the commit page on GitHub.
+- The "Go to commit page" button at the bottom takes you to the commit page on GitHub..
 
 # Commit Page
 
@@ -40,10 +40,11 @@ https://github.com/MicrosoftDocs/azure-docs/commit/4189b431df9d28d94f54661e223c3
 
 1. pip install -r requirements.txt
 2. Create a copy of .env.example, rename it to .env
+
    - [Link your GitHub and Microsoft accounts](https://review.learn.microsoft.com/en-us/help/get-started/setup-github?branch=main&branchFallbackFrom=master#2-link-your-github-and-microsoft-accounts)
    - [generate github access token](https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
    - [Authorizing a personal access token for use with SAML single sign-on](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on)
-     
+
      ![SSO](/images/SSO.png =700x)
    - [create Azure OpenAI resource. Please use GPT-4!](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
    - [create cosmosdb account, database, container, and get the key.](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal)
@@ -80,6 +81,7 @@ https://   **api.github.com/repos**   /MicrosoftDocs/azure-docs/commits   **?pat
 https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook?tabs=dotnet
 
 # Set url_mapping in target_config.json
+
 ![url_mapping](/images/url_mapping.png =700x)
 
 # Architecture
