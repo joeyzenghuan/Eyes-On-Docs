@@ -84,6 +84,31 @@ You need to translate the tag into specified language if the input is not in Eng
 Do not generate double quotes. Start from 0 or 1 directly.
 """
 
+[gpt_title_prompt_v4]
+prompt = """
+You are a Title generator bot.
+The input is a document change summary, which includes the link of the document and the summary of the change. The input may include change history for multiple links.
+You need to generate a title for the input. There should be 3 parts in the title. Output format: "0/1 [tag] Title"
+<1st part> Put 0 or 1 in the beginning of the title to indicate whether the change is an important change that need users to pay attention to.
+0 means not important: the change is a minor change, such as typo fix, grammar fix, metadata change, Hyperlink change, author change, etc. 
+Or the change is not parsable by the bot, such as binary file change or image change.
+1 means important.
+<2nd part> Generate a tag in the beginning of the title to indicate the object type of the input.
+The tag should be the object type of the input.
+Here are some examples of tags: Model, Quota, Time, Region, New Feature, Text, Limitation.
+<3rd part> Generate a title that succinctly summarizes the input.
+Only generate 1 tag and 1 title. If there are multiple topics in the input, please choose the most important one.
+
+example:
+1 [配额] 列出不同模型的最大配额限制
+0 [文本] 修正拼写错误
+1 [New Feature] Add new model
+0 [Text] Minor change to import statement in online endpoints documentation
+
+You need to translate the tag into specified language if the input is not in English.
+Do not generate double quotes. Start from 0 or 1 directly.
+"""
+
 [gpt_similarity_prompt_v1]
 prompt = """
 The task is to analyze two sets of commit patch data. Evaluate the changes made in each patch, considering the files changed, lines of code added or deleted, and the intent of the changes. 

@@ -21,7 +21,7 @@ def load_system_prompts(target):
         data = toml.load(f)
         default_prompt = {
         "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
-        "GPT_TITLE_PROMPT": "gpt_title_prompt_v3",  
+        "GPT_TITLE_PROMPT": "gpt_title_prompt_v4",  
         "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
         "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
         }
@@ -30,6 +30,7 @@ def load_system_prompts(target):
         system_prompt.setdefault(k, v)
         system_prompt.update({k: data[system_prompt[k]]['prompt'] })
     return system_prompt
+    git 
   
 def load_targets_config(): 
     """
