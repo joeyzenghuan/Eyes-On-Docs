@@ -9,3 +9,37 @@ target_config.json
 # static
 # .azure/
 __pycache__/
+
+# Next.js
+web/.next/
+web/out/
+web/build/
+web/node_modules/
+web/.env*.local
+
+# Next.js build output
+web/.next
+web/out
+
+# Dependencies
+web/node_modules
+web/.pnp
+web/.pnp.js
+
+# Testing
+web/coverage
+
+# Debug
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+
+# Local env files
+web/.env*.local
+
+# Vercel
+web/.vercel
+
+# TypeScript
+web/*.tsbuildinfo
+web/next-env.d.ts
