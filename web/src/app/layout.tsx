@@ -1,4 +1,11 @@
 import './globals.css';
+import { Orbitron } from 'next/font/google'
+
+const orbitron = Orbitron({ 
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-orbitron'
+})
 
 export const metadata = {
   title: 'Next.js',
@@ -11,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={`${orbitron.variable} dark bg-background-primary`}>
+      <body className="bg-background-primary text-text-primary min-h-screen flex flex-col">{children}</body>
     </html>
   )
 }

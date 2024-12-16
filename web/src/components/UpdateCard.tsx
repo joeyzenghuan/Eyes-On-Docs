@@ -1,94 +1,91 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { CalendarIcon, ExternalLinkIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface UpdateCardProps {
+  id: string;
   title: string;
-  summary: string;
-  gptSummary?: string;
   timestamp: string;
-  documentUrl: string;
   commitUrl: string;
-  product: string;
-  language: string;
+  gptSummary?: string;
 }
 
-export function UpdateCard({
-  title,
-  summary,
-  gptSummary,
-  timestamp,
-  documentUrl,
+export default function UpdateCard({ 
+  id, 
+  title, 
+  timestamp, 
   commitUrl,
-  product,
-  language,
+  gptSummary
 }: UpdateCardProps) {
-  // Add console log to check the props
-  console.log('UpdateCard Props:', {
-    title,
-    summary,
-    gptSummary,
-    timestamp,
-    documentUrl,
-    commitUrl,
-    product,
-    language
-  });
+  const [maxHeight, setMaxHeight] = useState('5rem'); // 初始高度对应5行
+  const [isHovering, setIsHovering] = useState(false);
 
-  const date = new Date(timestamp).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  useEffect(() => {
+    if (isHovering) {
+      const normalizedSummary = gptSummary ? gptSummary.replace(/\\n/g, '\n') : '';
+      const totalLines = normalizedSummary.split('\n').length;
+      
+      // 计算总高度，假设每行约1.5rem
+      const totalHeight = `${totalLines * 1.5}rem`;
+      
+      // 使用CSS过渡实现平滑展开
+      setMaxHeight(totalHeight);
+    }
+  }, [isHovering, gptSummary]);
+
+  const hasMoreLines = gptSummary ? gptSummary.split(/\\n|\n/).length > 5 : false;
 
   return (
-    <Card className="w-full hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-xl font-bold">{title}</CardTitle>
-          <div className="flex space-x-2">
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm">
-              {product}
-            </span>
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm">
-              {language}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center text-sm text-gray-500 mt-2">
-          <CalendarIcon className="w-4 h-4 mr-1" />
-          {date}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-gray-600 mb-4">{summary}</p>
-        {gptSummary && gptSummary.trim() !== '' && (
-          <div className="bg-blue-50 p-3 rounded-md mb-4">
-            <p className="text-blue-800 text-sm whitespace-pre-wrap">{gptSummary}</p>
-          </div>
-        )}
-        <div className="flex space-x-4">
-          <a
-            href={documentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center text-blue-600 hover:text-blue-800"
+    <div 
+      className="cyberpunk-card hover:animate-pulse-glow"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => {
+        setIsHovering(false);
+      }}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl text-yellow-400 truncate">{title}</h2>
+        <a 
+          href={commitUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-accent-secondary hover:text-accent-primary transition-colors"
+        >
+          🔗 Commit
+        </a>
+      </div>
+      <div className="text-text-secondary text-sm mb-2">
+        {new Date(timestamp).toLocaleString()}
+      </div>
+      {gptSummary && (
+        <div 
+          className="overflow-hidden transition-all duration-500 ease-in-out"
+          style={{ 
+            maxHeight: maxHeight,
+          }}
+        >
+          <ReactMarkdown 
+            className="text-white opacity-80 prose prose-invert"
+            remarkPlugins={[remarkGfm]} 
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              a: ({node, ...props}) => (
+                <a 
+                  {...props} 
+                  className="text-accent-secondary hover:text-accent-primary" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                />
+              )
+            }}
           >
-            <ExternalLinkIcon className="w-4 h-4 mr-1" />
-            View Documentation
-          </a>
-          <a
-            href={commitUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <ExternalLinkIcon className="w-4 h-4 mr-1" />
-            View Changes
-          </a>
+            {gptSummary}
+          </ReactMarkdown>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

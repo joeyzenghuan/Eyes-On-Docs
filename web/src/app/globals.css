@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --background-primary: #0A0A1A;
+  --background-secondary: #121228;
+  --text-primary: #00FFD1;
+  --text-secondary: #7E7EFF;
+  --accent-primary: #FF00FF;
+  --accent-secondary: #00FFFF;
+  --border-color: #3A3A5A;
+}
+
+body {
+  @apply bg-background-primary text-text-primary;
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-card {
+  @apply bg-black border border-border-color rounded-lg p-4 shadow-lg hover:shadow-2xl hover:border-accent-primary transition-all duration-300;
+  background: black;
+  backdrop-filter: blur(10px);
+}
+
+.cyberpunk-input {
+  @apply bg-background-secondary border border-border-color text-text-primary rounded-md focus:ring-accent-primary focus:border-accent-primary;
+  transition: all 0.3s ease;
+}
+
+.cyberpunk-button {
+  @apply bg-accent-primary text-background-primary hover:bg-accent-secondary transition-all duration-300 rounded-md px-4 py-2;
+}
+
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 255, 209, 0.5), 0 0 10px rgba(255, 0, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 255, 209, 0.8), 0 0 25px rgba(255, 0, 255, 0.6);
+  }
+}
+
+.animate-text-glow {
+  animation: text-glow 2s infinite;
+}
