@@ -131,7 +131,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
           <div className="text-center text-text-secondary">No updates found</div>
         ) : (
           <>
-            <div className="mt-6 grid grid-cols-1 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 w-full">
               {updates.map((update) => (
                 <UpdateCard
                   key={update.id}

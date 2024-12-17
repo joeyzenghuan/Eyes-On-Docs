@@ -101,7 +101,7 @@ export async function GET(request: Request) {
       .fetchAll();
 
     logToFile(`Fetched ${updates.length} updates`);
-    logToFile('Raw updates: ' + JSON.stringify(updates, null, 2));
+    // logToFile('Raw updates: ' + JSON.stringify(updates, null, 2));
 
     // 转换数据
     const transformedUpdates = updates.map(update => {
