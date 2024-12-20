@@ -21,31 +21,58 @@ function logToFile(message: string) {
   fs.appendFileSync(logFile, logMessage);
 }
 
+// Validate environment variables before initialization
+const requiredEnvVars = [
+  'APP_TENANT_ID',
+  'APP_CLIENT_ID',
+  'APP_CLIENT_SECRET',
+  'AZURE_COSMOSDB_ACCOUNT',
+  'AZURE_COSMOSDB_DATABASE',
+  'AZURE_COSMOSDB_CONVERSATIONS_CONTAINER'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  const errorMessage = `Missing required environment variables: ${missingEnvVars.join(', ')}`;
+  logToFile(errorMessage);
+  throw new Error(errorMessage);
+}
+
+
 // Initialize Azure AD credentials
 const credential = new ClientSecretCredential(
-  process.env.APP_TENANT_ID || '',
-  process.env.APP_CLIENT_ID || '',
-  process.env.APP_CLIENT_SECRET || ''
+  process.env.APP_TENANT_ID!,
+  process.env.APP_CLIENT_ID!,
+  process.env.APP_CLIENT_SECRET! 
 );
 
-// Initialize the Cosmos Client
-const client = new CosmosClient({
-  endpoint: `https://${process.env.AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/`,
-  aadCredentials: credential
-});
 
-const database = client.database(process.env.AZURE_COSMOSDB_DATABASE || '');
-const container = database.container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER || '');
+// Initialize the Cosmos Client with error handling
+let client: CosmosClient;
+try {
+  client = new CosmosClient({
+    endpoint: `https://${process.env.AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/`,
+    aadCredentials: credential
+  });
 
-// Log successful Cosmos Client connection
-logToFile(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`);
+  const database = client.database(process.env.AZURE_COSMOSDB_DATABASE!);
+  const container = database.container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!);
+
+  // Log successful Cosmos Client connection
+  logToFile(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`);
+} catch (error) {
+  const errorMessage = `Failed to initialize Cosmos Client: ${error instanceof Error ? error.message : String(error)}`;
+  logToFile(errorMessage);
+  throw error;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const product = searchParams.get('product');
   const language = searchParams.get('language');
   const page = parseInt(searchParams.get('page') || '1', 10);
-  const pageSize = 10; // 每页10个
+  const pageSize = 20; // 每页20个
   const offset = (page - 1) * pageSize; // 计算偏移量
 
   logToFile(`Received request with params: product=${product}, language=${language}, page=${page}`);
@@ -96,7 +123,7 @@ export async function GET(request: Request) {
 
     logToFile('Final query parameters: ' + JSON.stringify(parameters));
 
-    const { resources: updates } = await container.items
+    const { resources: updates } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items
       .query({ query: queryText, parameters })
       .fetchAll();
 
@@ -104,21 +131,50 @@ export async function GET(request: Request) {
     // logToFile('Raw updates: ' + JSON.stringify(updates, null, 2));
 
     // 转换数据
-    const transformedUpdates = updates.map(update => {
-      logToFile('Individual update fields: ' + JSON.stringify({
-        id: update.id,
-        gpt_title_response: update.gpt_title_response,
-        gpt_summary_response: update.gpt_summary_response
-      }));
+    const transformedUpdates = updates
+      .filter(update => update.gpt_title_response && !update.gpt_title_response.startsWith('0'))
+      .map(update => {
+        // 提取标签和标题的函数
+        const extractTagAndTitle = (titleResponse: string) => {
+          // 移除开头的数字
+          const titleWithoutNumber = titleResponse.replace(/^\d+\s*/, '');
+          
+          // 尝试提取标签
+          const tagMatch = titleWithoutNumber.match(/^\[(.*?)\]\s*(.+)$/);
+          
+          if (tagMatch) {
+            return {
+              tag: tagMatch[1].trim(),
+              title: tagMatch[2].trim()
+            };
+          }
+          
+          // 如果没有标签，返回空标签和去除数字后的标题
+          return {
+            tag: '',
+            title: titleWithoutNumber.trim()
+          };
+        };
 
-      return {
-        id: update.id,
-        title: update.gpt_title_response,
-        gptSummary: update.gpt_summary_response,
-        timestamp: update.commit_time,
-        commitUrl: update.commit_url
-      };
-    });
+        const { tag, title } = extractTagAndTitle(update.gpt_title_response);
+
+        logToFile('Individual update fields: ' + JSON.stringify({
+          id: update.id,
+          gpt_title_response: update.gpt_title_response,
+          tag: tag,
+          title: title,
+          gpt_summary_response: update.gpt_summary_response
+        }));
+
+        return {
+          id: update.id,
+          tag: tag,
+          title: title,
+          gptSummary: update.gpt_summary_response,
+          timestamp: update.commit_time,
+          commitUrl: update.commit_url
+        };
+      });
 
     logToFile(`Transformed ${transformedUpdates.length} updates`);
 
@@ -129,7 +185,7 @@ export async function GET(request: Request) {
     };
     logToFile('Count query: ' + JSON.stringify(countQuery));
 
-    const { resources: [totalCount] } = await container.items.query(countQuery).fetchAll();
+    const { resources: [totalCount] } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items.query(countQuery).fetchAll();
     logToFile(`Total count of updates: ${totalCount}`);
 
     // 计算总页数

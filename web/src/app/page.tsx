@@ -34,7 +34,8 @@ async function getUpdates(product: string, language: string, page: number) {
         title: update.title,
         timestamp: update.timestamp,
         commitUrl: update.commitUrl,
-        gptSummary: update.gptSummary // Explicitly pass gptSummary
+        gptSummary: update.gptSummary, // Explicitly pass gptSummary
+        tag: update.tag // Add tag property
       };
     });
 
@@ -42,7 +43,7 @@ async function getUpdates(product: string, language: string, page: number) {
       updates: transformedUpdates,
       total: data.pagination.totalItems,
       page: data.pagination.currentPage,
-      pageSize: 10
+      pageSize: 20
     };
   } catch (error) {
     console.error('Error fetching updates:', error);
@@ -50,7 +51,7 @@ async function getUpdates(product: string, language: string, page: number) {
       updates: [],
       total: 0,
       page: page,
-      pageSize: 10
+      pageSize: 20
     };
   }
 }
@@ -63,6 +64,7 @@ interface Update {
   timestamp: string;
   commitUrl: string;
   gptSummary?: string;
+  tag?: string; // Add tag property
 }
 
 export default function Home({ searchParams }: { searchParams: { product?: string; language?: string; page?: string } }) {
@@ -75,7 +77,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    pageSize: 10
+    pageSize: 20
   });
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -87,9 +89,9 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
         setUpdates(data.updates);
         setPagination({
           currentPage: data.page,
-          totalPages: Math.ceil(data.total / 10),
+          totalPages: Math.ceil(data.total / 20),
           totalItems: data.total,
-          pageSize: 10
+          pageSize: 20
         });
       } catch (error) {
         console.error('Failed to fetch updates:', error);
@@ -108,7 +110,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
           tracking-widest uppercase font-orbitron 
           transform hover:scale-105 transition-transform duration-300
           drop-shadow-[0_0_20px_rgba(255,255,0,0.6)]
-          animate-[pulse_6s_ease-in-out_infinite]
+          animate-[pulse_5s_ease-in-out_infinite]
           bg-clip-text text-transparent 
           bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600
           hover:bg-gradient-to-br
@@ -137,6 +139,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
                   key={update.id}
                   id={update.id}
                   title={update.title}
+                  tag={update.tag}
                   timestamp={update.timestamp}
                   commitUrl={update.commitUrl}
                   gptSummary={update.gptSummary}
@@ -148,7 +151,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
                 currentPage={pagination.currentPage} 
                 totalPages={pagination.totalPages}
                 totalItems={pagination.totalItems}
-                pageSize={pagination.pageSize}
+                pageSize={20}
                 onPageChange={(newPage) => {
                   const params = new URLSearchParams(window.location.search);
                   params.set('page', newPage.toString());
