@@ -62,32 +62,25 @@ export default function UpdateCard({
   };
 
   const hasMoreLines = gptSummary 
-    ? gptSummary.split(/\\n|\n/).length > 5 
+    ? (typeof gptSummary === 'string' 
+        ? gptSummary.split(/\n|\n/).length > 5 
+        : false)
     : false;
 
   // 复制卡片内容的函数
-  const handleCopyContent = () => {
-    if (contentRef.current) {
-      // 构建要复制的完整文本
-      const copyText = `Title: ${title}${tag ? ` [${tag}]` : ''}
-Timestamp: ${new Date(timestamp).toLocaleString()}
-Commit URL: ${commitUrl}
-${gptSummary ? `Summary:\n${gptSummary.replace(/\\n/g, '\n')}` : ''}`;
+  const copyCardContent = () => {
+    const content = `标题: ${title}
+标签: ${tag}
+时间: ${timestamp}
+内容: ${typeof gptSummary === 'string' ? gptSummary : JSON.stringify(gptSummary)}
+链接: ${commitUrl}`;
 
-      // 复制到剪贴板
-      navigator.clipboard.writeText(copyText).then(() => {
-        setIsCopied(true);
-        toast.success('Content copied to clipboard');
-        
-        // 2秒后恢复原状
-        setTimeout(() => {
-          setIsCopied(false);
-        }, 2000);
-      }).catch(err => {
-        toast.error('Copy failed');
-        console.error('Copy failed:', err);
-      });
-    }
+    navigator.clipboard.writeText(content).then(() => {
+      toast.success('内容已复制到剪贴板');
+    }).catch(err => {
+      toast.error('复制失败');
+      console.error('复制失败:', err);
+    });
   };
 
   return (
@@ -109,7 +102,7 @@ ${gptSummary ? `Summary:\n${gptSummary.replace(/\\n/g, '\n')}` : ''}`;
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              handleCopyContent();
+              copyCardContent();
             }}
             className={`
               p-1.5 rounded-md transition-all duration-300 flex items-center justify-center

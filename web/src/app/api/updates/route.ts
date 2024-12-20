@@ -74,13 +74,14 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = 20; // 每页20个
   const offset = (page - 1) * pageSize; // 计算偏移量
+  const updateType = searchParams.get('updateType') || 'single'; // 新增 updateType 参数，默认为 single
 
-  logToFile(`Received request with params: product=${product}, language=${language}, page=${page}`);
+  logToFile(`Received request with params: product=${product}, language=${language}, page=${page}, updateType=${updateType}`);
 
   try {
     let parameters = [];
     let conditions = [];
-    let queryText = "SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response)";
+    let queryText = "";
 
     logToFile('Initial query text: ' + queryText);
 
@@ -108,10 +109,13 @@ export async function GET(request: Request) {
       logToFile(`Added default language filter: ${defaultLanguage}`);
     }
 
-    if (conditions.length > 0) {
-      queryText += " AND " + conditions.join(" AND ");
-      logToFile('Updated query text with conditions: ' + queryText);
-    }
+    // 根据 updateType 调整查询条件
+    const query = updateType === 'weekly' 
+      ? 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language'
+      : 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response) AND c.gpt_title_response != "0" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language';
+
+    queryText = query;
+    logToFile('Updated query text with conditions: ' + queryText);
 
     // 添加排序和分页
     queryText += " ORDER BY c.commit_time DESC OFFSET @offset LIMIT @limit";
@@ -128,49 +132,72 @@ export async function GET(request: Request) {
       .fetchAll();
 
     logToFile(`Fetched ${updates.length} updates`);
-    // logToFile('Raw updates: ' + JSON.stringify(updates, null, 2));
 
     // 转换数据
     const transformedUpdates = updates
-      .filter(update => update.gpt_title_response && !update.gpt_title_response.startsWith('0'))
+      .filter(update => {
+        // 对于周总结，检查 teams_message_jsondata
+        if (updateType === 'weekly') {
+          return update.teams_message_jsondata && 
+                 update.teams_message_jsondata.title && 
+                 update.teams_message_jsondata.text;
+        }
+        // 对于单个更新，保持原有逻辑
+        return update.gpt_title_response && !update.gpt_title_response.startsWith('0');
+      })
       .map(update => {
-        // 提取标签和标题的函数
-        const extractTagAndTitle = (titleResponse: string) => {
-          // 移除开头的数字
-          const titleWithoutNumber = titleResponse.replace(/^\d+\s*/, '');
-          
-          // 尝试提取标签
-          const tagMatch = titleWithoutNumber.match(/^\[(.*?)\]\s*(.+)$/);
-          
-          if (tagMatch) {
-            return {
-              tag: tagMatch[1].trim(),
-              title: tagMatch[2].trim()
-            };
-          }
-          
-          // 如果没有标签，返回空标签和去除数字后的标题
-          return {
-            tag: '',
-            title: titleWithoutNumber.trim()
-          };
-        };
+        let tag = '';
+        let title = '';
+        let gptSummary = '';
 
-        const { tag, title } = extractTagAndTitle(update.gpt_title_response);
+        if (updateType === 'weekly') {
+          // 从 teams_message_jsondata 提取信息
+          const teamsData = update.teams_message_jsondata;
+          title = teamsData.title;
+          gptSummary = teamsData.text;
+
+          // 尝试从标题中提取标签
+          const tagMatch = title.match(/^\[(.*?)\]/);
+          if (tagMatch) {
+            tag = tagMatch[1].trim();
+          }
+        } else {
+          // 单个更新的原有逻辑
+          const extractTagAndTitle = (titleResponse: string) => {
+            const titleWithoutNumber = titleResponse.replace(/^\d+\s*/, '');
+            const tagMatch = titleWithoutNumber.match(/^\[(.*?)\]\s*(.+)$/);
+            
+            if (tagMatch) {
+              return {
+                tag: tagMatch[1].trim(),
+                title: tagMatch[2].trim()
+              };
+            }
+            
+            return {
+              tag: '',
+              title: titleWithoutNumber.trim()
+            };
+          };
+
+          const { tag: extractedTag, title: extractedTitle } = extractTagAndTitle(update.gpt_title_response);
+          tag = extractedTag;
+          title = extractedTitle;
+          gptSummary = update.gpt_summary_response;
+        }
 
         logToFile('Individual update fields: ' + JSON.stringify({
           id: update.id,
-          gpt_title_response: update.gpt_title_response,
           tag: tag,
           title: title,
-          gpt_summary_response: update.gpt_summary_response
+          gptSummary: gptSummary
         }));
 
         return {
           id: update.id,
           tag: tag,
           title: title,
-          gptSummary: update.gpt_summary_response,
+          gptSummary: gptSummary,
           timestamp: update.commit_time,
           commitUrl: update.commit_url
         };
@@ -178,9 +205,20 @@ export async function GET(request: Request) {
 
     logToFile(`Transformed ${transformedUpdates.length} updates`);
 
+    // 获取总数的查询条件
+    const getCountCondition = (updateType: string) => {
+      switch (updateType) {
+        case 'weekly':
+          return 'IS_DEFINED(c.gpt_weekly_summary_tokens)';
+        case 'single':
+        default:
+          return 'IS_DEFINED(c.gpt_title_response) AND c.gpt_title_response != "0" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens)';
+      }
+    };
+
     // 获取总数
     const countQuery = {
-      query: `SELECT VALUE COUNT(1) FROM c WHERE IS_DEFINED(c.gpt_title_response)${conditions.length > 0 ? ' AND ' + conditions.join(" AND ") : ''}`,
+      query: `SELECT VALUE COUNT(1) FROM c WHERE ${getCountCondition(updateType)} AND c.topic = @product AND c.language = @language`,
       parameters: parameters.filter(p => !['@offset', '@limit'].includes(p.name))
     };
     logToFile('Count query: ' + JSON.stringify(countQuery));

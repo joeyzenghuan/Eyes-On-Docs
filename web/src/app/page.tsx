@@ -1,14 +1,21 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Filters from '@/components/Filters';
 import { Pagination } from '@/components/Pagination';
 import UpdateCard from '@/components/UpdateCard';
 
-async function getUpdates(product: string, language: string, page: number) {
+async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
-    const response = await fetch(`/api/updates?product=${product}&language=${language}&page=${page}`, {
+    const params = new URLSearchParams({
+      product: product || 'AOAI-V2',
+      language: language || 'Chinese',
+      page: page.toString(),
+      updateType: updateType
+    });
+
+    const response = await fetch(`/api/updates?${params}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -80,12 +87,17 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     pageSize: 20
   });
   const [isLoading, setIsLoading] = React.useState(true);
+  const [updateType, setUpdateType] = useState<'single' | 'weekly'>('single');
+
+  const toggleUpdateType = (type: 'single' | 'weekly') => {
+    setUpdateType(type);
+  };
 
   React.useEffect(() => {
     async function fetchUpdates() {
       setIsLoading(true);
       try {
-        const data = await getUpdates(product, language, page);
+        const data = await getUpdates(product, language, page, updateType);
         setUpdates(data.updates);
         setPagination({
           currentPage: data.page,
@@ -101,34 +113,77 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     }
 
     fetchUpdates();
-  }, [product, language, page]);
+  }, [product, language, page, updateType]);
 
   return (
-    <main className="flex min-h-screen flex-col p-24 bg-background-primary">
-      <div className="max-w-5xl w-full mx-auto">
+    <main className="min-h-screen p-6 md:p-12 bg-background-primary text-text-primary">
+      <div className="max-w-4xl mx-auto">
         <h1 className="text-8xl font-black mb-6 text-yellow-400 text-center 
-          tracking-widest uppercase font-orbitron 
-          transform hover:scale-105 transition-transform duration-300
+          transform 
           drop-shadow-[0_0_20px_rgba(255,255,0,0.6)]
           animate-[pulse_5s_ease-in-out_infinite]
           bg-clip-text text-transparent 
-          bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600
-          hover:bg-gradient-to-br
+          bg-gradient-to-br from-yellow-400 to-yellow-600
           border-b-4 border-yellow-600 pb-2
-          hover:border-opacity-75 transition-all"
-        >
+          transition-all duration-300
+          hover:scale-[1.02]
+          hover:drop-shadow-[0_0_30px_rgba(255,255,0,0.8)]
+        ">
           EYES ON DOCS
         </h1>
-        
-        <div className="w-full flex justify-start mb-6">
+
+        <div className="flex justify-between items-center mb-4">
           <Filters 
             products={['AOAI-V2', 'AML']} 
             languages={['Chinese', 'English']}
           />
+          <div className="flex items-center justify-end w-full">
+            <div 
+              className="
+                relative flex w-72 bg-background-secondary rounded-full p-1 cursor-pointer
+                transition-all duration-300
+                hover:scale-[1.02]
+                hover:shadow-md
+              "
+              onClick={() => toggleUpdateType(updateType === 'single' ? 'weekly' : 'single')}
+            >
+              {/* 滑动背景 */}
+              <div 
+                className={`
+                  absolute top-1 bottom-1 w-1/2 bg-accent-secondary rounded-full 
+                  transition-all duration-300 ease-in-out
+                  ${updateType === 'single' ? 'left-1' : 'left-1/2'}
+                  shadow-md
+                `}
+              />
+              
+              {/* 文字按钮 */}
+              <div className="flex w-full z-10">
+                <div 
+                  className={`
+                    w-1/2 text-center py-2 rounded-full 
+                    transition-colors duration-300
+                    ${updateType === 'single' ? 'text-background-primary' : 'text-text-secondary hover:text-accent-secondary'}
+                  `}
+                >
+                  Single Update
+                </div>
+                <div 
+                  className={`
+                    w-1/2 text-center py-2 rounded-full 
+                    transition-colors duration-300
+                    ${updateType === 'weekly' ? 'text-background-primary' : 'text-text-secondary hover:text-accent-secondary'}
+                  `}
+                >
+                  Weekly Summary
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {isLoading ? (
-          <div className="text-center text-accent-secondary animate-pulse">Loading...</div>
+          <div className="text-center text-text-secondary">Loading...</div>
         ) : updates.length === 0 ? (
           <div className="text-center text-text-secondary">No updates found</div>
         ) : (
@@ -162,6 +217,27 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
           </>
         )}
       </div>
+      {/* 作者信息 */}
+      <footer className="mt-12 text-center text-text-secondary text-sm">
+        <div className="border-t border-accent-secondary/30 pt-6">
+          <p>
+            🚀 Created by <span className="font-bold text-accent-secondary">Joey Zeng</span> • 
+            <a 
+              href="mailto:zehua@microsoft.com" 
+              className="
+                ml-2
+                hover:text-accent-secondary 
+                transition-colors 
+                duration-300 
+                underline
+                hover:no-underline
+              "
+            >
+              zehua@microsoft.com
+            </a>
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
