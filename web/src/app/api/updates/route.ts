@@ -153,7 +153,7 @@ export async function GET(request: Request) {
         if (updateType === 'weekly') {
           // 从 teams_message_jsondata 提取信息
           const teamsData = update.teams_message_jsondata;
-          title = teamsData.title;
+          title = teamsData.title.replace(/\[Weekly Summary\]\s*/g, '').trim();
           gptSummary = teamsData.text;
 
           // 尝试从标题中提取标签
