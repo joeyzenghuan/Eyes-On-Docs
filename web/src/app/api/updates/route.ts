@@ -5,7 +5,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Function to log to file
-function logToFile(message: string) {
+function logToFile(message: string, level: 'info' | 'error' | 'warning' | 'debug' = 'info') {
+  const logLevel = process.env.LOG_LEVEL || 'info';
+  const levels = ['debug', 'info', 'warning', 'error'];
+  const currentLevelIndex = levels.indexOf(logLevel);
+  const messageLevelIndex = levels.indexOf(level);
+
+  if (messageLevelIndex < currentLevelIndex) {
+    return;
+  }
   const logDir = path.join(process.cwd(), 'logs');
   
   // Create logs directory if it doesn't exist
@@ -16,7 +24,7 @@ function logToFile(message: string) {
   const logFile = path.join(logDir, `updates_${new Date().toISOString().split('T')[0]}.log`);
   
   const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${message}\n`;
+  const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}\n`;
   
   fs.appendFileSync(logFile, logMessage);
 }
@@ -35,7 +43,7 @@ const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
   const errorMessage = `Missing required environment variables: ${missingEnvVars.join(', ')}`;
-  logToFile(errorMessage);
+  logToFile(errorMessage, 'error');
   throw new Error(errorMessage);
 }
 
@@ -60,15 +68,16 @@ try {
   const container = database.container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!);
 
   // Log successful Cosmos Client connection
-  logToFile(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`);
+  logToFile(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`, 'info');
 } catch (error) {
   const errorMessage = `Failed to initialize Cosmos Client: ${error instanceof Error ? error.message : String(error)}`;
-  logToFile(errorMessage);
+  logToFile(errorMessage, 'error');
   throw error;
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  logToFile(request.url, 'info');
   const product = searchParams.get('product');
   const language = searchParams.get('language');
   const page = parseInt(searchParams.get('page') || '1', 10);
@@ -76,14 +85,14 @@ export async function GET(request: Request) {
   const offset = (page - 1) * pageSize; // 计算偏移量
   const updateType = searchParams.get('updateType') || 'single'; // 新增 updateType 参数，默认为 single
 
-  logToFile(`Received request with params: product=${product}, language=${language}, page=${page}, updateType=${updateType}`);
+  logToFile(`Received request with params: product=${product}, language=${language}, page=${page}, updateType=${updateType}`, 'info');
 
   try {
     let parameters = [];
     let conditions = [];
     let queryText = "";
 
-    logToFile('Initial query text: ' + queryText);
+    logToFile('Initial query text: ' + queryText, 'debug');
 
     // Default to first product if not specified
     const defaultProduct = 'AOAI-V2';
@@ -92,30 +101,30 @@ export async function GET(request: Request) {
     if (product) {
       conditions.push("c.topic = @product");
       parameters.push({ name: '@product', value: product });
-      logToFile(`Added product filter: ${product}`);
+      logToFile(`Added product filter: ${product}`, 'debug');
     } else {
       conditions.push("c.topic = @product");
       parameters.push({ name: '@product', value: defaultProduct });
-      logToFile(`Added default product filter: ${defaultProduct}`);
+      logToFile(`Added default product filter: ${defaultProduct}`, 'debug');
     }
 
     if (language) {
       conditions.push("c.language = @language");
       parameters.push({ name: '@language', value: language });
-      logToFile(`Added language filter: ${language}`);
+      logToFile(`Added language filter: ${language}`, 'debug');
     } else {
       conditions.push("c.language = @language");
       parameters.push({ name: '@language', value: defaultLanguage });
-      logToFile(`Added default language filter: ${defaultLanguage}`);
+      logToFile(`Added default language filter: ${defaultLanguage}`, 'debug');
     }
 
     // 根据 updateType 调整查询条件
     const query = updateType === 'weekly' 
       ? 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language'
-      : 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response) AND c.gpt_title_response != "0" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language';
+      : 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response) AND c.status != "skip" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language';
 
     queryText = query;
-    logToFile('Updated query text with conditions: ' + queryText);
+    logToFile('Updated query text with conditions: ' + queryText, 'debug');
 
     // 添加排序和分页
     queryText += " ORDER BY c.commit_time DESC OFFSET @offset LIMIT @limit";
@@ -123,15 +132,15 @@ export async function GET(request: Request) {
       { name: '@offset', value: offset },
       { name: '@limit', value: pageSize }
     );
-    logToFile(`Added sorting, offset, and limit: offset=${offset}, limit=${pageSize}`);
+    logToFile(`Added sorting, offset, and limit: offset=${offset}, limit=${pageSize}`, 'debug');
 
-    logToFile('Final query parameters: ' + JSON.stringify(parameters));
+    logToFile('Final query parameters: ' + JSON.stringify(parameters), 'info');
 
     const { resources: updates } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items
       .query({ query: queryText, parameters })
       .fetchAll();
 
-    logToFile(`Fetched ${updates.length} updates`);
+    logToFile(`Fetched ${updates.length} updates`, 'info');
 
     // 转换数据
     const transformedUpdates = updates
@@ -162,7 +171,8 @@ export async function GET(request: Request) {
             tag = tagMatch[1].trim();
           }
         } else {
-          // 单个更新的原有逻辑
+          // 单个更新的原有逻辑  其实不用在前端处理 0,1, 后端已经处理好了，放在 teams_message_jsondata.title中了
+          // 后端已经处理好了 teams_message_jsondata.text =  commit_time +   gpt_summary_response（这里没用）
           const extractTagAndTitle = (titleResponse: string) => {
             const titleWithoutNumber = titleResponse.replace(/^\d+\s*/, '');
             const tagMatch = titleWithoutNumber.match(/^\[(.*?)\]\s*(.+)$/);
@@ -191,7 +201,7 @@ export async function GET(request: Request) {
           tag: tag,
           title: title,
           gptSummary: gptSummary
-        }));
+        }), 'debug');
 
         return {
           id: update.id,
@@ -203,7 +213,7 @@ export async function GET(request: Request) {
         };
       });
 
-    logToFile(`Transformed ${transformedUpdates.length} updates`);
+        logToFile(`Transformed ${transformedUpdates.length} updates`, 'info');
 
     // 获取总数的查询条件
     const getCountCondition = (updateType: string) => {
@@ -212,7 +222,7 @@ export async function GET(request: Request) {
           return 'IS_DEFINED(c.gpt_weekly_summary_tokens)';
         case 'single':
         default:
-          return 'IS_DEFINED(c.gpt_title_response) AND c.gpt_title_response != "0" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens)';
+          return 'IS_DEFINED(c.gpt_title_response) AND c.status != "skip" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens)';
       }
     };
 
@@ -221,10 +231,10 @@ export async function GET(request: Request) {
       query: `SELECT VALUE COUNT(1) FROM c WHERE ${getCountCondition(updateType)} AND c.topic = @product AND c.language = @language`,
       parameters: parameters.filter(p => !['@offset', '@limit'].includes(p.name))
     };
-    logToFile('Count query: ' + JSON.stringify(countQuery));
+    logToFile('Count query: ' + JSON.stringify(countQuery), 'debug');
 
     const { resources: [totalCount] } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items.query(countQuery).fetchAll();
-    logToFile(`Total count of updates: ${totalCount}`);
+    logToFile(`Total count of updates: ${totalCount}`, 'info');
 
     // 计算总页数
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -239,11 +249,11 @@ export async function GET(request: Request) {
       }
     };
 
-    logToFile('Final response: ' + JSON.stringify(response, null, 2));
+    logToFile('Final response: ' + JSON.stringify(response, null, 2), 'debug');
 
     return NextResponse.json(response);
   } catch (error) {
-    logToFile('Error in GET function: ' + error.message);
+    logToFile('Error in GET function: ' + error.message, 'error');
     return NextResponse.json(
       { error: 'Failed to fetch updates', details: error.message },
       { status: 500 }

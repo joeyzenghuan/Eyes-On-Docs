@@ -159,7 +159,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                 logger.exception("Unexpected exception:", e)  
 
             try: 
-                # Update the start time in CosmosDB 
+                # Upload commit history into CosmosDB 
                 self.update_commit_history("gpt_summary_response", gpt_summary)
                 self.update_commit_history("gpt_title_response", gpt_title)
 
