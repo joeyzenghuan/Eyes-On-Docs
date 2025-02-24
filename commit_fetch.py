@@ -31,7 +31,7 @@ class CommitFetcher:
             # 不管是否verified，都爬取
             if True:
                 #提取时间信息
-                datetime_str=datetime_str=item['commit']['author']['date']
+                datetime_str=item['commit']['author']['date']
                 precise_time = datetime.datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ")
                 precise_time_list.append(precise_time)  
                 #提取commits url
