@@ -128,18 +128,8 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
   return (
     <main className="min-h-screen p-6 md:p-12 bg-background-primary text-text-primary">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-8xl font-black mb-6 text-yellow-400 text-center 
-          transform 
-          drop-shadow-[0_0_20px_rgba(255,255,0,0.6)]
-          animate-[pulse_5s_ease-in-out_infinite]
-          bg-clip-text text-transparent 
-          bg-gradient-to-br from-yellow-400 to-yellow-600
-          border-b-4 border-yellow-600 pb-2
-          transition-all duration-300
-          hover:scale-[1.02]
-          hover:drop-shadow-[0_0_30px_rgba(255,255,0,0.8)]
-        ">
-          EYES ON DOCS
+        <h1 className="mt-5 mb-4 text-center text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 animate-pulse whitespace-nowrap">
+          Eyes On Docs
         </h1>
 
         <div className="flex justify-between items-center mb-4">
