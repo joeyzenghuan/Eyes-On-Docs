@@ -134,7 +134,22 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
 
         <div className="flex justify-between items-center mb-4">
           <Filters 
-            products={['AOAI-V2', 'AML']} 
+            products={[
+              'AOAI-V2',
+              'AML',
+              'Cog-speech-service',
+              'Cog-document-intelligence',
+              'Cog-language-service',
+              'Cog-translator',
+              'Cog-content-safety',
+              'Cog-computer-vision',
+              'Cog-custom-vision-service',
+              'IoT-iot-hub',
+              'IoT-iot-edge',
+              'IoT-iot-dps',
+              'IoT-iot-central',
+              'IoT-iot-hub-device-update'
+            ]}
             languages={['Chinese', 'English']}
           />
           <div className="flex items-center justify-end w-full">

@@ -18,6 +18,7 @@ export default function Filters({ products, languages }: FiltersProps) {
   const handleProductChange = (product: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('product', product);
+    params.set('page', '1');
     router.push(`/?${params.toString()}`);
     setSelectedProduct(product);
   };
@@ -25,6 +26,7 @@ export default function Filters({ products, languages }: FiltersProps) {
   const handleLanguageChange = (language: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('language', language);
+    params.set('page', '1');
     router.push(`/?${params.toString()}`);
     setSelectedLanguage(language);
   };
