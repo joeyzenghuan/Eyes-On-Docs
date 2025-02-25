@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Filters from '@/components/Filters';
 import { Pagination } from '@/components/Pagination';
 import UpdateCard from '@/components/UpdateCard';
+import { useSession, signOut } from 'next-auth/react';
 
 async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
@@ -88,6 +89,15 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
   });
   const [isLoading, setIsLoading] = React.useState(true);
   const [updateType, setUpdateType] = useState<'single' | 'weekly'>('single');
+  const { data: session } = useSession();
+  const [userId, setUserId] = useState<string>('Guest');
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      setUserId(session.user.email);
+    }
+  }, [session]);
 
   const toggleUpdateType = (type: 'single' | 'weekly') => {
     setUpdateType(type);
@@ -152,7 +162,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
             ]}
             languages={['Chinese', 'English']}
           />
-          <div className="flex items-center justify-end w-full">
+          <div className="flex items-center justify-end">
             <div 
               className="
                 relative flex w-72 bg-background-secondary rounded-full p-1 cursor-pointer
@@ -194,6 +204,45 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
                 </div>
               </div>
             </div>
+          </div>
+          <div className="flex items-center mx-4">
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth' })}
+              className="
+                group
+                relative
+                px-4 py-2
+                bg-accent-secondary
+                text-background-primary
+                rounded-full
+                hover:bg-accent-secondary/90
+                transition-colors
+                duration-300
+                text-sm
+                font-medium
+              "
+            >
+              Sign Out
+              <div className="
+                absolute
+                left-1/2
+                -translate-x-1/2
+                -bottom-10
+                px-3 py-1
+                bg-background-secondary
+                text-text-primary
+                rounded
+                text-sm
+                opacity-0
+                group-hover:opacity-100
+                transition-opacity
+                duration-300
+                whitespace-nowrap
+                z-10
+              ">
+                {userId}
+              </div>
+            </button>
           </div>
         </div>
 
