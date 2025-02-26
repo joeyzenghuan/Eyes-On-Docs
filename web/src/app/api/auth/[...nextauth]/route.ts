@@ -9,6 +9,12 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
+    session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
     redirect({ url, baseUrl }) {
       // 如果URL以baseUrl开头，说明是内部重定向，允许重定向
       if (url.startsWith(baseUrl)) return url;

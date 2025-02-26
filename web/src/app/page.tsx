@@ -30,11 +30,11 @@ async function getUpdates(product: string, language: string, page: number, updat
     const data = await response.json();
     
     // Log the received data
-    console.log('Received updates data:', JSON.stringify(data, null, 2));
+    // console.log('Received updates data:', JSON.stringify(data, null, 2));
 
     // Transform the API response to match the existing Update interface
     const transformedUpdates = data.updates.map((update: any) => {
-      console.log('Transforming update:', JSON.stringify(update, null, 2));
+      // console.log('Transforming update:', JSON.stringify(update, null, 2));
       return {
         id: update.id,
         topic: update.product,
@@ -94,8 +94,12 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
   const router = useRouter();
 
   useEffect(() => {
-    if (session?.user?.email) {
-      setUserId(session.user.email);
+    if (session?.user?.id) {
+      setUserId(session.user.id);
+      // 设置GA4用户ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('set', 'user_id', session.user.id);
+      }
     }
   }, [session]);
 
