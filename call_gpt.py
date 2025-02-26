@@ -103,7 +103,7 @@ class CallGPT:
   
     
 
-    def get_weekly_summary(self, language, weekly_commit_list, gpt_weekly_summary_prompt, max_input_token):  
+    def generate_weekly_summary_using_weekly_commit_list(self, language, weekly_commit_list, gpt_weekly_summary_prompt, max_input_token):  
         """  
         获取一周 commit 的总结  
   
