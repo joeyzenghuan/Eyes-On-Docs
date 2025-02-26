@@ -140,6 +140,9 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
           <Filters 
             products={[
               'AOAI-V2',
+              'AI-Foundry',
+              'Agent-Service',
+              'Model-Inference',
               'AML',
               'Cog-speech-service',
               'Cog-document-intelligence',
