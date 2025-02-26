@@ -51,7 +51,7 @@ def process_targets(targets):
             topic = target['topic_name']  
             root_commits_url = target['root_commits_url']  
             language = target['language']  
-            teams_webhook_url = target['teams_webhook_url']
+            teams_webhook_url = target.get('teams_webhook_url', None)
             system_prompts = load_system_prompts(target)
 
             if target.get("show_topic_in_title", "False") in ("True", "true"):
@@ -72,15 +72,17 @@ def process_targets(targets):
 
             logger.info(f"Root commits url: {root_commits_url}")  
             logger.info(f"Language: {language}")  
-            logger.info(f"Teams webhook url: {teams_webhook_url}") 
+            if teams_webhook_url:
+                logger.info(f"Teams webhook url: {teams_webhook_url}") 
+            else:
+                logger.info("No Teams webhook url provided, skipping Teams notifications")
             logger.warning(f"url_mapping: {url_mapping}")  
-
     
             git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000)  
             # all_commits = git_spyder.get_all_commits()  
             # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
             git_spyder.process_commits(git_spyder.latest_commits, url_mapping)  
-
+    
             if show_weekly_summary:
                 this_week_summary = git_spyder.cosmosDB_client.check_weekly_summary(topic, language, root_commits_url)  
 
@@ -88,8 +90,7 @@ def process_targets(targets):
                 seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()    
                 if (now.weekday() == 0 and seconds_since_midnight < git_spyder.schedule) or this_week_summary is None:  
                     git_spyder.generate_weekly_summary()
-
-
+    
             logger.warning(f"Finish processing topic: {topic}")  
         except Exception as e:  
             logger.exception("Unexpected exception:", e) 
@@ -110,4 +111,4 @@ def main():
             logger.exception("Unexpected exception:", e)  
   
 if __name__ == "__main__":   
-    main()  
+    main()

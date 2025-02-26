@@ -69,9 +69,17 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                 if gpt_weekly_summary_response:
                     title = self.generate_weekly_title()
                     time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                    logger.warning(f"Push weekly summary report to teams")
-                    teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
-                    logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
+                    
+                    teams_message_jsondata = None
+                    post_status = None
+                    error_message = None
+                    
+                    if self.teams_webhook_url:
+                        logger.warning(f"Push weekly summary report to teams")
+                        teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
+                        logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
+                    else:
+                        logger.warning(f"Skip sending weekly summary to teams: no webhook URL configured")
 
                     self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
                     self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
@@ -151,8 +159,9 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                                     time = self.topic + "\n\n" + str(time_)
                                 else:
                                     time = time_
-                                teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
-                                # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
+                                if self.teams_webhook_url:
+                                    teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
+                                    # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
 
 
             except Exception as e:  
