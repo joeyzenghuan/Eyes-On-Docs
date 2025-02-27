@@ -75,10 +75,11 @@ interface Update {
   tag?: string; // Add tag property
 }
 
-export default function Home({ searchParams }: { searchParams: { product?: string; language?: string; page?: string } }) {
+export default function Home({ searchParams }: { searchParams: { product?: string; language?: string; page?: string; updateType?: string } }) {
   const product = searchParams.product || 'AOAI-V2';
   const language = searchParams.language || 'Chinese';
   const page = parseInt(searchParams.page || '1', 10);
+  const updateType = searchParams.updateType || 'single';
 
   const [updates, setUpdates] = React.useState<Update[]>([]);
   const [pagination, setPagination] = React.useState({
@@ -88,7 +89,6 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     pageSize: 20
   });
   const [isLoading, setIsLoading] = React.useState(true);
-  const [updateType, setUpdateType] = useState<'single' | 'weekly'>('single');
   const { data: session } = useSession();
   const [userId, setUserId] = useState<string>('Guest');
   const router = useRouter();
@@ -99,19 +99,22 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
       // 设置GA4用户ID
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('set', 'user_id', session.user.id);
+        window.gtag('set', 'userName', session.user.name || 'Guest');
       }
     }
   }, [session]);
 
   const toggleUpdateType = (type: 'single' | 'weekly') => {
-    setUpdateType(type);
+    const params = new URLSearchParams(window.location.search);
+    params.set('updateType', type);
+    window.location.search = params.toString();
   };
 
   React.useEffect(() => {
     async function fetchUpdates() {
       setIsLoading(true);
       try {
-        const data = await getUpdates(product, language, page, updateType);
+        const data = await getUpdates(product, language, page, updateType as 'single' | 'weekly');
         setUpdates(data.updates);
         setPagination({
           currentPage: data.page,
@@ -219,7 +222,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
                 font-medium
               "
             >
-              Sign Out
+              Ni Hao {userId} 
               <div className="
                 absolute
                 left-1/2
@@ -237,7 +240,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
                 whitespace-nowrap
                 z-10
               ">
-                {userId}
+                sign out
               </div>
             </button>
           </div>

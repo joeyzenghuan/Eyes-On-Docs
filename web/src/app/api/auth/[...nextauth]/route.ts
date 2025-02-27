@@ -1,11 +1,21 @@
 import NextAuth from "next-auth";
-import GithubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 const handler = NextAuth({
   providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID || "",
-      clientSecret: process.env.GITHUB_SECRET || "",
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.username) return null;
+        
+        return {
+          id: credentials.username,
+          name: credentials.username,
+        };
+      }
     }),
   ],
   callbacks: {
@@ -16,9 +26,7 @@ const handler = NextAuth({
       return session;
     },
     redirect({ url, baseUrl }) {
-      // 如果URL以baseUrl开头，说明是内部重定向，允许重定向
       if (url.startsWith(baseUrl)) return url;
-      // 否则重定向到主页
       return baseUrl;
     },
   },

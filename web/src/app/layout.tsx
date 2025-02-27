@@ -40,7 +40,7 @@ export default function RootLayout({
                 dimension2: 'updateType',
                 dimension3: 'page',
                 dimension4: 'language',
-                dimension5: 'github_user_id'
+                dimension5: 'userName'
               }
             });
           `}

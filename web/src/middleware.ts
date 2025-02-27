@@ -34,19 +34,13 @@ export async function middleware(request: NextRequest) {
       updateType: url.searchParams.get('updateType') || 'single'
     },
     userInfo: {
-      id: token?.sub || 'anonymous',
-      emial: token?.email || null,
-      name: token?.name || 'anonymous',
-      image: token?.picture || null
+      name: token?.name || 'anonymous'
     }
   };
 
-  // 设置window.userId用于GA4跟踪
-  const response = NextResponse.next();
-  response.headers.set('Set-Cookie', `github_user_id=${token?.sub || 'anonymous'}; Path=/; SameSite=Strict`);
+  console.log(visitInfo);
 
-  //console.log
-  console.log('visitInfo:', visitInfo);
+  const response = NextResponse.next();
 
   // 将访问信息写入Cosmos DB
   try {
