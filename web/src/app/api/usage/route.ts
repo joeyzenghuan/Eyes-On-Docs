@@ -81,9 +81,12 @@ export async function GET() {
       userDailyStats: userDailyStats.sort((a, b) => a.date.localeCompare(b.date))
     };
 
-    logger.info(`使用统计数据获取成功，用户统计数: ${userStats.length}, 每日统计数: ${dailyStats.length}, 用户增长统计数: ${userGrowthStats.length}, 产品每日统计数: ${productDailyStats.length}, 用户每日统计数: ${userDailyStats.length}`);
-
-    return NextResponse.json(response);
+    logger.info(`使用统计数据获取成功，用户统计数: ${userStats.length}, 每日统计数: ${dailyStats.length}, 用户增长统计数: ${userGrowthStats.length}, 产品每日统计数: ${productDailyStats.length}, 用户每日统计数: ${userDailyStats.length}`);    
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, max-age=10'
+      }
+    });
   } catch (error) {
     logger.error(`获取使用统计数据失败: ${error instanceof Error ? error.message : String(error)}${error instanceof Error && error.stack ? '\n' + error.stack : ''}`);
     return NextResponse.json(
