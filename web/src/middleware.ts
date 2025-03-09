@@ -38,8 +38,7 @@ export async function middleware(request: NextRequest) {
     }
   };
 
-  console.log(visitInfo);
-
+  // console.log(visitInfo);
   const response = NextResponse.next();
 
   // 将访问信息写入Cosmos DB
@@ -50,6 +49,21 @@ export async function middleware(request: NextRequest) {
       .items.create(visitInfo);
   } catch (error) {
     console.error('Failed to log visit info to Cosmos DB:', error);
+    // 发送错误信息到webhook
+    if (process.env.LOG_ERROR_WEBHOOK_URL) {
+      console.log('Sending error to webhook:');
+      try {
+        await fetch(process.env.LOG_ERROR_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            Text: `错误: ${error instanceof Error ? error.message : String(error)}\n时间: ${new Date().toISOString()}\n来源: middleware.ts\n操作: log_visit_info`
+          })
+        });
+      } catch (webhookError) {
+        console.error('Failed to send error to webhook:', webhookError);
+      }
+    }
   }
 
   // 身份验证逻辑

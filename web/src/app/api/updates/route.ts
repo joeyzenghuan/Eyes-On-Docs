@@ -3,6 +3,7 @@ import { CosmosClient } from '@azure/cosmos';
 import { ClientSecretCredential } from '@azure/identity';
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from '@/lib/logger';
 
 // Function to log to file
 function logToFile(message: string, level: 'info' | 'error' | 'warning' | 'debug' = 'info') {
@@ -43,7 +44,7 @@ const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
   const errorMessage = `Missing required environment variables: ${missingEnvVars.join(', ')}`;
-  logToFile(errorMessage, 'error');
+  logger.error(errorMessage);
   throw new Error(errorMessage);
 }
 
@@ -68,31 +69,31 @@ try {
   const container = database.container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!);
 
   // Log successful Cosmos Client connection
-  logToFile(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`, 'info');
+  logger.debug(`Cosmos Client connected successfully to database: ${process.env.AZURE_COSMOSDB_DATABASE}, container: ${process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}`);
 } catch (error) {
   const errorMessage = `Failed to initialize Cosmos Client: ${error instanceof Error ? error.message : String(error)}`;
-  logToFile(errorMessage, 'error');
+  logger.error(errorMessage);
   throw error;
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  logToFile(request.url, 'info');
+  logger.info(`请求URL: ${request.url}`);
   const product = searchParams.get('product');
   const language = searchParams.get('language');
   const page = parseInt(searchParams.get('page') || '1', 10);
-  const pageSize = 20; // 每页20个
-  const offset = (page - 1) * pageSize; // 计算偏移量
-  const updateType = searchParams.get('updateType') || 'single'; // 新增 updateType 参数，默认为 single
+  const pageSize = 20;
+  const offset = (page - 1) * pageSize;
+  const updateType = searchParams.get('updateType') || 'single';
 
-  logToFile(`Received request with params: product=${product}, language=${language}, page=${page}, updateType=${updateType}`, 'info');
+  logger.debug(`收到请求参数：product=${product}, language=${language}, page=${page}, updateType=${updateType}`);
 
   try {
     let parameters = [];
     let conditions = [];
     let queryText = "";
 
-    logToFile('Initial query text: ' + queryText, 'debug');
+    logger.debug(`初始查询文本: ${queryText}`);
 
     // Default to first product if not specified
     const defaultProduct = 'AOAI-V2';
@@ -101,21 +102,21 @@ export async function GET(request: Request) {
     if (product) {
       conditions.push("c.topic = @product");
       parameters.push({ name: '@product', value: product });
-      logToFile(`Added product filter: ${product}`, 'debug');
+      logger.debug(`添加产品过滤条件: ${product}`);
     } else {
       conditions.push("c.topic = @product");
       parameters.push({ name: '@product', value: defaultProduct });
-      logToFile(`Added default product filter: ${defaultProduct}`, 'debug');
+      logger.debug(`添加默认产品过滤条件: ${defaultProduct}`);
     }
 
     if (language) {
       conditions.push("c.language = @language");
       parameters.push({ name: '@language', value: language });
-      logToFile(`Added language filter: ${language}`, 'debug');
+      logger.debug(`添加语言过滤条件: ${language}`);
     } else {
       conditions.push("c.language = @language");
       parameters.push({ name: '@language', value: defaultLanguage });
-      logToFile(`Added default language filter: ${defaultLanguage}`, 'debug');
+      logger.debug(`添加默认语言过滤条件: ${defaultLanguage}`);
     }
 
     // 根据 updateType 调整查询条件
@@ -124,7 +125,7 @@ export async function GET(request: Request) {
       : 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response) AND c.status != "skip" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language';
 
     queryText = query;
-    logToFile('Updated query text with conditions: ' + queryText, 'debug');
+    logger.debug(`更新后的查询文本: ${queryText}`);
 
     // 添加排序和分页
     queryText += " ORDER BY c.commit_time DESC OFFSET @offset LIMIT @limit";
@@ -132,15 +133,15 @@ export async function GET(request: Request) {
       { name: '@offset', value: offset },
       { name: '@limit', value: pageSize }
     );
-    logToFile(`Added sorting, offset, and limit: offset=${offset}, limit=${pageSize}`, 'debug');
+    logger.debug(`添加排序和分页参数：offset=${offset}, limit=${pageSize}`);
 
-    logToFile('Final query parameters: ' + JSON.stringify(parameters), 'info');
+    logger.debug(`最终查询参数: ${JSON.stringify(parameters)}`);
 
     const { resources: updates } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items
       .query({ query: queryText, parameters })
       .fetchAll();
 
-    logToFile(`Fetched ${updates.length} updates`, 'info');
+    logger.debug(`获取到${updates.length}条更新记录`);
 
     // 转换数据
     const transformedUpdates = updates
@@ -196,12 +197,7 @@ export async function GET(request: Request) {
           gptSummary = update.gpt_summary_response;
         }
 
-        logToFile('Individual update fields: ' + JSON.stringify({
-          id: update.id,
-          tag: tag,
-          title: title,
-          gptSummary: gptSummary
-        }), 'debug');
+        logger.debug(`单条更新字段: ${JSON.stringify({id: update.id,tag: tag,title: title,gptSummary: gptSummary})}`);
 
         return {
           id: update.id,
@@ -213,7 +209,7 @@ export async function GET(request: Request) {
         };
       });
 
-        logToFile(`Transformed ${transformedUpdates.length} updates`, 'info');
+        logger.debug(`Transformed ${transformedUpdates.length} updates`);
 
     // 获取总数的查询条件
     const getCountCondition = (updateType: string) => {
@@ -231,10 +227,10 @@ export async function GET(request: Request) {
       query: `SELECT VALUE COUNT(1) FROM c WHERE ${getCountCondition(updateType)} AND c.topic = @product AND c.language = @language`,
       parameters: parameters.filter(p => !['@offset', '@limit'].includes(p.name))
     };
-    logToFile('Count query: ' + JSON.stringify(countQuery), 'debug');
+    logger.debug(`计数查询: ${JSON.stringify(countQuery)}`);
 
     const { resources: [totalCount] } = await client.database(process.env.AZURE_COSMOSDB_DATABASE!).container(process.env.AZURE_COSMOSDB_CONVERSATIONS_CONTAINER!).items.query(countQuery).fetchAll();
-    logToFile(`Total count of updates: ${totalCount}`, 'info');
+    logger.debug(`更新记录总数: ${totalCount}`);
 
     // 计算总页数
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -249,11 +245,11 @@ export async function GET(request: Request) {
       }
     };
 
-    logToFile('Final response: ' + JSON.stringify(response, null, 2), 'debug');
+    logger.debug(`最终响应: ${JSON.stringify(response, null, 2)}`);
 
     return NextResponse.json(response);
   } catch (error) {
-    logToFile('Error in GET function: ' + error.message, 'error');
+    logger.error(`获取更新记录失败: ${error.message}`);
     return NextResponse.json(
       { error: 'Failed to fetch updates', details: error.message },
       { status: 500 }

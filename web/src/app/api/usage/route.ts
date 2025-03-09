@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { CosmosClient } from '@azure/cosmos';
 import { ClientSecretCredential } from '@azure/identity';
+import { logger } from '@/lib/logger';
 
 // Initialize Azure AD credentials
 const credential = new ClientSecretCredential(
@@ -16,11 +17,12 @@ const client = new CosmosClient({
 });
 
 export async function GET() {
+  logger.info('开始获取使用统计数据');
   try {
     const database = client.database(process.env.AZURE_COSMOSDB_DATABASE!);
     const container = database.container(process.env.AZURE_COSMOSDB_USER_TRAFFIC_CONTAINER!);
 
-    // 获取用户访问统计
+    // 获取每个用户的历史访问次数统计
     const userStatsQuery = {
       query: 'SELECT c.userInfo.name, COUNT(1) AS recordCount FROM c WHERE c.userInfo.name NOT LIKE \'anonymous\' AND c.path = "/" GROUP BY c.userInfo.name'
     };
@@ -71,16 +73,19 @@ export async function GET() {
       return acc;
     }, []);
 
-
-    return NextResponse.json({
+    const response = {
       userStats: userStats.sort((a, b) => b.recordCount - a.recordCount),
       dailyStats: dailyStats.sort((a, b) => a.date.localeCompare(b.date)),
       userGrowthStats,
       productDailyStats: productDailyStats.sort((a, b) => a.date.localeCompare(b.date)),
       userDailyStats: userDailyStats.sort((a, b) => a.date.localeCompare(b.date))
-    });
+    };
+
+    logger.info(`使用统计数据获取成功，用户统计数: ${userStats.length}, 每日统计数: ${dailyStats.length}, 用户增长统计数: ${userGrowthStats.length}, 产品每日统计数: ${productDailyStats.length}, 用户每日统计数: ${userDailyStats.length}`);
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching usage stats:', error);
+    logger.error(`获取使用统计数据失败: ${error instanceof Error ? error.message : String(error)}${error instanceof Error && error.stack ? '\n' + error.stack : ''}`);
     return NextResponse.json(
       { error: 'Failed to fetch usage statistics', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
