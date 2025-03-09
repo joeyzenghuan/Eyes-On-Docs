@@ -84,7 +84,8 @@ export async function GET() {
     logger.info(`使用统计数据获取成功，用户统计数: ${userStats.length}, 每日统计数: ${dailyStats.length}, 用户增长统计数: ${userGrowthStats.length}, 产品每日统计数: ${productDailyStats.length}, 用户每日统计数: ${userDailyStats.length}`);    
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'no-store, must-revalidate'
+        'Cache-Control': 'no-store, must-revalidate',
+        'Vary': '*'
       }
     });
   } catch (error) {
@@ -95,3 +96,7 @@ export async function GET() {
     );
   }
 }
+
+// 添加配置选项以禁用缓存
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
