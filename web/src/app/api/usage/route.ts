@@ -84,7 +84,7 @@ export async function GET() {
     logger.info(`使用统计数据获取成功，用户统计数: ${userStats.length}, 每日统计数: ${dailyStats.length}, 用户增长统计数: ${userGrowthStats.length}, 产品每日统计数: ${productDailyStats.length}, 用户每日统计数: ${userDailyStats.length}`);    
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 'public, max-age=10'
+        'Cache-Control': 'no-store, must-revalidate'
       }
     });
   } catch (error) {

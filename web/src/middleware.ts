@@ -41,6 +41,11 @@ export async function middleware(request: NextRequest) {
   // console.log(visitInfo);
   const response = NextResponse.next();
 
+  // 设置全局的缓存控制头
+  response.headers.set('Cache-Control', 'no-store, must-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+
   // 将访问信息写入Cosmos DB
   try {
     await client
