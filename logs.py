@@ -9,6 +9,7 @@ import requests
 
 load_dotenv()  # 加载.env文件中的环境变量
 ERROR_WEBHOOK_URL = os.getenv('ERROR_WEBHOOK_URL')
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')  # 从环境变量读取日志级别，默认为 INFO
 
 class WebhookHandler:
     def __init__(self, webhook_url):
@@ -26,7 +27,7 @@ class WebhookHandler:
             # 处理webhook发送失败的情况
             print(f"发送webhook通知失败: {str(e)}")
 
-def define_log_level(print_level="INFO", logfile_level="INFO"):
+def define_log_level(print_level=LOG_LEVEL, logfile_level=LOG_LEVEL):
     """调整日志级别到level之上
        Adjust the log level to above level
     """

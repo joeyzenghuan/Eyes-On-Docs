@@ -131,15 +131,14 @@ class CallGPT:
             {"role": "system", "content": f"{gpt_weekly_summary_prompt}\n  Reply Reasoning in {language}."},  
             {"role": "user", "content": prompt},  
         ]  
-  
-        logger.info(f"GPT_Weekly_Summary Request body: {messages}")  
+        logger.debug(f"GPT_Weekly_Summary Request body: {messages}")  
   
         # 获取 GPT 周总结响应  
-        gpt_weekly_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages, max_tokens=2000)  
+        gpt_weekly_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages, max_tokens=4000)  
           
         # 记录日志  
-        logger.warning(f"GPT_Weekly_Summary Response:\n  {gpt_weekly_summary_response}")  
-        logger.info(f"GPT_Weekly_Summary Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")    
+        logger.debug(f"GPT_Weekly_Summary Response:\n  {gpt_weekly_summary_response}")  
+        logger.info(f"**************** GPT_Weekly_Summary Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")    
 
         gpt_weekly_summary_tokens = {  
             "prompt": prompt_tokens,  
