@@ -121,7 +121,7 @@ export async function GET(request: Request) {
 
     // 根据 updateType 调整查询条件
     const query = updateType === 'weekly' 
-      ? 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language'
+      ? 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language AND NOT IS_NULL(c.teams_message_jsondata)'
       : 'SELECT * FROM c WHERE IS_DEFINED(c.gpt_title_response) AND c.status != "skip" AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens) AND c.topic = @product AND c.language = @language';
 
     queryText = query;
@@ -146,7 +146,7 @@ export async function GET(request: Request) {
     // 转换数据
     const transformedUpdates = updates
       .filter(update => {
-        // 对于周总结，检查 teams_message_jsondata
+        // 对于周总结，检查 teams_message_jsondata！！！ 
         if (updateType === 'weekly') {
           return update.teams_message_jsondata && 
                  update.teams_message_jsondata.title && 

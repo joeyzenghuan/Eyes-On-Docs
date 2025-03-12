@@ -68,17 +68,24 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             try:
                 time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 if gpt_weekly_summary_response:
-                    title = self.generate_weekly_title()
+                    gpt_weekly_summary_title = self.generate_weekly_title()
                     teams_message_jsondata = None
                     post_status = None
                     error_message = None
                     
+                    # web 前端 通过读 teams_message_jsondata 来获取 weekly summary 的 title 和 text
+                    # 如果 teams_webhook_url 为空，则直接将 title 和 text 写入 teams_message_jsondata
                     if self.teams_webhook_url:
                         logger.warning(f"Push weekly summary report to teams")
-                        teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
+                        teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_weekly_summary_title, time, gpt_weekly_summary_response, self.teams_webhook_url)
                         logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
                     else:
                         logger.warning(f"Skip sending weekly summary to teams: no webhook URL configured")
+                        teams_message_jsondata = {
+                            "title": gpt_weekly_summary_title,
+                            "text": gpt_weekly_summary_response,
+                        }
+
 
                     self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
                     self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
