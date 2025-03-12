@@ -107,6 +107,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
   const toggleUpdateType = (type: 'single' | 'weekly') => {
     const params = new URLSearchParams(window.location.search);
     params.set('updateType', type);
+    params.set('page', '1');
     window.location.search = params.toString();
   };
 
