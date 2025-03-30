@@ -154,7 +154,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                         else:
                             # check the first two characters of gpt_title, if it is '0 ', skip this commit
                             if status == "skip":
-                                logger.error(f"Skip this commit: {gpt_title}")
+                                logger.info(f"Skip this commit: {gpt_title}")
                             else:
                                 # lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
                                 # if self.get_similarity(input_dic, self.language, lastest_commit_in_cosmosdb, self.system_prompt_dict["GPT_SIMILARITL_PROMPT"]).split("\n")[1][0] == "1":
