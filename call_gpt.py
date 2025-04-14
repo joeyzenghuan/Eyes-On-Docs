@@ -112,20 +112,47 @@ class CallGPT:
         :param gpt_weekly_summary_prompt: GPT 周总结提示信息  
         :return: GPT 周总结响应  
         """  
-        # 构建初始提示信息  
+        if not weekly_commit_list:
+            logger.warning("Weekly commit list is empty")
+            return None, None
+        
         init_prompt = "Here are the document titles and summaries for this week's updates from Microsoft Learn:\n\n"  
         end_prompt = "Please format the updates in a numbered list, with each entry containing the title tag, title, summary, and link, prioritized by their significance with the most important updates at the top."
+        
         post_data = False
+        skipped_commits = 0
+        
         for commit in weekly_commit_list:  
-            if commit.get("gpt_title_response", "")[0] == "1":
+            title_response = commit.get("gpt_title_response", "")
+            if not isinstance(title_response, str) or len(title_response) < 1:
+                logger.warning(f"Invalid title response for commit: {commit}")
+                continue
+            
+            if title_response[0] == "1":
+                summary_response = commit.get("gpt_summary_response", "")
+                if not isinstance(summary_response, str):
+                    logger.warning(f"Invalid summary response for commit: {commit}")
+                    continue
+                
                 post_data = True
-                init_prompt += f"{commit['gpt_title_response'][2:]}\n\n{commit['gpt_summary_response']}\n\n"
-                used_tokens = self.num_tokens_from_string(gpt_weekly_summary_prompt+init_prompt+end_prompt, "cl100k_base")
+                init_prompt += f"{title_response[2:]}\n\n{summary_response}\n\n"
+                
+                used_tokens = self.num_tokens_from_string(
+                    gpt_weekly_summary_prompt + init_prompt + end_prompt, 
+                    "cl100k_base"
+                )
+                
                 if used_tokens > max_input_token:
-                    logger.warning(f"Input tokens exceed the limit value: {messages} / {max_input_token}")  
+                    logger.warning(f"Input tokens exceed the limit: {used_tokens} / {max_input_token}")
+                    skipped_commits = len(weekly_commit_list) - weekly_commit_list.index(commit)
+                    logger.warning(f"Skipped {skipped_commits} commits due to token limit")
                     break
+
         if not post_data:
+            logger.warning("No valid commit data found for weekly summary")
             return None, None
+
+        
         prompt = init_prompt + end_prompt
         messages = [  
             {"role": "system", "content": f"{gpt_weekly_summary_prompt}\n  Reply Reasoning in {language}."},  

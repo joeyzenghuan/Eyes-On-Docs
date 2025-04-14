@@ -290,7 +290,7 @@ class CosmosConversationClient:
                 AND c.root_commits_url = @root_commits_url  
                 AND c.language = @language  
                 AND IS_DEFINED(c.gpt_title_response) 
-                AND c.status != "skip" 
+                AND c.status = "post" 
                 AND NOT IS_DEFINED(c.gpt_weekly_summary_tokens)
                 AND c.commit_time >= '{last_monday_str}'  
                 AND c.commit_time <= '{last_sunday_str}'  
