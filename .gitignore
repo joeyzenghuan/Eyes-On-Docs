@@ -4,7 +4,7 @@
 logs
 test.json
 last_crawl_time.txt
-test*
+localtest*
 target_config.json
 # static
 # .azure/

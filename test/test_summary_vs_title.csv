@@ -1,0 +1,62 @@
+﻿summary,original_title,new_title
+"https://learn.microsoft.com/en-us/fabric/data-warehouse/share-warehouse-manage-permissions
+
+此文件中的更改主要是对一段文本的微调。原文中的 ""Build reports on the default dataset"" is selected (""Build"" permissions) 被修改为 ""Build reports on the default dataset"" checkbox is selected (""Build"" permissions)。这个修改使得文本更加清晰，明确指出 ""Build reports on the default dataset"" 是一个可以被选择的复选框。",[文本] 微调数据仓库管理权限文档中的文本描述,0 [文本] 微调数据仓库权限管理文档中的描述细节
+"https://learn.microsoft.com/en-us/fabric/data-warehouse/share-warehouse-manage-permissions
+
+这个文件中的更改主要是对一段文本的修改。原文是""Build reports on the default checkbox""，现在被改为了""Build reports on the default dataset""。这个修改更正了原文中的错误，使得描述更加准确。",[文本] 微软学习平台数据仓库权限管理文本修改,0 [文本] 对数据仓库管理权限文档的文本修正
+"https://learn.microsoft.com/en-us/fabric/cicd/git-integration/source-code-format
+
+这个提交主要是对“source-code-format”文件进行了修改。主要的改动包括：
+
+1. 修改了关于项目目录中自动生成的系统文件的描述，从“一个或两个”改为了“两个”。
+2. 删除了关于版本1和版本2的详细描述，包括每个版本中包含的文件和文件的内容。
+3. 在元数据文件和配置文件的描述中，将一些抽象的内容替换为了具体的示例。
+4. 删除了关于平台文件的描述，这是版本2中的一个特性，但在这次提交中被移除了。
+
+总的来说，这个提交看起来像是在将文档从描述两个版本的系统文件（版本1和版本2）转变为只描述一个版本的系统文件。",[修改] 对“source-code-format”文件的主要改动,"1 [文本] ""源代码格式""文档更新：专注于单一版本的系统文件描述"
+"https://learn.microsoft.com/en-us/fabric/data-engineering/configure-starter-pools
+
+此文件主要对“configure-starter-pools”文档进行了更新。原本的内容中提到，由于Starter Pools使用中等节点（8个Spark核心），F2容量的用户可能会看到会话启动时间慢2-3分钟。现在，这部分内容被扩展和详细化，增加了问题描述、影响和状态三个子标题。问题描述中，详细解释了在最大节点配置限制为单个节点时，系统尝试在这个单节点Starter Pool中同时容纳驱动程序和执行器，从而导致会话启动时间明显延迟。影响部分，明确了用户可能会经历2-3分钟的会话启动延迟。状态部分，说明团队正在积极解决这个问题，预计将很快实施解决方案，将单节点Starter Pool配置的会话启动时间改善到约5秒。",[更新] Microsoft文档“configure-starter-pools”更新内容解读,1 [配置] 更新了Starter Pools配置文档，详细描述了会话启动时间延迟问题及其解决方案
+"https://learn.microsoft.com/en-us/fabric/cicd/git-integration/source-code-format
+
+这个提交主要是对""https://learn.microsoft.com/en-us/fabric/cicd/git-integration/source-code-format""文件进行了修改。主要的改动包括：
+
+1. 修改了关于项目目录中自动生成的系统文件的描述，从“每个项目目录中的自动生成的系统文件可能有一个或两个，取决于你使用的版本”修改为“每个项目目录中都包含两个自动生成的系统文件，取决于你使用的版本”。
+
+2. 删除了关于版本1和版本2的详细描述，包括每个版本中包含的文件和文件的内容。
+
+3. 在元数据文件（Metadata file）的示例中，将""type"", ""displayName"", ""description""的值从占位符修改为具体的值。
+
+4. 在配置文件（Config file）的示例中，将""logicalId""的值从占位符修改为具体的值。
+
+5. 删除了关于平台文件（Platform file）的描述和示例，这是版本2特有的文件。
+
+总的来说，这个提交主要是对文档的一些描述进行了修改和删除，以及更新了一些示例。",[文档修改] 对Microsoft学习平台源代码格式文档的修改和更新,1 [文档] 更新了Git集成源代码格式的描述和示例
+"https://learn.microsoft.com/en-us/fabric/real-time-analytics/create-database
+
+此文件中的更改主要涉及到两个部分的图片描述的修改。第一个修改是关于创建新的KQL数据库的截图描述，将""新标签和标题为KQL数据库的条目都突出显示""更改为""标题为KQL数据库的条目突出显示""。第二个修改是关于KQL数据库主页的截图描述，将图片的lightbox属性从""database-dashboard.png""更改为""database-dashboard-extended.png""。
+
+https://learn.microsoft.com/en-us/fabric/real-time-analytics/media/create-database/database-dashboard-extended.png
+
+此文件是一个新的二进制文件，可能是一个新的图片文件，用于在文档中展示数据库的详细信息。",[图片] 修改了关于创建KQL数据库的图片描述和数据库主页的图片属性,1 [图片] KQL数据库相关图片描述及文件属性的重要修改
+"https://learn.microsoft.com/en-us/fabric/real-time-analytics/ingestion-supported-formats
+
+这个文件中的更改主要是将“Azure Data Explorer”更改为“Real-Time Analytics”。这是在描述数据摄取过程中做的修改，数据摄取是将数据添加到表格并使其可供查询的过程。对于所有的摄取方法，除了从查询摄取，数据必须是支持的格式。","[重命名] ""Azure Data Explorer""更名为""Real-Time Analytics""的更改","1 [模型] ""Azure Data Explorer""更改为""Real-Time Analytics""的重要更新"
+"https://learn.microsoft.com/en-us/fabric/real-time-analytics/create-database
+
+此文件中的更改主要涉及两个部分的图片描述和链接的修改。第一个修改是对新建 KQL 数据库的截图描述进行了微调，去掉了对 ""New"" 标签的高亮描述。第二个修改是对 KQL 数据库主页截图的描述进行了修改，并将其链接到了一个新的扩展图片。
+
+https://learn.microsoft.com/en-us/fabric/real-time-analytics/media/create-database/database-dashboard-extended.png
+
+这是一个新的二进制文件，可能是一个新的图片文件，用于在文档中展示更详细的数据库仪表板信息。",[Image] 修改了KQL数据库的图片描述和链接,1 [图片] KQL数据库截图描述和链接的重要修改
+"https://learn.microsoft.com/en-us/fabric/onelake/onelake-consumption
+
+这个文件中，已知问题的文本进行了更新。原来的文本是“在Fabric Capacity Metrics应用中，OneLake的交易使用情况报告不足。这也导致了对您的Fabric容量使用情况的报告不足。OneLake将在纠正问题之前提供通知。”现在的文本是“存在一个已知问题，即OneLake在Fabric Capacity Metrics应用中没有报告交易使用情况。OneLake的交易使用也没有计入容量限制。OneLake将在纠正问题之前提供通知。”","""[更新] OneLake消费情况文本的已知问题更新""",1 [问题] OneLake在Fabric Capacity Metrics应用中的已知问题文本更新
+"https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app-compute-page
+
+在此文件中，删除了一段关于Microsoft Fabric预览状态的注释。
+
+https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app
+
+在此文件中，删除了一段重复的内容，该内容是关于不支持使用外部模型编写工具编辑Microsoft Fabric Capacity Metrics应用的语义模型。",[文档] 删除了关于Microsoft Fabric的注释和重复内容,1 [模型] 删除Microsoft Fabric Capacity Metrics应用不支持使用外部模型编辑工具的内容
