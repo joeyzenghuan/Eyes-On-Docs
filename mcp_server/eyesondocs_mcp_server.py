@@ -1,6 +1,7 @@
 from typing import Any, Optional
 import httpx
 from mcp.server.fastmcp import FastMCP
+import os
 
 # 初始化FastMCP服务器
 mcp = FastMCP("doc_updates")
@@ -110,8 +111,7 @@ async def get_doc_updates(
 async def get_usage_stats(
     start_time: Optional[str] = None, 
     end_time: Optional[str] = None, 
-    exclude_users: str = "",
-    password: str = ""
+    exclude_users: str = ""
 ) -> str:
     """
     本工具用于获取 docs.westiedoubao.com（Azure AI 文档更新追踪网站）的使用统计数据。
@@ -120,11 +120,11 @@ async def get_usage_stats(
         start_time: 开始时间，ISO日期时间格式，如"2023-05-01T00:00:00Z"
         end_time: 结束时间，ISO日期时间格式，如"2023-05-31T23:59:59Z"
         exclude_users: 要排除的用户列表，用逗号分隔
-        password: 管理员密码，必填
     """
-    # 首先进行认证
+    # 从环境变量获取管理员密码
+    password = os.environ.get("DOCS_USAGE_ADMIN_PASSWORD", "")
     if not password:
-        return "错误：需要提供管理员密码才能访问使用统计数据。"
+        return "错误：需要在环境变量 DOCS_USAGE_ADMIN_PASSWORD 中设置管理员密码才能访问使用统计数据。"
     
     auth_url = f"{API_BASE}/usage/auth"
     async with httpx.AsyncClient() as client:
