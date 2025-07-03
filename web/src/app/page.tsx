@@ -10,7 +10,7 @@ import { useSession, signOut } from 'next-auth/react';
 async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
     const params = new URLSearchParams({
-      product: product || 'AOAI-V2',
+      product: product || 'AI-Foundry',
       language: language || 'Chinese',
       page: page.toString(),
       updateType: updateType
@@ -76,7 +76,7 @@ interface Update {
 }
 
 export default function Home({ searchParams }: { searchParams: { product?: string; language?: string; page?: string; updateType?: string } }) {
-  const product = searchParams.product || 'AOAI-V2';
+  const product = searchParams.product || 'AI-Foundry';
   const language = searchParams.language || 'Chinese';
   const page = parseInt(searchParams.page || '1', 10);
   const updateType = searchParams.updateType || 'single';
@@ -143,8 +143,8 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
         <div className="flex justify-between items-center mb-4">
           <Filters 
             products={[
-              'AOAI-V2',
               'AI-Foundry',
+              'AOAI-V2',
               'Agent-Service',
               'Model-Inference',
               'AML',
