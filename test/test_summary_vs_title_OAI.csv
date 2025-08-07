@@ -1,0 +1,183 @@
+﻿summary,original_title,new_title
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+这个文件中的更改主要包括以下几个部分：
+1. 更新了文件的元数据中的日期。
+2. 对一些问题的回答进行了微小的文本修改，例如将""It is important to note""更改为""It's important to note""。
+3. 添加了两个新的问题和答案，这些问题和答案主要关于模型的知识截止日期和模型对最近事件的回答可能出错的原因。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+这个文件中的更改主要是对一些问题和答案进行了微调。例如，将问题""I asked the model a question it should know the answer to about something that happened recently based on the knowledge cutoff and it got the answer wrong. Why does this happen?""更改为""I asked the model a question about something that happened recently before the knowledge cutoff and it got the answer wrong. Why does this happen?""。同时，对相应的答案也进行了一些修改。","[文件修改] Microsoft Azure AI服务OpenAI FAQ文件的更新
+",1 [模型] 更新了模型知识截止日期相关的问题和答案
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+在这个文件中，对一些问题和答案进行了修改。原来的问题是“我问了模型一个关于最近发生的事情的问题，它应该知道答案，但是它回答错了。为什么会这样？”现在被修改为“我问了模型一个关于在知识截止日期之前最近发生的事情的问题，但是它回答错了。为什么会这样？”。同时，对应的答案也进行了一些修改和补充。此外，还对另一个问题的答案进行了修改，原来的“Jacinda Ardern下台的时间”这个问题的答案是“这显示出训练数据知识至少到2023年1月”，现在被修改为“这显示出训练数据知识至少到2023年1月”。","""[修改] 更新了Azure AI服务OpenAI FAQ的问题和答案""",1 [模型] 对AI模型FAQ的问题和答案进行了重要修改
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+这个文件主要进行了以下更改：
+
+1. 更新了元数据中的日期，从2023年11月15日更改为2023年11月22日。
+
+2. 对一些问题的回答进行了微小的语言修改，例如将""it is important to note""更改为""it's important to note""。
+
+3. 添加了新的问题和答案，包括关于模型知识截止日期的问题，以及关于模型可能无法准确回答最近发生的事件的问题等。
+
+4. 对一些已有的问题和答案进行了扩展和补充，例如关于如何帮助GPT模型准确回答问题的部分，增加了更多的解释和链接。
+
+总的来说，这个提交主要是对文件中的内容进行了更新和扩充。",[文件更新] Microsoft Azure AI服务OpenAI FAQ文件的内容更新和扩充,1 [模型] 更新和扩充了模型知识截止日期等相关问题和答案
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/content-filters
+
+此文件中的更改主要涉及到一段文本的修改。原文中的“Customer Copyright Commitment”的链接已被更新。原链接是一个相对路径，现在已经被替换为一个完整的URL。","[链接] 更新了""Customer Copyright Commitment""的链接","0 [链接] 更新了""Customer Copyright Commitment""的链接地址"
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+在第一个提交中，对文件进行了大量的更新，主要是增加了关于如何在OpenAI和Azure OpenAI之间切换端点的详细说明。这包括了如何进行身份验证，如何使用API密钥，如何使用Microsoft Entra进行身份验证，如何为模型使用关键字参数，以及如何支持Azure OpenAI嵌入多个输入。
+
+在第二个提交中，更新了文件的日期。
+
+在第三个提交中，删除了大量的内容，主要是关于OpenAI Python 0.28.1的示例和说明，只保留了关于OpenAI Python 1.x的内容。
+
+在第四个提交中，更新了作者信息。
+
+在第五个提交中，对文件进行了微小的格式调整，增加了一个空行。
+
+在第六个提交中，修正了一个拼写错误，将""onlys""更正为""only""。",[更新] OpenAI和Azure OpenAI之间切换端点的详细说明更新和修订,1 [新功能] OpenAI和Azure OpenAI之间切换端点的详细说明更新
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+这个文件主要进行了两处修改。首先，修正了一处拼写错误，将""This article onlys shows""更正为""This article only shows""。其次，在文件末尾添加了一个新行，以满足文件格式要求。",[文档] Microsoft Azure AI服务文档的修改更新,0 [文本] 修正拼写错误并添加新行以满足文件格式要求
+"https://learn.microsoft.com/en-us/azure/aks/coredns-custom
+
+此文件中添加了关于CoreDNS pod副本推荐最小数量的警告。建议每个集群至少有2个CoreDNS pod副本。如果配置的CoreDNS pod副本最小数量为1，可能会在需要节点排空的操作中出现故障，例如集群升级操作。
+
+https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview
+
+此文件进行了一些更新和修改。主要更改包括对Azure Active Directory B2C的描述，以及对使用Azure AD B2C的企业和个人的描述。此外，还对Azure AD B2C作为白标签认证解决方案的描述进行了修改和澄清。
+
+https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview 和 https://learn.microsoft.com/en-us/azure/active-directory-b2c/technical-overview
+
+这两个文件都进行了更新。在overview文件中，更新了文件的日期，并修改了客户意图的描述。在technical-overview文件中，对Azure AD B2C的技术和功能进行了更详细的介绍，包括租户、本地账户登录选项、外部身份提供商登录、用户界面、自定义域、本地化、电子邮件验证、多因素认证（MFA）、密码复杂性、强制密码重置等。同时，这两个文件的修改也包括了一些语言和格式的优化。",[更新] Azure Active Directory B2C和CoreDNS文档的更新和修改,1 [新特性] Azure AD B2C技术概览和功能详细介绍更新
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+这是一个新的文件，主要介绍了Azure OpenAI的性能和延迟问题。内容包括延迟的定义，以及影响延迟的各种因素，如模型选择，最大令牌数，流式处理，内容过滤等。此外，还提供了一些优化性能的建议。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/toc.yml
+
+在目录文件中，添加了对新文件latency的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+在这次提交中，删除了一个多余的表格行。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+在这次提交中，修改了关于流式处理的描述。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+在这次提交中，对文件进行了大量修改，删除了一些内容，包括模型选择，最大令牌和停止序列，内容过滤，best_of和n参数，配额和速率限制，区域可用性等部分。同时，对一些部分进行了重写和补充。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+在这次提交中，对一些描述进行了微调，使其更加清晰易懂。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+在这次提交中，对一些描述进行了微调，使其更加清晰易懂。",[文件修改] Azure OpenAI性能和延迟问题文件的多次修改和优化,1 [新特性] Azure OpenAI性能和延迟问题的全面介绍及优化建议
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+这个文件中进行了一次插入操作。",[链接] 如何在Azure AI服务中切换OpenAI端点,1 [模型] Azure AI服务OpenAI端点切换指南更新
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+这个文件的修改主要是对作者信息进行了更新。原来的作者信息是“mrbullwinkle #dereklegenzoff”和“mbullwin #delegenz”，现在被修改为“mrbullwinkle”和“mbullwin”。",[文档] 更新了Azure AI服务文档中的作者信息,0 [作者] 更新了Azure AI服务文档的作者信息
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+该文件进行了大量的修改，删除了194行，添加了10行。主要的更改包括删除了大量关于OpenAI Python 0.28.1版本的内容，包括认证、API密钥、模型关键字参数等的详细说明和示例代码。同时，对于OpenAI Python 1.x版本的内容进行了一些修改和补充，包括认证、创建完成、聊天完成和嵌入等操作的示例代码。此外，还更新了一些链接和下一步的建议。",[文档更新] 对OpenAI Python版本内容的大量修改和更新,1 [模型] OpenAI Python版本内容的重大更新和修改
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models
+
+这个文件中的更改主要是对模型名称的修改，将""GPT-4 Turbo""更改为""GPT-4 Turbo Preview""。同时，对应的描述也进行了相应的修改，强调这是一个预览版模型。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+在这个文件中，对于FAQ部分的问题""I can't find GPT-4 Turbo?""的答案也进行了修改，将""GPT-4 Turbo""更改为""GPT-4 Turbo Preview""，并对应修改了模型的描述。",[模型] Microsoft Azure AI服务中GPT-4 Turbo模型名称的修改,"1 [模型] ""GPT-4 Turbo""名称更改为""GPT-4 Turbo Preview""的重要更新"
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models
+
+这个文件中的更改主要包括两部分。首先，更新了文件的日期，从2023年11月17日更改为2023年11月22日。其次，对模型的描述进行了修改，特别是对`gpt-4` (1106-preview)模型的描述，增加了""GPT-4 Turbo""的标签，并对如何部署这个模型的说明进行了补充。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/faq.yml
+
+在这个文件中，添加了一个新的问题和答案，问题是""I can't find GPT-4 Turbo?""，答案是对如何找到和部署GPT-4 Turbo模型的说明。","""[模型] 更新了GPT-4 Turbo模型的描述和部署说明""",1 [模型] GPT-4 Turbo模型的描述和部署方法更新
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+这个文件的修改主要是更新了日期，从2023年7月20日改为了2023年11月22日。",[网页] 更新了Azure AI服务OpenAI教程的日期,0 [日期] 更新Azure AI服务OpenAI切换端点文档的日期
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints
+
+此次提交对文件进行了大量的更新，主要包括以下几个方面：
+
+1. 删除了关于OpenAI库的注意事项，替换为OpenAI Python 0.28.1的相关内容。
+
+2. 在Authentication部分，增加了大量的内容，包括API key和Microsoft Entra authentication的使用方法，以及如何在OpenAI和Azure OpenAI之间切换。
+
+3. 增加了关于模型关键字参数的说明，包括OpenAI和Azure OpenAI的使用差异。
+
+4. 增加了关于Azure OpenAI embeddings多输入支持的内容，包括OpenAI和Azure OpenAI的使用差异。
+
+5. 在文件的最后，增加了下一步的学习链接。","""[更新] 对Azure OpenAI服务文档的大量更新""",1 [模型] Azure OpenAI教程更新：增加认证方法和模型关键字参数说明，以及多输入支持内容
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency
+
+这个文件主要进行了两处修改。首先，将标题""Completions and chat completions""更改为""Improve performance""，可能是为了更准确地描述该部分的内容。其次，删除了一段关于模型响应流的描述，可能是因为这部分信息对于读者来说并不重要或者可能引起混淆。",[修改] Microsoft Azure AI服务文档的标题和内容更新,1 [模型] 性能改进与模型响应流描述删除
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/embeddings
+
+这个文件主要进行了一些代码的修改，以修复编译错误。主要的改动包括：
+
+1. 更新了创建`EmbeddingsOptions`对象的方式，现在使用了新的构造函数，并设置了`DeploymentName`和`Input`属性。
+2. 修改了调用`GetEmbeddings`方法的方式，现在直接传入`embeddingOptions`对象。
+3. 在遍历`returnValue.Value.Data[0].Embedding`时，添加了`ToArray()`方法。","""[代码修改] 修复编译错误的代码修改和更新""",1 [Model] 修复编译错误并更新嵌入选项的创建方式
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/quotas-limits
+
+此文件中对DALL-E 3的配额限制进行了修正，将其并发请求的数量从每分钟12个请求更改为每分钟6个请求。",[配额] DALL-E 3的并发请求配额限制已更改,1 [配额] DALL-E 3并发请求配额限制更改
+"https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第一次提交中，此文件添加了有关Azure OpenAI服务的新功能的信息，包括客户可配置的内容过滤级别，新的RAI模型（包括越狱风险检测，受保护的材料文本和受保护的材料代码），以及新的阻止列表功能。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第二次提交中，此文件对一些内容进行了更新，包括对内容过滤级别的描述，对新RAI模型的描述，以及对阻止列表功能的描述。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第三次提交中，此文件进行了格式更改，包括对“负责任的AI”部分的重新组织。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第四次提交中，此文件添加了有关所有DALL-E模型中的内容凭证的信息。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第五次提交中，此文件移动了“负责任的AI”部分的位置。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/content-filters
+
+在第六次提交中，此文件更新了一些内容，包括对内容过滤器配置的描述。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/whats-new
+
+在第七次提交中，此文件修复了一些措辞，包括对新RAI模型的描述。","""[更新] Azure OpenAI服务的新功能和更新""",1 [新功能] Azure OpenAI服务添加新功能和RAI模型更新
+"https://learn.microsoft.com/en-us/azure/backup/backup-azure-immutable-vault-concept
+
+此文件更新了 Azure 不可变存储库的可用性信息，确认它在所有 Azure 公共区域和美国政府区域都可用。
+
+https://learn.microsoft.com/en-us/azure/mysql/flexible-server/concepts-high-availability
+
+此文件更新了关于高可用性（HA）服务器的数据复制支持信息。现在，对于启用了 HA 的服务器，只通过 GTID-based 复制支持数据复制。
+
+https://learn.microsoft.com/en-us/azure/ai-services/openai/includes/go
+
+此文件修复了一个错误，将 azopenai.CompletionsOption 的 DeploymentID 字段更改为 Deployment。
+
+https://learn.microsoft.com/en-us/azure/data-factory/whats-new
+
+此文件修复了一个拼写错误，将 ""Region expanstion"" 更改为 ""Region expansion""。
+
+https://learn.microsoft.com/en-us/azure/machine-learning/v1/how-to-deploy-model-cognitive-search
+
+此文件修复了一个语法错误，将 ""a Azure AI Search"" 更改为 ""an Azure AI Search""。",[更新] Azure 不可变存储库在所有公共和政府区域的可用性更新,1 [区域] Azure不可变存储库现已在所有公共和政府区域可用

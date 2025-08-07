@@ -17,6 +17,9 @@ class CommitFetcher:
         # 獲取網頁響應  
         # response = requests.get(root_commits_url, headers=headers).text  
         response = self._make_request_to_json(root_commits_url, headers=headers)
+        if not isinstance(response, list):
+            logger.error(f"Failed to fetch commits or response is not a list. URL: {root_commits_url}, Response: {response}")
+            return {}
   
 
   
@@ -25,18 +28,36 @@ class CommitFetcher:
         commits_url_list = []  
 
         #解析每個commits
-        for item in response:
-
-            # if item['commit']['verification']['verified']== True:
-            # 不管是否verified，都爬取
-            if True:
-                #提取时间信息
-                datetime_str=datetime_str=item['commit']['author']['date']
-                precise_time = datetime.datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ")
-                precise_time_list.append(precise_time)  
+        for idx, item in enumerate(response):
+            try:
+                if not isinstance(item, dict):
+                    logger.warning(f"Item at index {idx} is not a dict: {item}")
+                    continue
+                # 检查关键字段是否存在
+                if 'commit' not in item or 'author' not in item['commit'] or 'date' not in item['commit']['author']:
+                    logger.warning(f"Missing expected keys in item at index {idx}: {item}")
+                    continue
+                datetime_str = item['commit']['author']['date']
+                try:
+                    precise_time = datetime.datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%SZ")
+                except ValueError as ve:
+                    logger.warning(f"Invalid datetime format at index {idx}: {datetime_str}, Exception: {ve}")
+                    continue
+                precise_time_list.append(precise_time)
                 #提取commits url
-                full_url=item['url']
-                commits_url_list.append(full_url)  
+                full_url = item.get('url')
+                if not full_url:
+                    logger.warning(f"Missing 'url' in item at index {idx}: {item}")
+                    continue
+                commits_url_list.append(full_url)
+            except Exception as e:
+                logger.error(f"Error processing item at index {idx}: {item}, Exception: {e}", exc_info=True)
+                continue
+
+        if not precise_time_list or not commits_url_list:
+            logger.warning(f"No valid commits found for URL: {root_commits_url}. precise_time_list: {precise_time_list}, commits_url_list: {commits_url_list}")
+            return {}
+
         #将时间和url打包成dict
         commits_dic_time_url = dict(zip(precise_time_list, commits_url_list))  
         return commits_dic_time_url    
@@ -154,14 +175,18 @@ class CommitFetcher:
             logger.error(f"Request exception for URL: {url}", exc_info=e)  
             return "Error"  
         
-    def _make_request_to_json(self, url, is_stream=False, headers={}):  
-        try:  
-            response = requests.get(url, stream=is_stream, headers=headers)  
-            response.raise_for_status()  
-            return response.json()  
-        except requests.RequestException as e:  
-            logger.error(f"Request exception for URL: {url}", exc_info=e)  
-            return "Error"    
+    def _make_request_to_json(self, url, is_stream=False, headers={}, retries=3, delay=2):
+        import time
+        for attempt in range(retries):
+            try:
+                response = requests.get(url, stream=is_stream, headers=headers)
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as e:
+                logger.error(f"Request exception for URL: {url}, Attempt: {attempt+1}, Exception: {e}", exc_info=True)
+                time.sleep(delay)
+        logger.error(f"All retries failed for URL: {url}")
+        return None
 
 if __name__ == "__main__":  
     fetcher = CommitFetcher()  

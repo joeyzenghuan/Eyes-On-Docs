@@ -62,16 +62,30 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         weekly_commit_list = self.cosmosDB_client.get_weekly_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
         if weekly_commit_list:
             logger.info(f"Find {len(weekly_commit_list)} last week summary in CosmosDB")
-            gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.get_weekly_summary(
+            gpt_weekly_summary_response, gpt_weekly_summary_tokens = self.generate_weekly_summary_using_weekly_commit_list(
                 self.language, weekly_commit_list, self.system_prompt_dict["GPT_WEEKLY_SUMMARY_PROMPT"], self.max_input_token
                 )
             try:
+                time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
                 if gpt_weekly_summary_response:
-                    title = self.generate_weekly_title()
-                    time = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                    logger.warning(f"Push weekly summary report to teams")
-                    teams_message_jsondata, post_status, error_message = self.post_teams_message(title, time, gpt_weekly_summary_response, self.teams_webhook_url)
-                    logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
+                    gpt_weekly_summary_title = self.generate_weekly_title()
+                    teams_message_jsondata = None
+                    post_status = None
+                    error_message = None
+                    
+                    # web 前端 通过读 teams_message_jsondata 来获取 weekly summary 的 title 和 text
+                    # 如果 teams_webhook_url 为空，则直接将 title 和 text 写入 teams_message_jsondata
+                    if self.teams_webhook_url:
+                        logger.warning(f"Push weekly summary report to teams")
+                        teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_weekly_summary_title, time, gpt_weekly_summary_response, self.teams_webhook_url)
+                        logger.debug(f"Teams Message jsonData: {teams_message_jsondata}")
+                    else:
+                        logger.warning(f"Skip sending weekly summary to teams: no webhook URL configured")
+                        teams_message_jsondata = {
+                            "title": gpt_weekly_summary_title,
+                            "text": gpt_weekly_summary_response,
+                        }
+
 
                     self.save_commit_history(time, "", "", teams_message_jsondata, post_status, error_message)
                     self.update_commit_history("gpt_weekly_summary_tokens", gpt_weekly_summary_tokens)
@@ -140,7 +154,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                         else:
                             # check the first two characters of gpt_title, if it is '0 ', skip this commit
                             if status == "skip":
-                                logger.error(f"Skip this commit: {gpt_title}")
+                                logger.info(f"Skip this commit: {gpt_title}")
                             else:
                                 # lastest_commit_in_cosmosdb = cosmos_conversation_client.get_lastest_commit(self.topic, self.language, self.root_commits_url, sort_order = 'DESC')
                                 # if self.get_similarity(input_dic, self.language, lastest_commit_in_cosmosdb, self.system_prompt_dict["GPT_SIMILARITL_PROMPT"]).split("\n")[1][0] == "1":
@@ -151,15 +165,16 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
                                     time = self.topic + "\n\n" + str(time_)
                                 else:
                                     time = time_
-                                teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
-                                # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
+                                if self.teams_webhook_url:
+                                    teams_message_jsondata, post_status, error_message = self.post_teams_message(gpt_title[2:], time, gpt_summary, self.teams_webhook_url, commit_url)
+                                    # print(gpt_title[2:]+"\n\n"+gpt_summary+"\n\n")
 
 
             except Exception as e:  
                 logger.exception("Unexpected exception:", e)  
 
             try: 
-                # Update the start time in CosmosDB 
+                # Upload commit history into CosmosDB 
                 self.update_commit_history("gpt_summary_response", gpt_summary)
                 self.update_commit_history("gpt_title_response", gpt_title)
 

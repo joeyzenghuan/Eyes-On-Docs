@@ -1,0 +1,283 @@
+﻿summary,original_title,new_title
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/disaster-recovery
+
+这个文件中的更改是对一段文本的修改。原文中的 ""**Get operation**"" API 的链接被更改了。原链接是一个完整的 URL，现在被更改为一个相对路径。","[链接] ""Get operation"" API链接的修改","0 [链接] ""Get operation"" API链接更新为相对路径"
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-contract
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Automated contract processing is the process of extracting key contract fields from documents. Historically, the contract analysis process has been done manually and, hence, very time consuming."" 被修改为 ""Automated contract processing is the process of extracting key contract fields from documents. Historically, the contract analysis process is achieved manually and, hence, very time consuming.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""If the language of your documents and extraction scenarios supports custom neural models, it's recommended that you use custom neural models over template models for higher accuracy."" 被修改为 ""If the language of your documents and extraction scenarios supports custom neural models, we recommend that you use custom neural models over template models for higher accuracy.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-general-document
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Layout model with the optional query string parameter **`features=keyValuePairs`** enabled."" 被修改为 ""`Layout` model with the optional query string parameter **`features=keyValuePairs`** enabled.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-layout
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Select **Run Layout**. The Document Intelligence Sample Labeling tool calls the Analyze Layout API and analyze the document."" 被修改为 ""Select **Run Layout**. The Document Intelligence Sample Labeling tool calls the `Analyze Layout` API and analyze the document.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-tax-document
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""TaxYear"" 被修改为 ""`TaxYear`""。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/faq.yml
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""A confidence score indicates probability by measuring the degree of statistical certainty that the extracted result has been detected correctly."" 被修改为 ""A confidence score indicates probability by measuring the degree of statistical certainty that the extracted result is detected correctly.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/how-to-guides/includes/v3-0/rest-api
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Once you've added a code sample to your application, choose the green **Start** button next to formRecognizer_quickstart to build and run your program, or press **F5**."" 被修改为 ""Once you add a code sample to your application, choose the green **Start** button next to formRecognizer_quickstart to build and run your program, or press **F5**.""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/index.yml
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Extracting information from unstructured document (e.g., contracts) with Azure AI Document Intelligence"" 被修改为 ""Extracting information from unstructured document (for example, contracts) with Azure AI Document Intelligence""
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/quickstarts/includes/v3-csharp-sdk
+
+此文件中的更改主要涉及对文本的微调，以改善语法和语义清晰度。例如，""Once you've added a code sample to your application, choose the green **Start** button next to formRecognizer_quickstart to build and run your program, or press **F5**."" 被修改为 ""Once you add a code sample to your application, choose the green **Start** button next to formRecognizer_quickstart to build and run your program, or press **F5**.""",[文本] 微调 Azure AI 文档智能服务的文本以提高语法和语义清晰度,0 [文本] 微调Azure AI文档智能服务的语法和语义清晰度
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-business-card
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-composed-models
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-contract
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-classifier
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-label-tips
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-label
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-lifecycle
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-neural
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-template
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-document-intelligence-studio
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-general-document
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-health-insurance-card
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-id-document
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-invoice
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-layout
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-model-overview
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-query-fields
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-read
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-receipt
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-tax-document
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/disaster-recovery
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/faq.yml
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/how-to-guides/compose-custom-models
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/includes/preview-notice
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/sdk-overview-v3-0
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/sdk-overview-v3-1
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/v3-1-migration-guide
+
+此文件的日期从11/15/2023更改为11/21/2023。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/whats-new
+
+此文件的日期从11/15/2023更","为""[日期] 微软Azure AI服务文档智能的更新日期从11/15/2023更改为11/21/2023""",0 [时间] Azure AI服务文档日期更新
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-add-on-capabilities
+
+此文件中的更改主要涉及对文档智能的附加功能的描述和更新。这包括对某些功能的名称进行了修改，例如将“ocr.highResolution”更改为“ocrHighResolution”，将“ocr.formula”更改为“formulas”，等等。此外，还添加了新的附加功能，如“语言检测”和“键值对”。这些更改可能是为了提高文档智能的功能性和用户体验。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-model-overview
+
+此文件中的更改主要涉及对文档智能模型概述的更新。这包括对可用模型的描述进行了更新，例如将“ocr.highResolution”更改为“ocrHighResolution”，将“ocr.formula”更改为“formulas”，等等。此外，还添加了新的附加功能，如“语言检测”和“键值对”。这些更改可能是为了提高文档智能的功能性和用户体验。",[模型] 更新了文档智能模型概述和附加功能,1 [模型] 文档智能模型概述的重要更新
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/overview
+
+这个文件的修改主要是更新了日期，从2023年11月15日改为了2023年11月22日。",[网页] Microsoft Azure AI服务文档智能概述页面的日期更新,0 [日期] 更新了Azure AI服务文档智能概述的日期
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-business-card
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-composed-models
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-contract
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-label
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-neural
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom-template
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-general-document
+
+此文件中的更改主要涉及更新了一些链接，将旧的链接替换为新的链接。",[链接] 更新了Azure AI服务文档智能概念的链接,0 [链接] Azure AI服务文档智能概念中的链接更新
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/toc.yml
+
+此文件中的更改主要涉及到链接的更新。原始链接中的 ""/azure/cognitive-services/language-service/context/context"" 被替换为 ""/azure/ai-services/language-service/context/context""。
+
+https://learn.microsoft.com/en-us/azure/ai-studio/toc.yml
+
+此文件中的更改也涉及到链接的更新。原始链接中的 ""/azure/ai-services/openai/concepts/system-message?context=/azure/ai-studio/context/context"" 被替换为 ""/azure/ai-services/openai/concepts/system-message?context=/azure/ai-studio/context/context""。
+
+https://learn.microsoft.com/en-us/azure/ai-services/language-service/toc.yml
+
+此文件中的更改涉及到链接的更新。原始链接中的 ""%2fazure%2fcognitive-services%2flanguage-service%2fcontext%2fcontext"" 被替换为 ""%2fazure%2fai-services%2flanguage-service%2fcontext%2fcontext""。
+
+https://learn.microsoft.com/en-us/azure/ai-studio/breadcrumb/toc.yml
+
+此文件是新创建的，包含了 Azure 和 Azure AI Studio 的链接。
+
+https://learn.microsoft.com/en-us/azure/ai-studio/context/context.yml
+
+此文件也是新创建的，包含了品牌信息和面包屑路径。",[链接更新] Microsoft Azure AI服务和AI Studio的链接更新和新文件创建,"""0 [链接] Azure AI服务和AI Studio的链接更新和新文件创建"""
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/summarization/includes/quickstarts/rest-api
+
+该文件中删除了""Conversation summarization""的标题。","[网页更新] ""Conversation summarization""标题在文件中被删除","1 [模型] ""Conversation summarization""标题已删除"
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-add-on-capabilities
+
+此文件中的更改主要涉及对文档智能的附加功能的描述。首先，更新了文件的修改日期。然后，对一些附加功能的命名进行了修改，例如将`ocr.highResolution`更改为`ocrHighResolution`，`ocr.formula`更改为`formulas`，`ocr.font`更改为`styleFont`，`ocr.barcode`更改为`barcodes`。此外，还添加了两个新的附加功能`languages`和`keyValuePairs`。`languages`功能用于预测每行文本的主要语言，`keyValuePairs`功能用于识别文档中的键值对。最后，对查询字段提取的描述进行了一些修改。
+
+https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-model-overview
+
+此文件中的更改主要涉及对文档智能模型的描述。首先，更新了对附加功能的描述，列出了所有可用的附加功能，包括新添加的`languages`和`keyValuePairs`。然后，对分析功能部分进行了一些修改，删除了一些不必要的空行。",[文档智能] 更新了文档智能的附加功能和模型描述,1 [新功能] 文档智能附加功能更新及新增功能介绍
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/toc.yml
+
+这个文件中的更改主要是更新了几个链接的路径。原来的路径中的""cognitive-services""被更改为""ai-services""。",[链接] 更新了Azure AI服务语言服务文档中的链接路径,0 [链接] Azure AI服务文档中链接路径的更新
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/toc.yml
+
+此文件中的更改主要涉及到链接的更新。原始链接中的 ""/azure/cognitive-services/language-service/context/context"" 被替换为 ""/azure/ai-services/language-service/context/context""。这些更改涉及到文件中的多个部分，包括 ""Responsible use of AI""、""How-to guides""、""Resources"" 和 ""Enterprise readiness"" 等部分。
+
+https://learn.microsoft.com/en-us/azure/ai-studio/toc.yml
+
+在这个文件中，""System message templates"" 部分的链接也进行了更新。原始链接 ""/azure/ai-services/openai/concepts/system-message?context=/azure/ai-studio/context/context"" 被替换为 ""/azure/ai-services/openai/concepts/system-message?context=/azure/ai-studio/context/context""。","""[链接更新] Microsoft Azure AI服务和AI Studio的链接更新""",0 [链接] Azure AI服务和AI Studio链接更新
+"https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+在第一次提交中，对文件进行了7次插入和1次删除。主要的更改是在“Audio Content Creation”部分添加了一个新的问题和答案，问题是“我如何在代码中引用我在Audio Content Creation平台上创建的词典文件？”。
+
+https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+在第二次提交中，对文件进行了2次插入和2次删除。主要的更改是调整了“Audio Content Creation”部分的问题和答案的格式。
+
+https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+在第三次提交中，对文件进行了1次插入和1次删除。主要的更改是在“Audio Content Creation”部分的答案中添加了一个具体的例子，说明如何获取词典文件ID和URI。
+
+https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+在第四次提交中，对文件进行了1次插入和1次删除。主要的更改是在“Audio Content Creation”部分的答案中修正了一个拼写错误，将“obatain”更正为“obtain”。","[更新] Microsoft Azure AI服务语音服务FAQ页面的连续修改
+",1 [新功能] 在“Audio Content Creation”部分添加了如何引用词典文件的新问题和答案
+"https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+此文件中的更改主要是修正了一个拼写错误。原文中的 ""obatain"" 被更正为 ""obtain""。这个更改发生在一个问题的答案部分，问题是：“我如何在代码中引用我在音频内容创建平台上创建的词典文件？”在答案中，描述了如何打开词典文件，获取词典文件ID，然后在音频内容创建平台上将引用此词典的文件切换到SSML格式。在SSML文件中，找到 `<!--ID=FCB` xml节点，可以根据提到的文件ID找到词典文件的URI。最后，在代码中使用SSML词典元素引用词典文件URI链接。",[文档] Microsoft Azure AI服务语音服务FAQ修正拼写错误,0 [文本] 修正Azure语音服务FAQ中的拼写错误
+"https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-services-quotas-and-limits
+
+此文件中的更改主要涉及到语音服务配额和限制的描述。在文件的一个表格中，对“词汇文件大小”这一项的限制进行了修改，原来的“每个文件3000个字符”和“每个文件20000个字符”分别被改为“每个文件30KB”和“每个文件100KB”。此外，对于词汇文件的注释也进行了修改，删除了“限制包括所有文本，包括标签。词汇文件的字符不收费。”这一句，保留了“只有SSML中的词汇元素被计为计费字符。参考[计费字符](text-to-speech#billable-characters)以了解更多。”这一句。",[配额] 微软Azure语音服务配额和限制的修改,1 [配额] 语音服务配额和限制的重要更新：词汇文件大小限制和注释修改
+"https://learn.microsoft.com/en-us/azure/ai-services/speech-service/faq-tts.yml
+
+这个文件中的更改主要是对一个问题的回答进行了更新。原问题是：“我如何在代码中引用我在音频内容创建平台上创建的词典文件？”原回答中，提供了一种方法，即首先在音频内容创建平台上打开词典文件并获取词典文件ID，然后将引用此词典的文件切换到SSML格式，在SSML文件中找到`<!--ID=FCB` xml节点，根据提到的文件ID找到词典文件的URI，最后在代码中使用SSML词典元素引用词典文件URI链接。现在的回答在原有的基础上，增加了具体的例子，详细说明了如何获取词典文件ID和词典文件的URI。",[更新] Microsoft Azure AI服务语音服务FAQ更新：如何在代码中引用词典文件,1 [FAQ更新] 音频内容创建平台词典文件引用问题回答更新
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/summarization/includes/quickstarts/rest-api
+
+此文件中删除了10行内容，主要是移除了一些破损的链接。",[网页更新] Microsoft Azure AI服务语言服务摘要中删除了破损链接,0 [链接] 删除了一些破损的链接
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/summarization/overview
+
+此文件中删除了两行内容，这两行内容是关于REST API的文档链接的注释。",[网页更新] 删除了关于REST API的文档链接的内容,0 [链接] 删除了关于REST API的文档链接的注释
+"https://learn.microsoft.com/en-us/azure/ai-services/language-service/summarization/how-to/document-summarization
+
+此文件中删除了两行内容，这两行内容是一个注释，链接到了参考文档。",[链接] 微软Azure AI服务文档摘要中的内容更改,0 [链接] 删除了指向参考文档的注释
+"https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/quickstarts/includes/v3-rest-api
+
+这个文件中的更改是修复了一个错字。在""开始使用文档智能""的快速入门指南中（具体是Rest API部分），""Health insurance card""的值从""healthInsuranceCard.us""更改为""prebuilt-healthInsuranceCard.us""。","[链接] Microsoft Azure文档智能快速入门指南中的更改
+
+[文本] 修复了""开始使用文档智能""快速入门指南中的错字","0 [文本] 修复错别字并更新""Health insurance card""的值"
+"https://learn.microsoft.com/en-us/azure/ai-services/content-safety/overview
+
+这个文件主要进行了以下更改：
+1. 修改了一些描述内容安全工作室功能的文本，主要是对一些细节的调整，例如将""实时""的描述从""real time""改为""real-time""。
+2. 更改了联系我们的电子邮件地址，从""acm-team@microsoft.com""更改为""contentsafetysupport@microsoft.com""。
+3. 调整了查询速率的描述，将每秒请求（RPS）的单位更改为每10秒请求，并将F0和S0的请求速率从5和10更改为1000。","[文本] 微软内容安全服务概述的修改
+
+[电子邮件] 微软内容安全服务的联系方式更新
+
+[配额] 微软内容安全服务的查询速率调整","1 [Text] ""内容安全工作室功能描述和查询速率单位的重要调整"""

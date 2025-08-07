@@ -1,0 +1,147 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "1.0.0",
+    "title": "DocUpdatesAPI",
+    "description": "获取 Azure AI 相关产品的文档更新信息"
+  },
+  "servers": [
+    {
+      "url": "https://docs.westiedoubao.com/api"
+    }
+  ],
+  "security": [
+    {
+      "sig": []
+    }
+  ],
+  "paths": {
+    "/updates": {
+      "get": {
+        "description": "获取 Azure AI 相关产品的文档更新信息",
+        "operationId": "get_doc_updates",
+        "parameters": [
+          {
+            "name": "product",
+            "in": "query",
+            "description": "产品名称。可选值：AOAI-V2、AI-Foundry、Agent-Service、Model-Inference、AML、Cog-speech-service、Cog-document-intelligence、Cog-language-service、Cog-translator、Cog-content-safety、Cog-computer-vision、Cog-custom-vision-service、IoT-iot-hub、IoT-iot-edge、IoT-iot-dps、IoT-iot-central、IoT-iot-hub-device-update。",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "AOAI-V2"
+            },
+            "example": "AOAI-V2"
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "description": "语言。可选值：Chinese、English。",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "Chinese"
+            },
+            "example": "Chinese"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码，正整数。",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "updateType",
+            "in": "query",
+            "description": "更新类型。可选值：single（单条更新）、weekly（周总结）。",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "single"
+            },
+            "example": "single"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回文档更新信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "tag": { "type": "string", "description": "标签" },
+                          "title": { "type": "string", "description": "标题" },
+                          "timestamp": { "type": "string", "description": "时间" },
+                          "gptSummary": { "type": "string", "description": "摘要" },
+                          "commitUrl": { "type": "string", "description": "提交链接" }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": { "type": "integer" },
+                        "totalPages": { "type": "integer" },
+                        "totalItems": { "type": "integer" },
+                        "pageSize": { "type": "integer" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "updates": [
+                    {
+                      "tag": "更新",
+                      "title": "文档内容优化",
+                      "timestamp": "2024-06-01T12:00:00Z",
+                      "gptSummary": "优化了API文档内容，提升可读性。",
+                      "commitUrl": "https://github.com/xxx/commit/abc123"
+                    }
+                  ],
+                  "pagination": {
+                    "currentPage": 1,
+                    "totalPages": 3,
+                    "totalItems": 60,
+                    "pageSize": 20
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "通用错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sig": {
+        "type": "apiKey",
+        "description": "The SHA 256 hash of the entire request URI with an internal key.",
+        "name": "sig",
+        "in": "query"
+      }
+    }
+  }
+} 
