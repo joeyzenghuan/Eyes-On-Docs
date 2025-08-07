@@ -14,3 +14,4 @@ pandas
 bs4
 tiktoken
 matplotlib
+mcp[cli]
