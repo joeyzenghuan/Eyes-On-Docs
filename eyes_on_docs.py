@@ -30,7 +30,6 @@ def load_system_prompts(target):
         system_prompt.setdefault(k, v)
         system_prompt.update({k: data[system_prompt[k]]['prompt'] })
     return system_prompt
-    git 
   
 def load_targets_config(): 
     """

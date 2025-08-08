@@ -7,7 +7,7 @@ from io import BytesIO
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QDateTime, QUrl, QTimer
 from PyQt5.QtGui import QDesktopServices
-from ui_layout import Ui_DocsBot_CosmosDB
+from archived.ui_layout import Ui_DocsBot_CosmosDB
 from cosmosdb_client import CosmosDBHandler
 from threading import Thread
 
