@@ -1,3 +1,35 @@
+# Eyes On Docs - 文档更新监控机器人
+
+## 项目简介
+
+Eyes On Docs 是一个智能文档更新监控机器人，专为监控 Microsoft Azure 官方文档的 GitHub 仓库更新而设计。该项目能够自动检测文档变更，利用 GPT-4 生成智能摘要，并通过 Microsoft Teams 推送通知，帮助团队及时了解重要文档更新。
+
+### 🎯 核心功能
+
+- **自动监控**: 定时检查 GitHub 文档仓库的提交更新（默认每2小时）
+- **智能摘要**: 使用 GPT-4 自动生成高质量的更新摘要和标题
+- **多语言支持**: 支持中文和英文输出
+- **Teams 集成**: 通过 Webhook 自动推送通知到 Microsoft Teams 频道
+- **周报功能**: 每周一自动生成上周更新的汇总报告
+- **多主题支持**: 可同时监控多个不同的文档主题和仓库
+
+### 🏗️ 技术架构
+
+- **Azure OpenAI**: GPT-4 模型用于内容分析和摘要生成
+- **Azure Cosmos DB**: 数据持久化存储，避免重复处理
+- **GitHub API**: 获取提交历史和文档变更信息
+- **Microsoft Teams Webhook**: 推送通知到团队频道
+- **Python 异步处理**: 高效的多任务处理能力
+
+### 🌟 适用场景
+
+- 企业技术文档团队的更新监控
+- 开源项目文档变更追踪
+- 技术团队的知识同步和信息共享
+- 大型文档仓库的自动化运维
+
+---
+
 # User Interface
 
 Users can see the following notifications in Teams Channel.

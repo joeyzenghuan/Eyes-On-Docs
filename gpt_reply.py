@@ -10,7 +10,7 @@ from tenacity import (
     wait_random_exponential,
 )  # for exponential backoff
 
-load_dotenv()
+load_dotenv(override=True)  # 允许覆盖环境变量
 
 AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")

@@ -20,7 +20,7 @@ from teams_notifier import TeamsNotifier
 from logs import logger
 import toml
 
-load_dotenv()
+load_dotenv(override=True)  # 允许覆盖环境变量
 
 class CommitTester(CommitFetcher, CallGPT, TeamsNotifier):
     def __init__(self):

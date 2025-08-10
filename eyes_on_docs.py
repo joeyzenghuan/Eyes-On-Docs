@@ -10,7 +10,7 @@ from logs import logger
 from gpt_reply import *  
 from spyder import *  
 
-load_dotenv()  
+load_dotenv(override=True)  # 允许覆盖环境变量
   
 def load_system_prompts(target):  
     """
