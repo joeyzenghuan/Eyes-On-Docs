@@ -1,5 +1,5 @@
 from logs import logger  
-from gpt_reply import get_gpt_response  
+from gpt_reply import get_gpt_response, get_gpt_structured_response  
 import tiktoken
   
 class CallGPT:  
@@ -49,7 +49,7 @@ class CallGPT:
         ]  
   
         # 记录请求信息  
-        logger.info(f"GPT_Summary Request body: {messages}")  
+        logger.debug(f"GPT_Summary Request body: {messages}")  
   
         # 获取GPT模型的回复  
         gpt_summary_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)  
@@ -84,7 +84,7 @@ class CallGPT:
         ]  
   
         # 记录请求信息  
-        logger.info(f"GPT_Title Request body: {messages}")  
+        logger.debug(f"GPT_Title Request body: {messages}")  
   
         # 获取GPT模型的回复  
         gpt_title_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)  
@@ -197,7 +197,7 @@ class CallGPT:
             {"role": "user", "content": f"Patch 1 data:\n{previous_prompt}\n\nPatch 2 data:\n{commit_patch_data}\n\nOutput (1 for similar, 0 for not similar):\n[Placeholder for the AI's binary output]\n\nReasoning:\n[Placeholder for the AI's explanation]"},  
         ]  
   
-        logger.info(f"GPT_Similarity Request body: {messages}")  
+        logger.debug(f"GPT_Similarity Request body: {messages}")  
   
         # 获取 GPT 相似度响应  
         gpt_similarity_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_response(messages)  
@@ -207,6 +207,98 @@ class CallGPT:
         logger.info(f"GPT_Similarity Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")    
 
         return gpt_similarity_response  
+  
+    def gpt_summary_and_title_structured(self, commit_patch_data, language, gpt_structured_prompt, url_mapping):
+        """
+        使用 structured output 一次性生成摘要和标题
+        
+        :param commit_patch_data: 提交的补丁数据
+        :param language: 回复的语言
+        :param gpt_structured_prompt: structured output 的提示词
+        :param url_mapping: URL 映射配置
+        :return: (gpt_summary, gpt_title, importance_score, importance_score_reasoning, gpt_tokens, commit_patch_data)
+        """
+        try:
+            # 定义 JSON schema
+            response_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "document_analysis",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "summary": {
+                                "type": "string",
+                                "description": "详细的更新内容摘要"
+                            },
+                            "title": {
+                                "type": "string", 
+                                "description": "格式化的标题，格式为：[标签] 具体标题，不包含数字前缀"
+                            },
+                            "importance_score": {
+                                "type": "integer",
+                                "description": "重要性评分：1表示重要需要通知，0表示不重要跳过通知",
+                                "enum": [0, 1]
+                            },
+                            "importance_score_reasoning": {
+                                "type": "string",
+                                "description": "判断重要性的理由"
+                            }
+                        },
+                        "required": ["summary", "title", "importance_score", "importance_score_reasoning"],
+                        "additionalProperties": False
+                    }
+                }
+            }
+            
+            system_message = f"{gpt_structured_prompt} Reply in {language}."
+            
+            # 构建消息列表
+            messages = [
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": f"Here are the commit patch data. #####{commit_patch_data} ##### Reply in {language}"},
+            ]
+            
+            # 记录请求信息
+            logger.debug(f"GPT_Structured Request body: {messages}")
+            
+            # 获取 structured response
+            structured_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_structured_response(
+                messages, response_format
+            )
+            
+            if structured_response is None:
+                logger.error("Failed to get structured response from GPT")
+                return None, None, None, None, commit_patch_data
+                
+            # 提取结果
+            gpt_summary = structured_response.get("summary", "")
+            gpt_title = structured_response.get("title", "")
+            importance_score = structured_response.get("importance_score", 0)
+            importance_score_reasoning = structured_response.get("importance_score_reasoning", "")
+            
+            # 修正摘要中的链接
+            gpt_summary = self.correct_links(gpt_summary, url_mapping)
+            
+            # 记录响应和token信息
+            logger.warning(f"GPT_Structured Response Summary:\n  {gpt_summary}")
+            logger.warning(f"GPT_Structured Response Title:\n  {gpt_title}")
+            logger.warning(f"GPT_Structured Importance Score: {importance_score}")
+            logger.warning(f"GPT_Structured Importance Score Reasoning: {importance_score_reasoning}")
+            logger.info(f"GPT_Structured Tokens: Prompt {prompt_tokens}, Completion {completion_tokens}, Total {total_tokens}")
+            
+            gpt_tokens = {
+                "prompt": prompt_tokens,
+                "completion": completion_tokens,
+                "total": total_tokens
+            }
+            
+            return gpt_summary, gpt_title, importance_score, importance_score_reasoning, gpt_tokens, commit_patch_data
+            
+        except Exception as e:
+            logger.exception("Exception in gpt_summary_and_title_structured:", e)
+            return None, None, None, None, None, commit_patch_data
   
     def num_tokens_from_string(self, string: str, encoding_name: str) -> int:
         """Returns the number of tokens in a text string."""

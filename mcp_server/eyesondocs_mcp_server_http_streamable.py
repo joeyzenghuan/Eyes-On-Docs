@@ -261,3 +261,4 @@ if __name__ == "__main__":
     # 运行 HTTP streamable 服务器
     # 这是推荐的 web 部署方式，适合通过网络访问
     mcp.run(transport="streamable-http")
+    # mcp.run(transport='stdio')

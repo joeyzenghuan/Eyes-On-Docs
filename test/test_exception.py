@@ -3,7 +3,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)  # 允许覆盖环境变量
 
 
 personal_token = os.getenv("PERSONAL_TOKEN")

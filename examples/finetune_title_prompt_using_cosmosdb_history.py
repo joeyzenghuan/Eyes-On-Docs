@@ -4,7 +4,7 @@ import sys
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)  # 允许覆盖环境变量
 
 
 # 获取当前文件的路径

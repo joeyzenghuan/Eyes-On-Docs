@@ -7,7 +7,7 @@ import requests
 
 # from metagpt.const import PROJECT_ROOT
 
-load_dotenv()  # 加载.env文件中的环境变量
+load_dotenv(override=True)  # 允许覆盖环境变量  # 加载.env文件中的环境变量
 ERROR_WEBHOOK_URL = os.getenv('ERROR_WEBHOOK_URL')
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')  # 从环境变量读取日志级别，默认为 INFO
 

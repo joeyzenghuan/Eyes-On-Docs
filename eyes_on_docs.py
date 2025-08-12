@@ -10,7 +10,7 @@ from logs import logger
 from gpt_reply import *  
 from spyder import *  
 
-load_dotenv()  
+load_dotenv(override=True)  # 允许覆盖环境变量
   
 def load_system_prompts(target):  
     """
@@ -23,7 +23,8 @@ def load_system_prompts(target):
         "GPT_SUMMARY_PROMPT": "gpt_summary_prompt_v2",  
         "GPT_TITLE_PROMPT": "gpt_title_prompt_v4",  
         "GPT_SIMILARITY_PROMPT": "gpt_similarity_prompt_v1",  
-        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1"  
+        "GPT_WEEKLY_SUMMARY_PROMPT": "gpt_weekly_summary_prompt_v1",
+        "GPT_STRUCTURED_PROMPT": "gpt_structured_prompt_v1"  # 新增 structured prompt
         }
     system_prompt =  {k: v for k, v in target.items() if "GPT" in k}
     for k, v in default_prompt.items():
@@ -65,9 +66,13 @@ def process_targets(targets):
                 show_weekly_summary = False
             
             url_mapping = target.get("url_mapping", None)
+            
+            # 获取 GPT 分析模式配置，默认为 legacy 模式确保向后兼容
+            gpt_analysis_mode = target.get("gpt_analysis_mode", "legacy")
 
             logger.warning(f"========================= Start to process topic: {topic} =========================")  
             logger.info(f"show_topic_in_title: {show_topic_in_title}, show_weekly_summary: {show_weekly_summary}")  
+            logger.info(f"gpt_analysis_mode: {gpt_analysis_mode}")  # 记录使用的分析模式  
 
             logger.info(f"Root commits url: {root_commits_url}")  
             logger.info(f"Language: {language}")  
@@ -79,7 +84,7 @@ def process_targets(targets):
     
 
             # 最后一个参数是 max_input_token 30000 
-            git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000)  
+            git_spyder = Spyder(topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompts, 30000, gpt_analysis_mode)  
             # all_commits = git_spyder.get_all_commits()  
             # selected_commits, latest_crawl_time = git_spyder.select_latest_commits(all_commits)  
             git_spyder.process_commits(git_spyder.latest_commits, url_mapping)  

@@ -8,7 +8,7 @@ from cosmosdb_client import CosmosDBHandler
 from call_gpt import CallGPT
 from teams_notifier import TeamsNotifier
 
-load_dotenv()  
+load_dotenv(override=True)  # 允许覆盖环境变量  
 PERSONAL_TOKEN = os.getenv("PERSONAL_TOKEN")  
   
 class Spyder(CommitFetcher, CallGPT, TeamsNotifier):  
