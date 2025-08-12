@@ -21,7 +21,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
     - CallGPT: GPT模型调用功能  
     - TeamsNotifier: Teams通知发送功能
     """
-    def __init__(self, topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompt_dict, max_input_token):  
+    def __init__(self, topic, root_commits_url, language, teams_webhook_url, show_topic_in_title, system_prompt_dict, max_input_token, gpt_analysis_mode="legacy"):  
         """
         初始化爬虫实例
         
@@ -33,6 +33,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
             show_topic_in_title (bool): 是否在通知标题中显示主题名称
             system_prompt_dict (dict): GPT系统提示词字典
             max_input_token (int): GPT输入的最大token数量限制
+            gpt_analysis_mode (str): GPT分析模式，"legacy"或"structured"，默认"legacy"
         """
         # 保存配置参数
         self.topic = topic
@@ -42,6 +43,7 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         self.system_prompt_dict = system_prompt_dict
         self.max_input_token = max_input_token
         self.show_topic_in_title = show_topic_in_title
+        self.gpt_analysis_mode = gpt_analysis_mode  # 新增：GPT分析模式
 
         # 设置GitHub API请求头，包含认证令牌
         self.headers = {"Authorization": "token " + PERSONAL_TOKEN}
@@ -98,10 +100,9 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         """
         使用GPT生成提交的摘要、标题和状态
         
-        这个方法执行完整的GPT处理流程：
-        1. 先生成摘要：分析提交的补丁数据，生成更新内容摘要
-        2. 再生成标题：基于摘要生成简洁的标题
-        3. 最后判断状态：决定是否需要发送通知
+        支持两种模式：
+        - legacy: 传统的两次调用模式（摘要 + 标题）
+        - structured: 新的一次调用模式（使用 structured output）
         
         Args:
             commit_patch_data (str): 提交的补丁数据（文件变更详情）
@@ -112,6 +113,19 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         Returns:
             tuple: (gpt_summary, gpt_title, status) 
                    GPT摘要、GPT标题、处理状态
+        """
+        if self.gpt_analysis_mode == "structured":
+            # 新的 structured output 模式
+            logger.info("Using structured output mode for GPT analysis")
+            return self._generate_gpt_responses_structured(commit_patch_data, language, prompts, url_mapping)
+        else:
+            # 传统的 legacy 模式
+            logger.info("Using legacy mode for GPT analysis")
+            return self._generate_gpt_responses_legacy(commit_patch_data, language, prompts, url_mapping)
+    
+    def _generate_gpt_responses_legacy(self, commit_patch_data, language, prompts, url_mapping):
+        """
+        传统的两次GPT调用模式
         """
         # 第一步：使用GPT生成提交内容摘要
         gpt_summary, gpt_summary_tokens, commit_patch_data = self.gpt_summary(commit_patch_data, language, prompts["GPT_SUMMARY_PROMPT"], url_mapping)  
@@ -133,7 +147,53 @@ class Spyder(CommitFetcher, CallGPT, TeamsNotifier):
         # 第三步：根据生成的标题判断处理状态
         status = self.determine_status(gpt_title)  
         
-        return gpt_summary, gpt_title, status  
+        return gpt_summary, gpt_title, status
+        
+    def _generate_gpt_responses_structured(self, commit_patch_data, language, prompts, url_mapping):
+        """
+        新的 structured output 一次调用模式
+        """
+        try:
+            # 使用 structured output 一次性生成摘要和标题
+            gpt_summary, gpt_title, importance_score, importance_score_reasoning, gpt_tokens, processed_patch_data = self.gpt_summary_and_title_structured(
+                commit_patch_data, language, prompts["GPT_STRUCTURED_PROMPT"], url_mapping
+            )
+            
+            if gpt_summary is None or gpt_title is None or importance_score is None:
+                # 如果 structured 模式失败，fallback 到 legacy 模式
+                logger.warning("Structured output failed, falling back to legacy mode")
+                return self._generate_gpt_responses_legacy(commit_patch_data, language, prompts, url_mapping)
+            
+            # 根据 importance_score 直接确定状态，不需要调用 determine_status
+            if importance_score == 0:
+                status = 'skip'
+                logger.info(f"Skipping this commit based on importance_score: {gpt_title}")
+            else:
+                status = 'post'
+                logger.info(f"Processing this commit based on importance_score: {gpt_title}")
+            
+            # 为了与 legacy 模式兼容，在标题前添加数字前缀用于保存到数据库
+            # 这样现有的处理逻辑可以正常工作
+            formatted_gpt_title = f"{importance_score} {gpt_title}"
+            
+            # 记录token使用情况（structured模式只有一次调用的token）
+            self.update_commit_history("gpt_structured_tokens", gpt_tokens)
+            # 为了保持兼容性，也记录到原有的字段中
+            self.update_commit_history("gpt_summary_tokens", gpt_tokens)
+            self.update_commit_history("gpt_title_tokens", {"prompt": 0, "completion": 0, "total": 0})  # 标题是同时生成的，所以为0
+            
+            # 记录处理后的提交补丁数据
+            self.update_commit_history("commit_patch_data", processed_patch_data)
+            
+            # 记录额外的 structured 模式特有信息
+            self.update_commit_history("importance_score", importance_score)
+            self.update_commit_history("importance_score_reasoning", importance_score_reasoning)
+            
+            return gpt_summary, formatted_gpt_title, status
+            
+        except Exception as e:
+            logger.exception("Exception in structured mode, falling back to legacy mode:", e)
+            return self._generate_gpt_responses_legacy(commit_patch_data, language, prompts, url_mapping)  
     
     def generate_weekly_summary(self):
         """
