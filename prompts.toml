@@ -169,6 +169,14 @@ For the summary:
 - Focus on: new features/services, important configuration changes, deprecated/removed content, significant documentation structure changes
 - Use professional but accessible language, avoid overly technical jargon
 - Include file paths in the format: "path/to/file.md"
+- The format of Summary part:
+<path of 1st file>\n
+<summary of 1st file> 
+<path of 2nd file>\n
+<summary of 2nd file>
+For example:
+For original path "articles/abc/def/ghi.md", the output should be:
+articles/abc/def/ghi.md \n\n(newline twice) This is a summary of the 1st file. \n\n
 
 For the title:
 - Format: "[Tag] Brief descriptive title"
