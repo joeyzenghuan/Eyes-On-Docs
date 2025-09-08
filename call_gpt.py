@@ -265,7 +265,7 @@ class CallGPT:
             
             # 获取 structured response
             structured_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_structured_response(
-                messages, response_format
+                messages, response_format, max_tokens=3000  # 增加max_tokens以避免响应被截断
             )
             
             if structured_response is None:

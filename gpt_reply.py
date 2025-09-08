@@ -48,7 +48,7 @@ def get_gpt_response(messages, max_tokens=1000):
         logger.exception("get_gpt_response Exception:", e)          
         return None, None, None, None
 
-def get_gpt_structured_response(messages, response_format, max_tokens=1000):
+def get_gpt_structured_response(messages, response_format, max_tokens=2000):
     """
     使用 OpenAI structured output 获取格式化的 GPT 响应
     
@@ -72,9 +72,25 @@ def get_gpt_structured_response(messages, response_format, max_tokens=1000):
         # structured output 返回的是 JSON 格式的字符串
         gpt_response_content = response.choices[0].message.content
         
+        # 记录响应内容以便调试
+        logger.debug(f"GPT structured response content: {gpt_response_content}")
+        
+        # 检查响应是否为空
+        if not gpt_response_content:
+            logger.error("GPT returned empty response content")
+            return None, None, None, None
+        
         # 解析 JSON 响应
         import json
-        parsed_response = json.loads(gpt_response_content)
+        try:
+            parsed_response = json.loads(gpt_response_content)
+        except json.JSONDecodeError as json_error:
+            logger.error(f"JSON decode error: {json_error}")
+            logger.error(f"Response content that failed to parse: {gpt_response_content}")
+            # 检查是否是由于响应被截断导致的
+            if len(gpt_response_content) > 0 and not gpt_response_content.rstrip().endswith('}'):
+                logger.error("Response appears to be truncated. Consider increasing max_tokens.")
+            return None, None, None, None
         
         prompt_tokens = response.usage.prompt_tokens
         completion_tokens = response.usage.completion_tokens
