@@ -7,6 +7,54 @@ import { Pagination } from '@/components/Pagination';
 import UpdateCard from '@/components/UpdateCard';
 import { useSession, signOut } from 'next-auth/react';
 
+// Fallback product list
+const FALLBACK_PRODUCTS = [
+  'AI-Foundry',
+  'AOAI-V2',
+  'Agent-Service',
+  'Model-Inference',
+  'AML',
+  'Cog-speech-service',
+  'Cog-document-intelligence',
+  'Cog-language-service',
+  'Cog-translator',
+  'Cog-content-safety',
+  'Cog-computer-vision',
+  'Cog-custom-vision-service',
+  'IoT-iot-hub',
+  'IoT-iot-edge',
+  'IoT-iot-dps',
+  'IoT-iot-central',
+  'IoT-iot-hub-device-update'
+];
+
+async function getProducts() {
+  try {
+    const response = await fetch('/api/products', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch products, using fallback');
+      return FALLBACK_PRODUCTS;
+    }
+
+    const data = await response.json();
+    
+    if (data.source === 'fallback') {
+      console.warn('Products API returned fallback:', data.error);
+    }
+    
+    return data.products || FALLBACK_PRODUCTS;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return FALLBACK_PRODUCTS;
+  }
+}
+
 async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
     const params = new URLSearchParams({
@@ -76,12 +124,13 @@ interface Update {
 }
 
 export default function Home({ searchParams }: { searchParams: { product?: string; language?: string; page?: string; updateType?: string } }) {
-  const product = searchParams.product || 'AI-Foundry';
   const language = searchParams.language || 'Chinese';
   const page = parseInt(searchParams.page || '1', 10);
   const updateType = searchParams.updateType || 'single';
 
   const [updates, setUpdates] = React.useState<Update[]>([]);
+  const [products, setProducts] = React.useState<string[]>(FALLBACK_PRODUCTS);
+  const [currentProduct, setCurrentProduct] = React.useState<string>(searchParams.product || FALLBACK_PRODUCTS[0]);
   const [pagination, setPagination] = React.useState({
     currentPage: 1,
     totalPages: 1,
@@ -104,6 +153,31 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     }
   }, [session]);
 
+  // Fetch products on mount
+  React.useEffect(() => {
+    async function fetchProducts() {
+      const productList = await getProducts();
+      setProducts(productList);
+      
+      // If no product in URL, set default to first product from config
+      if (!searchParams.product && productList.length > 0) {
+        setCurrentProduct(productList[0]);
+        // Update URL with the default product
+        const params = new URLSearchParams(window.location.search);
+        params.set('product', productList[0]);
+        router.push(`/?${params.toString()}`);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  // Update currentProduct when searchParams.product changes
+  React.useEffect(() => {
+    if (searchParams.product) {
+      setCurrentProduct(searchParams.product);
+    }
+  }, [searchParams.product]);
+
   const toggleUpdateType = (type: 'single' | 'weekly') => {
     const params = new URLSearchParams(window.location.search);
     params.set('updateType', type);
@@ -115,7 +189,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     async function fetchUpdates() {
       setIsLoading(true);
       try {
-        const data = await getUpdates(product, language, page, updateType as 'single' | 'weekly');
+        const data = await getUpdates(currentProduct, language, page, updateType as 'single' | 'weekly');
         setUpdates(data.updates);
         setPagination({
           currentPage: data.page,
@@ -131,7 +205,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
     }
 
     fetchUpdates();
-  }, [product, language, page, updateType]);
+  }, [currentProduct, language, page, updateType]);
 
   return (
     <main className="min-h-screen p-6 md:p-12 bg-background-primary text-text-primary">
@@ -142,25 +216,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
 
         <div className="flex justify-between items-center mb-4">
           <Filters 
-            products={[
-              'AI-Foundry',
-              'AOAI-V2',
-              'Agent-Service',
-              'Model-Inference',
-              'AML',
-              'Cog-speech-service',
-              'Cog-document-intelligence',
-              'Cog-language-service',
-              'Cog-translator',
-              'Cog-content-safety',
-              'Cog-computer-vision',
-              'Cog-custom-vision-service',
-              'IoT-iot-hub',
-              'IoT-iot-edge',
-              'IoT-iot-dps',
-              'IoT-iot-central',
-              'IoT-iot-hub-device-update'
-            ]}
+            products={products}
             languages={['Chinese', 'English']}
           />
           <div className="flex items-center justify-end">
