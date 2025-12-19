@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface FiltersProps {
@@ -14,6 +14,22 @@ export default function Filters({ products, languages }: FiltersProps) {
 
   const [selectedProduct, setSelectedProduct] = useState(searchParams.get('product') || products[0]);
   const [selectedLanguage, setSelectedLanguage] = useState(searchParams.get('language') || languages[0]);
+
+  // Sync selected product with URL params
+  useEffect(() => {
+    const productFromUrl = searchParams.get('product');
+    if (productFromUrl) {
+      setSelectedProduct(productFromUrl);
+    }
+  }, [searchParams]);
+
+  // Sync selected language with URL params
+  useEffect(() => {
+    const languageFromUrl = searchParams.get('language');
+    if (languageFromUrl) {
+      setSelectedLanguage(languageFromUrl);
+    }
+  }, [searchParams]);
 
   const handleProductChange = (product: string) => {
     const params = new URLSearchParams(searchParams);
