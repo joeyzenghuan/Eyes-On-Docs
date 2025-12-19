@@ -48,24 +48,25 @@ def get_gpt_response(messages, max_tokens=1000):
         logger.exception("get_gpt_response Exception:", e)          
         return None, None, None, None
 
-def get_gpt_structured_response(messages, response_format, max_tokens=2000):
+def get_gpt_structured_response(messages, response_format):
     """
     使用 OpenAI structured output 获取格式化的 GPT 响应
     
     Args:
         messages: 消息列表
         response_format: 响应格式定义 (JSON schema)
-        max_tokens: 最大 token 数
         
     Returns:
         tuple: (parsed_response_dict, prompt_tokens, completion_tokens, total_tokens)
+    
+    Note:
+        不设置max_tokens，使用OpenAI API默认行为（上下文窗口减去prompt tokens）
     """
     try:
         response = chat_completion_with_backoff(
             model=AZURE_OPENAI_DEPLOYMENT,
             messages=messages,
             temperature=0,
-            max_tokens=max_tokens,
             response_format=response_format
         )
 

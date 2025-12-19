@@ -263,9 +263,9 @@ class CallGPT:
             # 记录请求信息
             logger.debug(f"GPT_Structured Request body: {messages}")
             
-            # 获取 structured response
+            # 获取 structured response (不设置max_tokens，使用API默认值)
             structured_response, prompt_tokens, completion_tokens, total_tokens = get_gpt_structured_response(
-                messages, response_format, max_tokens=3000  # 增加max_tokens以避免响应被截断
+                messages, response_format
             )
             
             if structured_response is None:
