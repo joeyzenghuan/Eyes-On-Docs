@@ -4,6 +4,8 @@ from loguru import logger as _logger
 from dotenv import load_dotenv
 import os
 import requests
+from collections import deque
+import time
 
 # from metagpt.const import PROJECT_ROOT
 
@@ -11,15 +13,51 @@ load_dotenv(override=True)  # 允许覆盖环境变量  # 加载.env文件中的
 ERROR_WEBHOOK_URL = os.getenv('ERROR_WEBHOOK_URL')
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')  # 从环境变量读取日志级别，默认为 INFO
 
+# 熔断配置：2分钟内超过20次error通知则退出程序
+ERROR_WINDOW_SECONDS = int(os.getenv('ERROR_WINDOW_SECONDS', 120))  # 时间窗口（秒）
+ERROR_THRESHOLD = int(os.getenv('ERROR_THRESHOLD', 20))  # 阈值
+
 class WebhookHandler:
     def __init__(self, webhook_url):
         self.webhook_url = webhook_url
+        self.error_timestamps = deque()  # 记录error发送时间戳
+        self.window_seconds = ERROR_WINDOW_SECONDS
+        self.threshold = ERROR_THRESHOLD
+
+    def _cleanup_old_timestamps(self):
+        """清理超出时间窗口的旧时间戳"""
+        current_time = time.time()
+        while self.error_timestamps and (current_time - self.error_timestamps[0]) > self.window_seconds:
+            self.error_timestamps.popleft()
+
+    def _check_circuit_breaker(self):
+        """检查是否触发熔断机制"""
+        self._cleanup_old_timestamps()
+        if len(self.error_timestamps) >= self.threshold:
+            print(f"\n{'='*60}")
+            print(f"[熔断机制触发] 在 {self.window_seconds} 秒内发送了 {len(self.error_timestamps)} 次error通知")
+            print(f"超过阈值 {self.threshold}，程序将退出以防止通知风暴")
+            print(f"{'='*60}\n")
+            # 发送最后一条通知告知熔断
+            try:
+                requests.post(self.webhook_url, json={
+                    'text': f"⚠️ 熔断机制触发：{self.window_seconds}秒内发送了{len(self.error_timestamps)}次error通知，程序已自动退出。请检查系统状态。"
+                })
+            except:
+                pass
+            os._exit(1)  # 强制退出程序
 
     def __call__(self, message):
         # print(f"message: {message}")
         try:
             # 解析消息中的异常信息
             if "Traceback" in message or "ERROR" in message:
+                # 记录当前时间戳
+                self.error_timestamps.append(time.time())
+                
+                # 检查是否触发熔断
+                self._check_circuit_breaker()
+                
                 # 发送异常通知到webhook URL
                 # print(f"检测到异常：\n{message}")
                 requests.post(self.webhook_url, json={'text': f"检测到异常：\n{message}"})
