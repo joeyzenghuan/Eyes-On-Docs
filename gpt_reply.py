@@ -1,4 +1,4 @@
-from openai import AzureOpenAI
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from logs import logger
@@ -12,19 +12,21 @@ from tenacity import (
 
 load_dotenv(override=True)  # 允许覆盖环境变量
 
-AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
-AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY", "").strip()
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "").strip()
+# e.g., https://YOUR-RESOURCE-NAME.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "").strip()
 
-client = AzureOpenAI(
+# 构建 v1 API 的 base_url
+base_url = f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/"
+
+client = OpenAI(
     api_key=AZURE_OPENAI_KEY,
-    api_version=AZURE_OPENAI_API_VERSION,
-    azure_endpoint=AZURE_OPENAI_ENDPOINT
+    base_url=base_url,
+    default_headers={"api-key": AZURE_OPENAI_KEY}
 )
 
-# @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
-@retry(wait=60, stop=stop_after_attempt(1))
+@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(1))
 def chat_completion_with_backoff(**kwargs):
     return client.chat.completions.create(**kwargs)
 
