@@ -43,3 +43,6 @@ web/.vercel
 # TypeScript
 web/*.tsbuildinfo
 web/next-env.d.ts
+
+# Claude credentials (DO NOT commit)
+.claude/vm_credentials.env
