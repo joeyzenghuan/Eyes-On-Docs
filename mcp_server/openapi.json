@@ -24,7 +24,7 @@
           {
             "name": "product",
             "in": "query",
-            "description": "产品名称。可选值：AOAI-V2、AI-Foundry、Agent-Service、Model-Inference、AML、Cog-speech-service、Cog-document-intelligence、Cog-language-service、Cog-translator、Cog-content-safety、Cog-computer-vision、Cog-custom-vision-service、IoT-iot-hub、IoT-iot-edge、IoT-iot-dps、IoT-iot-central、IoT-iot-hub-device-update。",
+            "description": "产品名称。可选值：Microsoft-Foundry、AOAI-V2、AI-Foundry、Agent-Service、Model-Inference、AML、Cog-speech-service、Cog-document-intelligence、Cog-language-service、Cog-translator、Cog-content-safety、Cog-computer-vision、Cog-custom-vision-service、IoT-iot-hub、IoT-iot-edge、IoT-iot-dps、IoT-iot-central、IoT-iot-hub-device-update。",
             "required": false,
             "schema": {
               "type": "string",

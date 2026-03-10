@@ -48,6 +48,7 @@ async def get_doc_updates(
 
     Args:
         product: 产品名称。可选值如下（区分大小写）：
+            - Microsoft-Foundry
             - AOAI-V2
             - AI-Foundry
             - Agent-Service
@@ -205,6 +206,7 @@ async def search_updates(
     参数说明：
         keyword: 要搜索的关键词，支持模糊匹配。
         product: 产品名称。可选值如下（区分大小写）：
+            - Microsoft-Foundry
             - AOAI-V2
             - AI-Foundry
             - Agent-Service

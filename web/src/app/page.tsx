@@ -9,6 +9,7 @@ import { useSession, signOut } from 'next-auth/react';
 
 // Fallback product list
 const FALLBACK_PRODUCTS = [
+  'Microsoft-Foundry',
   'AI-Foundry',
   'AOAI-V2',
   'Agent-Service',
@@ -58,7 +59,7 @@ async function getProducts() {
 async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
     const params = new URLSearchParams({
-      product: product || 'AI-Foundry',
+      product: product || 'Microsoft-Foundry',
       language: language || 'Chinese',
       page: page.toString(),
       updateType: updateType

@@ -4,6 +4,7 @@ import fs from 'fs';
 
 // Hard-coded fallback product list
 const FALLBACK_PRODUCTS = [
+  'Microsoft-Foundry',
   'AI-Foundry',
   'AOAI-V2',
   'Agent-Service',
