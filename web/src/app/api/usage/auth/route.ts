@@ -1,25 +1,19 @@
 import { NextResponse } from 'next/server';
+import { validateAdminPassword } from '@/lib/adminAuth';
 
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
-    const correctPassword = process.env.ADMIN_PASSWORD;
+    const auth = validateAdminPassword(password);
 
-    if (!correctPassword) {
-      return NextResponse.json(
-        { error: '系统配置错误：未设置管理员密码' },
-        { status: 500 }
-      );
-    }
-
-    if (password === correctPassword) {
+    if (auth.ok) {
       return NextResponse.json({ success: true });
-    } else {
-      return NextResponse.json(
-        { error: '密码错误' },
-        { status: 401 }
-      );
     }
+
+    return NextResponse.json(
+      { error: auth.error },
+      { status: auth.status }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: '验证过程出错' },
