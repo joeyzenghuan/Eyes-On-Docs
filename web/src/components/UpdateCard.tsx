@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { CalendarIcon, ExternalLinkIcon, Copy } from 'lucide-react';
+import { BookOpen, ExternalLinkIcon, Copy } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { toast } from 'sonner';
+import { getPrimaryDocUrl, isLikelyInternalLearnUrl } from '@/lib/docLinks';
 
 interface UpdateCardProps {
   id: string;
@@ -27,6 +28,7 @@ export default function UpdateCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const primaryDocUrl = getPrimaryDocUrl(typeof gptSummary === 'string' ? gptSummary : '');
 
   useEffect(() => {
     if (contentRef.current) {
@@ -114,21 +116,40 @@ export default function UpdateCard({
           >
             <Copy size={16} />
           </button>
-          <a 
-            href={commitUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="
-              p-1.5 rounded-md transition-all duration-300 flex items-center justify-center
-              bg-background-secondary text-text-secondary hover:bg-accent-secondary
-            "
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent card expand when clicking commit link
-            }}
-            title="View commit"
-          >
-            <ExternalLinkIcon size={16} />
-          </a>
+          {primaryDocUrl && (
+            <a
+              href={primaryDocUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                p-1.5 rounded-md transition-all duration-300 flex items-center justify-center
+                bg-background-secondary text-text-secondary hover:bg-accent-secondary
+              "
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              title="Open public Learn article"
+            >
+              <BookOpen size={16} />
+            </a>
+          )}
+          {commitUrl && (
+            <a
+              href={commitUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                p-1.5 rounded-md transition-all duration-300 flex items-center justify-center
+                bg-background-secondary text-text-secondary hover:bg-accent-secondary
+              "
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              title="View commit"
+            >
+              <ExternalLinkIcon size={16} />
+            </a>
+          )}
         </div>
       </div>
       <div className="text-text-secondary text-sm mb-2 w-full">
@@ -158,14 +179,28 @@ export default function UpdateCard({
               remarkPlugins={[remarkGfm]} 
               rehypePlugins={[rehypeRaw]}
               components={{
-                a: ({node, ...props}) => (
-                  <a 
-                    {...props} 
-                    className="text-accent-secondary hover:text-accent-primary" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  />
-                )
+                a: ({node, ...props}) => {
+                  const href = typeof props.href === 'string' ? props.href : '';
+                  if (isLikelyInternalLearnUrl(href)) {
+                    return (
+                      <span
+                        className="text-text-secondary/70 break-words"
+                        title="Internal Learn source fragment; not a public article link"
+                      >
+                        {props.children || href}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <a
+                      {...props}
+                      className="text-accent-secondary hover:text-accent-primary break-words"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  );
+                }
               }}
             >
               {gptSummary.replace(/\\n/g, '\n')}
