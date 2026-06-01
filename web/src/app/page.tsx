@@ -6,28 +6,7 @@ import Filters from '@/components/Filters';
 import { Pagination } from '@/components/Pagination';
 import UpdateCard from '@/components/UpdateCard';
 import { useSession, signOut } from 'next-auth/react';
-
-// Fallback product list
-const FALLBACK_PRODUCTS = [
-  'Microsoft-Foundry',
-  'AI-Foundry',
-  'AOAI-V2',
-  'Agent-Service',
-  'Model-Inference',
-  'AML',
-  'Cog-speech-service',
-  'Cog-document-intelligence',
-  'Cog-language-service',
-  'Cog-translator',
-  'Cog-content-safety',
-  'Cog-computer-vision',
-  'Cog-custom-vision-service',
-  'IoT-iot-hub',
-  'IoT-iot-edge',
-  'IoT-iot-dps',
-  'IoT-iot-central',
-  'IoT-iot-hub-device-update'
-];
+import { DEFAULT_PRODUCT, FALLBACK_PRODUCTS, PRODUCT_LABELS } from '@/lib/products';
 
 async function getProducts() {
   try {
@@ -40,7 +19,10 @@ async function getProducts() {
 
     if (!response.ok) {
       console.error('Failed to fetch products, using fallback');
-      return FALLBACK_PRODUCTS;
+      return {
+        products: FALLBACK_PRODUCTS,
+        labels: PRODUCT_LABELS
+      };
     }
 
     const data = await response.json();
@@ -49,17 +31,23 @@ async function getProducts() {
       console.warn('Products API returned fallback:', data.error);
     }
     
-    return data.products || FALLBACK_PRODUCTS;
+    return {
+      products: data.products || FALLBACK_PRODUCTS,
+      labels: data.labels || PRODUCT_LABELS
+    };
   } catch (error) {
     console.error('Error fetching products:', error);
-    return FALLBACK_PRODUCTS;
+    return {
+      products: FALLBACK_PRODUCTS,
+      labels: PRODUCT_LABELS
+    };
   }
 }
 
 async function getUpdates(product: string, language: string, page: number, updateType: 'single' | 'weekly') {
   try {
     const params = new URLSearchParams({
-      product: product || 'Microsoft-Foundry',
+      product: product || DEFAULT_PRODUCT,
       language: language || 'Chinese',
       page: page.toString(),
       updateType: updateType
@@ -131,6 +119,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
 
   const [updates, setUpdates] = React.useState<Update[]>([]);
   const [products, setProducts] = React.useState<string[]>(FALLBACK_PRODUCTS);
+  const [productLabels, setProductLabels] = React.useState<Record<string, string>>(PRODUCT_LABELS);
   const [currentProduct, setCurrentProduct] = React.useState<string>(searchParams.product || FALLBACK_PRODUCTS[0]);
   const [pagination, setPagination] = React.useState({
     currentPage: 1,
@@ -157,8 +146,9 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
   // Fetch products on mount
   React.useEffect(() => {
     async function fetchProducts() {
-      const productList = await getProducts();
+      const { products: productList, labels } = await getProducts();
       setProducts(productList);
+      setProductLabels(labels);
       
       // If no product in URL, set default to first product from config
       if (!searchParams.product && productList.length > 0) {
@@ -218,6 +208,7 @@ export default function Home({ searchParams }: { searchParams: { product?: strin
         <div className="flex justify-between items-center mb-4">
           <Filters 
             products={products}
+            productLabels={productLabels}
             languages={['Chinese', 'English']}
           />
           <div className="flex items-center justify-end">
