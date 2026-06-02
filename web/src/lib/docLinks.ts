@@ -7,6 +7,12 @@ const INTERNAL_LEARN_PATH_PARTS = [
   '/media/'
 ];
 
+const LOCALE_PATTERN = /^[a-z]{2}-[a-z]{2}$/i;
+const SOURCE_REPOS = {
+  azureAiDocs: 'https://github.com/MicrosoftDocs/azure-ai-docs/blob/main/articles',
+  azureDocs: 'https://github.com/MicrosoftDocs/azure-docs/blob/main/articles'
+};
+
 export function extractUrls(markdown: string = '') {
   return Array.from(markdown.matchAll(URL_PATTERN))
     .map(match => match[0].replace(/[.,;:]+$/, ''))
@@ -34,6 +40,64 @@ export function isPublicLearnUrl(url: string = '') {
   } catch {
     return false;
   }
+}
+
+function toSourcePath(parts: string[]) {
+  const sourcePath = parts.join('/');
+  if (!sourcePath) {
+    return '';
+  }
+
+  if (/\.[a-z0-9]+$/i.test(sourcePath)) {
+    return sourcePath;
+  }
+
+  return parts[parts.length - 1] === 'toc' ? `${sourcePath}.yml` : `${sourcePath}.md`;
+}
+
+export function getLearnSourceUrl(url: string = '') {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'learn.microsoft.com') {
+      return '';
+    }
+
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    if (parts.length > 0 && LOCALE_PATTERN.test(parts[0])) {
+      parts.shift();
+    }
+
+    if (parts[0] !== 'azure') {
+      return '';
+    }
+
+    const azurePath = parts.slice(1);
+    const [productRoot, ...rest] = azurePath;
+
+    if (!productRoot || rest.length === 0) {
+      return '';
+    }
+
+    if (productRoot === 'foundry' || productRoot === 'foundry-classic' || productRoot === 'ai-services') {
+      return `${SOURCE_REPOS.azureAiDocs}/${toSourcePath([productRoot, ...rest])}`;
+    }
+
+    if (productRoot === 'machine-learning' || productRoot.startsWith('iot-')) {
+      return `${SOURCE_REPOS.azureDocs}/${toSourcePath(azurePath)}`;
+    }
+
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+export function getOpenableDocUrl(url: string = '') {
+  if (!isLikelyInternalLearnUrl(url)) {
+    return url;
+  }
+
+  return getLearnSourceUrl(url) || url;
 }
 
 export function getPrimaryDocUrl(markdown: string = '') {

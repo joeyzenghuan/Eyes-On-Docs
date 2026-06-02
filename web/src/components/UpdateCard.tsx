@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { toast } from 'sonner';
-import { getPrimaryDocUrl, isLikelyInternalLearnUrl } from '@/lib/docLinks';
+import { getOpenableDocUrl, getPrimaryDocUrl } from '@/lib/docLinks';
 
 interface UpdateCardProps {
   id: string;
@@ -181,23 +181,17 @@ export default function UpdateCard({
               components={{
                 a: ({node, ...props}) => {
                   const href = typeof props.href === 'string' ? props.href : '';
-                  if (isLikelyInternalLearnUrl(href)) {
-                    return (
-                      <span
-                        className="text-text-secondary/70 break-words"
-                        title="Internal Learn source fragment; not a public article link"
-                      >
-                        {props.children || href}
-                      </span>
-                    );
-                  }
+                  const openableHref = getOpenableDocUrl(href);
+                  const isSourceFileLink = href !== openableHref;
 
                   return (
                     <a
                       {...props}
+                      href={openableHref}
                       className="text-accent-secondary hover:text-accent-primary break-words"
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={isSourceFileLink ? 'Open GitHub source file' : undefined}
                     />
                   );
                 }
