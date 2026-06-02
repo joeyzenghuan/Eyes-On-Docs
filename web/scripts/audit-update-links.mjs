@@ -3,6 +3,11 @@
 const DEFAULT_BASE_URL = process.env.DOCS_BASE_URL || 'https://docs.westiedoubao.com';
 const URL_PATTERN = /https?:\/\/[^\s)\]}>"']+/g;
 const INTERNAL_LEARN_PATH_PARTS = ['/includes/', '/toc', '/model-matrix/', '/media/'];
+const LOCALE_PATTERN = /^[a-z]{2}-[a-z]{2}$/i;
+const SOURCE_REPOS = {
+  azureAiDocs: 'https://github.com/MicrosoftDocs/azure-ai-docs/blob/main/articles',
+  azureDocs: 'https://github.com/MicrosoftDocs/azure-docs/blob/main/articles'
+};
 
 function parseArgs(argv) {
   const args = {
@@ -66,6 +71,64 @@ function isLikelyInternalLearnUrl(url) {
   } catch {
     return false;
   }
+}
+
+function toSourcePath(parts) {
+  const sourcePath = parts.join('/');
+  if (!sourcePath) {
+    return '';
+  }
+
+  if (/\.[a-z0-9]+$/i.test(sourcePath)) {
+    return sourcePath;
+  }
+
+  return parts[parts.length - 1] === 'toc' ? `${sourcePath}.yml` : `${sourcePath}.md`;
+}
+
+function getLearnSourceUrl(url = '') {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'learn.microsoft.com') {
+      return '';
+    }
+
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    if (parts.length > 0 && LOCALE_PATTERN.test(parts[0])) {
+      parts.shift();
+    }
+
+    if (parts[0] !== 'azure') {
+      return '';
+    }
+
+    const azurePath = parts.slice(1);
+    const [productRoot, ...rest] = azurePath;
+
+    if (!productRoot || rest.length === 0) {
+      return '';
+    }
+
+    if (productRoot === 'foundry' || productRoot === 'foundry-classic' || productRoot === 'ai-services') {
+      return `${SOURCE_REPOS.azureAiDocs}/${toSourcePath([productRoot, ...rest])}`;
+    }
+
+    if (productRoot === 'machine-learning' || productRoot.startsWith('iot-')) {
+      return `${SOURCE_REPOS.azureDocs}/${toSourcePath(azurePath)}`;
+    }
+
+    return '';
+  } catch {
+    return '';
+  }
+}
+
+function getOpenableDocUrl(url = '') {
+  if (!isLikelyInternalLearnUrl(url)) {
+    return url;
+  }
+
+  return getLearnSourceUrl(url) || url;
 }
 
 async function fetchJson(url) {
@@ -140,13 +203,15 @@ async function main() {
 
         for (const url of urls) {
           const internal = isLikelyInternalLearnUrl(url);
-          const result = internal ? { status: 'internal-source', ok: false } : await checkUrl(url);
+          const targetUrl = getOpenableDocUrl(url);
+          const result = await checkUrl(targetUrl);
           findings.push({
             product,
             page,
             updateId: update.id,
             title: update.title,
             url,
+            targetUrl,
             internal,
             status: result.status,
             ok: result.ok,
@@ -164,7 +229,8 @@ async function main() {
     pagesPerProduct: args.pages,
     totalLinks: findings.length,
     brokenLinks: broken.length,
-    internalSourceLinks: broken.filter(item => item.internal).length
+    internalSourceLinks: findings.filter(item => item.internal).length,
+    brokenInternalSourceLinks: broken.filter(item => item.internal).length
   };
 
   console.log(JSON.stringify({ summary, broken }, null, 2));
