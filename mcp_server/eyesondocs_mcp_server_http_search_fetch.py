@@ -10,12 +10,14 @@ mcp = FastMCP("doc_updates")
 API_BASE = "https://docs.westiedoubao.com/api"
 USER_AGENT = "doc-updates-app/1.0"
 
-async def make_api_request(url: str) -> dict[str, Any] | None:
+async def make_api_request(url: str, extra_headers: Optional[dict[str, str]] = None) -> dict[str, Any] | None:
     """向API发送请求，并进行适当的错误处理。"""
     headers = {
         "User-Agent": USER_AGENT,
         "Accept": "application/json"
     }
+    if extra_headers:
+        headers.update(extra_headers)
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url, headers=headers, timeout=30.0)
@@ -154,7 +156,7 @@ async def get_usage_stats(
     if query_string:
         url = f"{url}?{query_string}"
     
-    data = await make_api_request(url)
+    data = await make_api_request(url, extra_headers={"x-admin-password": password})
     
     if not data or "error" in data:
         return f"无法获取使用统计数据：{data.get('error', '未知错误')}"
