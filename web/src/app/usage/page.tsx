@@ -239,7 +239,16 @@ export default function UsagePage() {
     setLoading(true);
     setLoadingProgress(0);
     try {
-      const response = await fetch(`/api/usage?startTime=${startTime}&endTime=${endTime}&excludeUsers=${excludeUsers}`);
+      const params = new URLSearchParams({
+        startTime,
+        endTime,
+        excludeUsers
+      });
+      const response = await fetch(`/api/usage?${params.toString()}`, {
+        headers: {
+          'x-admin-password': password
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch usage statistics');
       }
