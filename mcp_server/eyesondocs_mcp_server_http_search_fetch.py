@@ -9,6 +9,28 @@ mcp = FastMCP("doc_updates")
 # 常量
 API_BASE = "https://docs.westiedoubao.com/api"
 USER_AGENT = "doc-updates-app/1.0"
+DEFAULT_PRODUCTS = [
+    "Microsoft-Foundry",
+    "AI-Foundry",
+    "AOAI-V2",
+    "Agent-Service",
+    "Model-Inference",
+    "AML",
+    "Cog-speech-service",
+    "Cog-content-understanding",
+    "Cog-computer-vision",
+    "Cog-content-safety",
+    "Cog-custom-vision-service",
+    "Cog-document-intelligence",
+    "Cog-language-service",
+    "Cog-translator",
+    "IoT-iot-central",
+    "IoT-iot-develop",
+    "IoT-iot-dps",
+    "IoT-iot-edge",
+    "IoT-iot-hub-device-update",
+    "IoT-iot-hub",
+]
 
 async def make_api_request(url: str, extra_headers: Optional[dict[str, str]] = None) -> dict[str, Any] | None:
     """向API发送请求，并进行适当的错误处理。"""
@@ -37,6 +59,26 @@ def format_update(update: dict) -> str:
 摘要: {update.get('gptSummary', '无摘要')}
 提交链接: {update.get('commitUrl', '无链接')}
 """
+
+def format_search_update(product: str, update: dict) -> str:
+    """将搜索结果格式化为包含 fetch id 的可读字符串。"""
+    update_id = update.get("id", "")
+    return f"""
+ID: {product}:{update_id}
+产品: {product}
+标签: {update.get('tag', '无标签')}
+标题: {update.get('title', '无标题')}
+时间: {update.get('timestamp', '未知时间')}
+摘要: {update.get('gptSummary', '无摘要')}
+提交链接: {update.get('commitUrl', '无链接')}
+"""
+
+async def get_products() -> list[str]:
+    """从 Web API 获取产品列表，失败时使用本地 fallback。"""
+    data = await make_api_request(f"{API_BASE}/products")
+    if data and isinstance(data.get("products"), list):
+        return data["products"]
+    return DEFAULT_PRODUCTS
 
 @mcp.tool()
 async def get_doc_updates(
@@ -264,22 +306,72 @@ async def search_updates(
 @mcp.tool()
 async def search(query: str) -> str:
     """
-    Web Search using a query string.
+    Search Azure AI documentation updates across tracked products.
     
     Args:
-        query: The search query string.
+        query: Keyword to search in update titles and summaries.
     """
-    return "今天上海的天气是上午大风,下午大雨,晚上出太阳."
+    query = query.strip()
+    if not query:
+        return "请输入要搜索的关键词。"
+
+    products = await get_products()
+    found_updates = []
+
+    for product in products:
+        for page in range(1, 4):
+            url = f"{API_BASE}/updates?product={product}&language=Chinese&page={page}&updateType=single"
+            data = await make_api_request(url)
+
+            if not data or "updates" not in data or not data["updates"]:
+                break
+
+            for update in data["updates"]:
+                update_text = update.get("title", "") + " " + update.get("gptSummary", "")
+                if query.lower() in update_text.lower():
+                    found_updates.append((product, update))
+
+    if not found_updates:
+        return f"未找到包含关键词 '{query}' 的文档更新。"
+
+    formatted = [
+        format_search_update(product, update)
+        for product, update in found_updates[:10]
+    ]
+    return f"找到 {len(found_updates)} 条包含关键词 '{query}' 的更新，显示前 {min(10, len(found_updates))} 条：\n\n" + "\n==== 结果分割线 ====\n".join(formatted)
 
 @mcp.tool()
 async def fetch(id: str) -> str:
     """
-    Retrieve documents by ID.
+    Retrieve a documentation update by ID returned from search.
     
     Args:
-        id: The document ID to retrieve.
+        id: The update ID. Prefer the "product:update_id" format returned by search.
     """
-    return "DoubaoLab的总部位于上海紫星路999999号."
+    update_id = id.strip()
+    if not update_id:
+        return "请输入要获取的更新 ID。"
+
+    products = await get_products()
+    requested_product = None
+    if ":" in update_id:
+        requested_product, update_id = update_id.split(":", 1)
+        products = [requested_product]
+
+    for product in products:
+        for page in range(1, 11):
+            url = f"{API_BASE}/updates?product={product}&language=Chinese&page={page}&updateType=single"
+            data = await make_api_request(url)
+
+            if not data or "updates" not in data or not data["updates"]:
+                break
+
+            for update in data["updates"]:
+                if update.get("id") == update_id:
+                    return format_search_update(product, update)
+
+    product_hint = f"产品={requested_product}，" if requested_product else ""
+    return f"未找到更新：{product_hint}ID={update_id}。"
 
 if __name__ == "__main__":
     # 运行 HTTP streamable 服务器
