@@ -6,9 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 interface FiltersProps {
   products: string[];
   languages: string[];
+  productLabels?: Record<string, string>;
 }
 
-export default function Filters({ products, languages }: FiltersProps) {
+export default function Filters({ products, languages, productLabels = {} }: FiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -88,7 +89,7 @@ export default function Filters({ products, languages }: FiltersProps) {
         >
           {products.map(product => (
             <option key={product} value={product} className="bg-background-primary text-text-secondary">
-              {product}
+              {productLabels[product] || product}
             </option>
           ))}
         </select>

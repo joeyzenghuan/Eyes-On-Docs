@@ -1,28 +1,7 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-
-// Hard-coded fallback product list
-const FALLBACK_PRODUCTS = [
-  'Microsoft-Foundry',
-  'AI-Foundry',
-  'AOAI-V2',
-  'Agent-Service',
-  'Model-Inference',
-  'AML',
-  'Cog-speech-service',
-  'Cog-document-intelligence',
-  'Cog-language-service',
-  'Cog-translator',
-  'Cog-content-safety',
-  'Cog-computer-vision',
-  'Cog-custom-vision-service',
-  'IoT-iot-hub',
-  'IoT-iot-edge',
-  'IoT-iot-dps',
-  'IoT-iot-central',
-  'IoT-iot-hub-device-update'
-];
+import { FALLBACK_PRODUCTS, PRODUCT_LABELS } from '@/lib/products';
 
 interface TargetConfig {
   topic_name: string;
@@ -40,6 +19,7 @@ export async function GET() {
       console.error(`Config file not found at: ${configPath}, using fallback products`);
       return NextResponse.json({ 
         products: FALLBACK_PRODUCTS,
+        labels: PRODUCT_LABELS,
         source: 'fallback',
         error: 'Config file not found'
       });
@@ -65,6 +45,7 @@ export async function GET() {
       console.error('No topic_name found in config file, using fallback products');
       return NextResponse.json({ 
         products: FALLBACK_PRODUCTS,
+        labels: PRODUCT_LABELS,
         source: 'fallback',
         error: 'No topics found in config'
       });
@@ -72,6 +53,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       products,
+      labels: PRODUCT_LABELS,
       source: 'config',
       count: products.length
     });
@@ -80,6 +62,7 @@ export async function GET() {
     console.error('Error reading target_config.json:', error);
     return NextResponse.json({ 
       products: FALLBACK_PRODUCTS,
+      labels: PRODUCT_LABELS,
       source: 'fallback',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
