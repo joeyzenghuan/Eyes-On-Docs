@@ -1,13 +1,47 @@
-from logs import logger  
-from gpt_reply import get_gpt_response, get_gpt_structured_response  
+from logs import logger
+from gpt_reply import get_gpt_response, get_gpt_structured_response
 import tiktoken
-  
-class CallGPT:  
 
-    def correct_links(self, response, url_mapping):  
-        """  
-        修正响应中的链接。  
-        :param response: GPT模型的回复  
+# Optional include-link resolver. Never fail hard on import — if the
+# module is absent (e.g. rolled back) or misbehaves, the rest of this
+# file must keep working unchanged.
+try:
+    from include_link_resolver import IncludeLinkResolver
+    _INCLUDE_RESOLVER_AVAILABLE = True
+except Exception:  # pragma: no cover — defensive import
+    IncludeLinkResolver = None  # type: ignore[assignment]
+    _INCLUDE_RESOLVER_AVAILABLE = False
+
+
+# Singleton resolver so its in-memory cache + rate-limit tracker survive
+# across every commit processed within one Spyder run. Instantiation is
+# cheap; the resolver's feature flag decides whether it actually does
+# anything.
+_INCLUDE_RESOLVER = None
+
+
+def _get_include_resolver():
+    """Return a lazily-initialised resolver singleton, or None if the
+    resolver module is unavailable. The resolver itself is a no-op when
+    RESOLVE_INCLUDE_LINKS is unset — so this is safe to always call."""
+    global _INCLUDE_RESOLVER
+    if not _INCLUDE_RESOLVER_AVAILABLE:
+        return None
+    if _INCLUDE_RESOLVER is None:
+        try:
+            _INCLUDE_RESOLVER = IncludeLinkResolver()
+        except Exception as exc:
+            logger.warning("Failed to init IncludeLinkResolver: %s", exc)
+            return None
+    return _INCLUDE_RESOLVER
+
+
+class CallGPT:
+
+    def correct_links(self, response, url_mapping):
+        """
+        修正响应中的链接。
+        :param response: GPT模型的回复
         :return: 修正后的回复  
         """  
         replacements = {  
@@ -25,10 +59,29 @@ class CallGPT:
             replacements.update(url_mapping)
         print(replacements)
 
-        for old, new in replacements.items():  
-            response = response.replace(old, new)  
-        logger.warning(f"Correct Links in GPT_Summary Response:\n  {response}")  
-        return response  
+        for old, new in replacements.items():
+            response = response.replace(old, new)
+        logger.warning(f"Correct Links in GPT_Summary Response:\n  {response}")
+
+        # Optional post-processing: turn `/includes/…` Learn URLs (which 404
+        # on learn.microsoft.com because include files have no public page)
+        # into the parent article URL that includes them. Fully opt-in via
+        # RESOLVE_INCLUDE_LINKS env var, and any failure inside the resolver
+        # leaves `response` unchanged.
+        resolver = _get_include_resolver()
+        if resolver is not None:
+            try:
+                rewritten = resolver.rewrite_markdown(response)
+                if rewritten != response:
+                    logger.info("Include-link resolver rewrote at least one URL")
+                    response = rewritten
+            except Exception as exc:
+                # Belt-and-suspenders: the resolver already fails open,
+                # but wrap here too so we never propagate up into the
+                # commit-processing loop.
+                logger.warning("Include-link resolver raised unexpectedly: %s", exc)
+
+        return response
   
     
     def gpt_summary(self, commit_patch_data, language, gpt_summary_prompt, url_mapping):  
