@@ -61,3 +61,6 @@ web/next-env.d.ts
 .claude/hook-debug.log
 .claude/hook-debug.log.*
 .claude/scheduled_tasks.json
+
+# include_link_resolver runtime cache (auto-generated at repo root by include_link_resolver.py)
+include_link_cache.json
