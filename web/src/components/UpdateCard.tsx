@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { toast } from 'sonner';
-import { getPrimaryDocUrl, isLikelyInternalLearnUrl } from '@/lib/docLinks';
+import { getOpenableDocUrl, getPrimaryDocUrl, isLikelyInternalLearnUrl } from '@/lib/docLinks';
 
 interface UpdateCardProps {
   id: string;
@@ -181,11 +181,24 @@ export default function UpdateCard({
               components={{
                 a: ({node, ...props}) => {
                   const href = typeof props.href === 'string' ? props.href : '';
-                  if (isLikelyInternalLearnUrl(href)) {
+                  // Backend `include_link_resolver` may have already turned
+                  // /includes/ URLs into real Learn parent URLs. If we still
+                  // see an /includes/ URL here, resolution didn't happen —
+                  // fall back to a clickable GitHub-source link so the user
+                  // can at least see the raw markdown instead of a dead
+                  // 404 tinted-grey span.
+                  const isInternalFragment = isLikelyInternalLearnUrl(href);
+                  const openableHref = isInternalFragment ? getOpenableDocUrl(href) : href;
+                  // If neither Learn nor GitHub source is available (e.g.
+                  // unknown product root), openableHref === href which is
+                  // still the 404 include URL. Keep the old grey-span
+                  // behavior in that case so the user isn't teased with a
+                  // link that doesn't work.
+                  if (isInternalFragment && openableHref === href) {
                     return (
                       <span
                         className="text-text-secondary/70 break-words"
-                        title="Internal Learn source fragment; not a public article link"
+                        title="Internal Learn source fragment; could not resolve to a public article link"
                       >
                         {props.children || href}
                       </span>
@@ -195,9 +208,11 @@ export default function UpdateCard({
                   return (
                     <a
                       {...props}
+                      href={openableHref}
                       className="text-accent-secondary hover:text-accent-primary break-words"
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={isInternalFragment ? 'Fallback: opens the raw markdown source on GitHub' : undefined}
                     />
                   );
                 }
