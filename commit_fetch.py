@@ -2,6 +2,7 @@
 import requests  # HTTP请求库，用于调用GitHub API
 from bs4 import BeautifulSoup  # HTML解析库（用于废弃的网页爬虫方法）
 import datetime  # 时间处理库
+from urllib.parse import urlparse, parse_qs  # URL 解析，避免手动 split 出错
 from logs import logger  # 日志记录器
 
 class CommitFetcher:  
@@ -30,13 +31,19 @@ class CommitFetcher:
         Returns:
             dict: commit时间到URL的映射字典，格式为 {datetime: url, ...}
         """
-        logger.info(f"Commit Root page: {root_commits_url}")  
+        logger.info(f"Commit Root page: {root_commits_url}")
 
         # 从URL中提取主题路径，用于后续过滤特定目录的文件变更
-        # 例如：从 "...?path=articles/ai-services/openai" 中提取 "articles/ai-services/openai"
-        parts = root_commits_url.split('path=')
-        # 获取 'path=' 后面的部分
-        self.topic_path = parts[1] if len(parts) > 1 else None
+        # 使用 urllib.parse 处理query string，正确支持多参数（例如 ?path=X&sha=live），
+        # 避免旧版本 `split('path=')` 在 path 参数后面还有其他参数时把它们粘在一起。
+        # 例：
+        #   .../commits?path=articles/foundry/openai              -> "articles/foundry/openai"
+        #   .../commits?path=articles/foundry/openai&sha=live     -> "articles/foundry/openai"
+        #   .../commits?sha=live&path=articles/foundry/openai     -> "articles/foundry/openai"
+        #   .../commits                                            -> None
+        query_params = parse_qs(urlparse(root_commits_url).query)
+        path_values = query_params.get('path', [])
+        self.topic_path = path_values[0] if path_values else None
 
         # 通过GitHub API获取commit列表的JSON响应
         # response = requests.get(root_commits_url, headers=headers).text  # 废弃的直接请求方式
