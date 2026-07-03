@@ -46,3 +46,16 @@ web/next-env.d.ts
 
 # Claude credentials (DO NOT commit)
 .claude/vm_credentials.env
+# VM state snapshot pulled from production (contains secrets)
+.claude/vm-snapshot/
+# Claude Code per-machine local settings (permissions/env/MCP list)
+.claude/settings.local.json
+# Claude Code runtime state (session state / plans / checkpoints)
+.claude/investigation-state.json
+.claude/investigation-state/
+.claude/plans/
+.claude/checkpoints/
+.claude/cases/
+.claude/hook-debug.log
+.claude/hook-debug.log.*
+.claude/scheduled_tasks.json
